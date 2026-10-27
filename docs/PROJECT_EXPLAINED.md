@@ -154,3 +154,10 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Built with vanilla CSS design tokens, ESLint 9 flat configuration, strict TypeScript flags, and accessibility-first Testing Library suites.
 - **How it helps here:** Serves as the recruiter-facing workspace for uploading resumes, inspecting cited evidence, and executing hiring workflow decisions without heavy frameworks.
 - **Alternatives considered:** Streamlit UI (rejected: limited keyboard accessibility and inability to support the full 17-screen audit-driven recruiter journey).
+
+### Component: Quality Tooling & Automated CI Pipeline (`.pre-commit-config.yaml`, `.github/workflows/ci.yml`, `scripts/`)
+- **What it is:** Pre-commit hooks for secret detection and linting, developer helper scripts (`scripts/run_checks.sh`), and GitHub Actions CI pipelines executing on free Ubuntu runners.
+- **Why:** Prevents secret leaks before code leaves the local machine and guarantees every PR and commit on `main` satisfies quality bars (Ruff, Mypy, Pytest >=80% coverage, ESLint, TypeScript compilation, Vitest, Gitleaks).
+- **How it works:** Git hooks trigger Gitleaks and Ruff; GitHub Actions workflow provisions isolated free runners for parallelized backend, frontend, and secret scanning jobs.
+- **How it helps here:** Enforces the stop-the-line security rule and ensures zero regressions enter the codebase as new agents and features are introduced.
+- **Alternatives considered:** Manual developer checks without automated CI (rejected: high risk of undetected broken builds, missing tests, or exposed tokens).

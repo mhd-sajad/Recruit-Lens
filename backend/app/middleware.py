@@ -15,9 +15,7 @@ logger = logging.getLogger("app.middleware")
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Middleware attaching a unique request ID to context and response headers."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Honor incoming X-Request-ID if provided, otherwise generate one
         incoming_req_id = request.headers.get("X-Request-ID")
         req_id = incoming_req_id if incoming_req_id else str(uuid.uuid4())
