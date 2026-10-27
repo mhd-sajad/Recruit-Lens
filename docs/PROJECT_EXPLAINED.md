@@ -161,3 +161,10 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Git hooks trigger Gitleaks and Ruff; GitHub Actions workflow provisions isolated free runners for parallelized backend, frontend, and secret scanning jobs.
 - **How it helps here:** Enforces the stop-the-line security rule and ensures zero regressions enter the codebase as new agents and features are introduced.
 - **Alternatives considered:** Manual developer checks without automated CI (rejected: high risk of undetected broken builds, missing tests, or exposed tokens).
+
+### Component: Project Entry Documentation (`README.md`)
+- **What it is:** The root repository documentation covering platform capabilities, monorepo directory layout, developer prerequisites, setup guides, and test execution commands.
+- **Why:** Provides clear orientation for any developer, reviewer, or user running the repository locally for the first time.
+- **How it works:** Explains step-by-step onboarding using both automated scripts and manual CLI workflows for backend and frontend.
+- **How it helps here:** Eliminates ambiguity around dependencies, port bindings, and verification commands.
+- **Alternatives considered:** Minimal or auto-generated boilerplate readme (rejected: fails to communicate project context, architecture, and verification instructions).
