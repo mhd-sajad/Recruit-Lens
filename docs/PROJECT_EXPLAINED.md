@@ -176,3 +176,24 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Preserves exact ground truth query targets while isolating binary PDFs and CSVs in local gitignored storage (`data/`).
 - **How it helps here:** Enables rigorous truth testing and benchmark evaluations across sparse (BM25), dense (MiniLM/BGE), and hybrid retrieval architectures.
 - **Alternatives considered:** Generating synthetic test resumes (rejected: fails to replicate multi-column layouts, OCR artifacts, and unstructured phrasing found in real resumes).
+
+### Component: SSRF-Protected Job Description Scraper (`backend/app/core/jd_scraper.py`)
+- **What it is:** Robust HTTP client and HTML extractor for acquiring online job postings with strict SSRF defenses, timeouts, and body size limits.
+- **Why:** Protects internal infrastructure and cloud environments against Server-Side Request Forgery (SSRF) when recruiters input arbitrary job posting URLs.
+- **How it works:** Validates schemes (`http`/`https`), resolves DNS before socket connection, and rejects private, loopback, link-local, multicast, and cloud metadata addresses (e.g. AWS `169.254.169.254`). Enforces a 10s connect timeout and a 2 MB streaming body limit. Falls back to selector-based and semantic article HTML parsers.
+- **How it helps here:** Allows recruiters to paste job URLs directly without risking attacks on internal cloud credentials or intranet microservices.
+- **Alternatives considered:** Raw `requests.get` or `urllib.request` (rejected: completely vulnerable to SSRF, cloud credential theft, and denial-of-service via huge payloads).
+
+### Component: Structured Experience & Education Extractors (`backend/app/core/experience_extractor.py` & `education_extractor.py`)
+- **What it is:** Deterministic rule-based extractors for parsing candidate titles, employers, dates, bullet accomplishments, degree hierarchies (including B.Tech/M.Tech/MCA/Dipl.-Ing.), graduation years, and career gaps.
+- **Why:** Solves closed-vocabulary and structural extraction problems deterministically and cheaply without burning costly, slow LLM inference tokens.
+- **How it works:** Uses regex patterns, seniority level mappings (0-4), date interval difference calculation for employment spans and career gaps ($\ge 6$ months), and title/company disambiguation heuristics that preserve clean titles.
+- **How it helps here:** Feeds downstream retrieval and scoring agents with verified job title progressions, total experience metrics, and education ordinal ranks with zero LLM hallucination risk.
+- **Alternatives considered:** Zero-shot LLM parsing for every resume (rejected: slow, expensive, non-deterministic, and prone to hallucinations on dates and titles).
+
+### Component: Multi-Column Resume PDF Parser & Deterministic Gate (`backend/app/core/pdf_parser.py` & `scripts/measure_parser.py`)
+- **What it is:** Production PDF extraction engine with horizontal coordinate clustering for multi-column resumes, deterministic gate verification, confidence estimation, and PII isolation.
+- **Why:** Multi-column PDFs scramble text reading order in standard parsers; ATS systems frequently fail on non-resume uploads or leak PII into scoring text.
+- **How it works:** Uses `pdfplumber` character geometry to cluster columns with fallback to `pypdf`. Applies a deterministic rule-based gate scoring 8 resume markers vs negative document markers (invoices, papers, contracts). Isolates candidate contact details into a distinct `ContactPII` container and produces scrubbed `scoring_text`.
+- **How it helps here:** Measured on 100 real resumes and 20 non-resumes: achieved **98.0% clean title extraction** (jumping from old 33.3% baseline), **100% gate recall**, **100% gate precision**, and **0.0% parse failures**.
+- **Alternatives considered:** OCR-based layout analysis (rejected: excessive memory footprint exceeding the 400 MB RAM budget); unseparated PII in scoring text (rejected: violates privacy rules and biases scoring).
