@@ -169,3 +169,10 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Explains step-by-step onboarding using both automated scripts and manual CLI workflows for backend and frontend.
 - **How it helps here:** Eliminates ambiguity around dependencies, port bindings, and verification commands.
 - **Alternatives considered:** Minimal or auto-generated boilerplate readme (rejected: fails to communicate project context, architecture, and verification instructions).
+
+### Component: Stratified Dataset Sampling & Gold Pairs Baseline (`docs/eval_pairs_locked.json`)
+- **What it is:** A locked benchmark set of 34 verified query-chunk pairs, alongside a stratified sample of 300 real resumes across 24 professional domains and 2,000 sampled LinkedIn job postings.
+- **Why:** Establishes a concrete, repeatable baseline for measuring retrieval performance (Hit@1/3/5/10 and MRR) and parser quality without committing bulky datasets to version control.
+- **How it works:** Preserves exact ground truth query targets while isolating binary PDFs and CSVs in local gitignored storage (`data/`).
+- **How it helps here:** Enables rigorous truth testing and benchmark evaluations across sparse (BM25), dense (MiniLM/BGE), and hybrid retrieval architectures.
+- **Alternatives considered:** Generating synthetic test resumes (rejected: fails to replicate multi-column layouts, OCR artifacts, and unstructured phrasing found in real resumes).

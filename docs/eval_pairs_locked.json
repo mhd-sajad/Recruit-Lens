@@ -1,0 +1,206 @@
+[
+    {
+        "domain": "Software Engineering",
+        "query": "Requires strong proficiency in Python and RESTful API development.",
+        "relevant_chunk_id": "62994611_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Software Engineering",
+        "query": "Experience with containerization tools like Docker and Kubernetes.",
+        "relevant_chunk_id": "21297521_009",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Software Engineering",
+        "query": "Familiarity with CI/CD pipelines and tools like Jenkins.",
+        "relevant_chunk_id": "83816738_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Software Engineering",
+        "query": "Strong frontend development skills using React.js.",
+        "relevant_chunk_id": "83816738_006",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Software Engineering",
+        "query": "Understanding of Agile/Scrum methodologies.",
+        "relevant_chunk_id": "83816738_008",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Data Science",
+        "query": "Familiarity with machine learning frameworks like TensorFlow or PyTorch.",
+        "relevant_chunk_id": "50328713_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Data Science",
+        "query": "Data visualization skills using Tableau or PowerBI.",
+        "relevant_chunk_id": "18448085_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Data Science",
+        "query": "Proficient in SQL for complex data extraction.",
+        "relevant_chunk_id": "30863060_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Data Science",
+        "query": "Deep understanding of deep learning algorithms and neural networks.",
+        "relevant_chunk_id": "34953092_002",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Product Management",
+        "query": "Experience leading product roadmap from conception to launch.",
+        "relevant_chunk_id": "24574164_004",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Product Management",
+        "query": "Experience in B2B SaaS product environments.",
+        "relevant_chunk_id": "12085736_006",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Product Management",
+        "query": "Go-to-market (GTM) strategy execution.",
+        "relevant_chunk_id": "20330739_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Finance",
+        "query": "Financial modeling and valuation experience (DCF, LBO).",
+        "relevant_chunk_id": "34185495_005",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Finance",
+        "query": "Proficiency in Advanced Excel (VBA, Macros).",
+        "relevant_chunk_id": "14181049_004",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Finance",
+        "query": "Experience in portfolio management and risk assessment.",
+        "relevant_chunk_id": "29406313_011",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Finance",
+        "query": "Background in corporate FP&A (Financial Planning & Analysis).",
+        "relevant_chunk_id": "24530382_008",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Healthcare",
+        "query": "Familiarity with HIPAA compliance and patient data privacy.",
+        "relevant_chunk_id": "25749150_006",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Healthcare",
+        "query": "Clinical trial management and FDA submission experience.",
+        "relevant_chunk_id": "17555081_006",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Healthcare",
+        "query": "Experience with Electronic Health Record (EHR) systems like Epic.",
+        "relevant_chunk_id": "32081266_009",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Healthcare",
+        "query": "Background in molecular biology or PCR techniques.",
+        "relevant_chunk_id": "24349611_004",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Healthcare",
+        "query": "Knowledge of medical billing and coding (ICD-10).",
+        "relevant_chunk_id": "23918545_002",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Marketing",
+        "query": "Experience managing paid social campaigns (Facebook, LinkedIn).",
+        "relevant_chunk_id": "13837784_005",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Marketing",
+        "query": "SEO/SEM strategy and execution.",
+        "relevant_chunk_id": "30504149_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Marketing",
+        "query": "Proficiency with email marketing platforms like Mailchimp or Hubspot.",
+        "relevant_chunk_id": "15423153_004",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Marketing",
+        "query": "Experience with Google Analytics and conversion tracking.",
+        "relevant_chunk_id": "14128006_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Operations",
+        "query": "Supply chain optimization and inventory management.",
+        "relevant_chunk_id": "11890896_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Operations",
+        "query": "Lean Six Sigma or continuous improvement methodologies.",
+        "relevant_chunk_id": "12904972_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Operations",
+        "query": "Vendor negotiation and procurement experience.",
+        "relevant_chunk_id": "26341987_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Operations",
+        "query": "Experience managing warehouse staff and safety protocols.",
+        "relevant_chunk_id": "20176584_001",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Sales",
+        "query": "Proven track record of exceeding B2B sales quotas.",
+        "relevant_chunk_id": "65708020_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Sales",
+        "query": "Experience using Salesforce CRM to manage pipelines.",
+        "relevant_chunk_id": "29825044_007",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Sales",
+        "query": "Cold calling and outbound prospecting skills.",
+        "relevant_chunk_id": "91467795_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Sales",
+        "query": "Proven ability to sell SaaS products to Enterprise clients.",
+        "relevant_chunk_id": "21283365_003",
+        "relevance_score": 2
+    },
+    {
+        "domain": "Sales",
+        "query": "Contract negotiation and closing complex enterprise deals.",
+        "relevant_chunk_id": "35673335_005",
+        "relevance_score": 2
+    }
+]
