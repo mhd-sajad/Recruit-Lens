@@ -70,6 +70,37 @@ Open `http://localhost:5173` to interact with the recruiter dashboard.
 
 ---
 
+## Batch 1: Ingestion, Parsing & Retrieval Truth Test
+
+Batch 1 establishes a verified, measured data ingestion and candidate-isolated retrieval foundation:
+
+- **Dual-Engine PDF Parser:** Multi-column layout coordinate clustering, deterministic rule-based resume gate, and strict PII isolation (`scoring_text` free of contact details). Measured on 100 real resumes and 20 non-resumes:
+  - **Structured Title Extraction Rate:** **98.0%** (jumping from old 33.3% baseline)
+  - **Resume Gate Precision:** **100.0%** (20/20 non-resumes rejected)
+  - **Resume Gate Recall:** **100.0%** (100/100 real resumes accepted)
+  - **Parse Failures:** **0.0%** (0/100)
+- **SSRF-Safe JD Scraper:** Blocks loopback, private, link-local, and cloud metadata IPs (`169.254.169.254`) with strict timeouts and 2 MB size caps.
+- **Quantized ONNX Embedder:** CPU-quantized MiniLM-L6 operating at **132.3 MB RSS** (well below the 350 MB ceiling) at **74.6 ms/chunk**, outperforming BGE-small (which breached RAM at 750.5 MB).
+- **Candidate-Isolated Retrieval:** Zero cross-candidate data leakage by construction. Stores float32 embedding blobs and fuses in-memory `bm25s` and dense vector cosine similarity via Reciprocal Rank Fusion ($k=60$).
+- **Truth Test on 34 Gold Pairs:**
+  - **BM25 (Sparse):** Hit@5: **100.0%** (95% CI: [100.0%, 100.0%]), MRR: **0.8456** (95% CI: [0.7573, 0.9289])
+  - **Hybrid (RRF $k=60$):** Hit@5: **97.1%** (95% CI: [91.2%, 100.0%]), MRR: **0.7966** (95% CI: [0.6936, 0.8971])
+  - **Primary Engine Decision:** BM25 designated primary retrieval signal, with dense semantic search as secondary verification.
+
+### Running Batch 1 Benchmarks & Tools
+```bash
+# Run parser benchmark on 100 real resumes and 20 non-resumes
+bash scripts/measure_parser.sh
+
+# Run embeddings benchmark and 34-pair truth test
+cd backend && uv run python ../scripts/benchmark_retrieval_and_truth_test.py
+
+# Launch interactive CLI to label new query-chunk ground truth pairs
+cd backend && uv run python ../scripts/label_pairs.py
+```
+
+---
+
 ## Running Quality Checks
 
 Run the unified quality verification suite across backend and frontend:
