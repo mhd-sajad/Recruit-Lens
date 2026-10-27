@@ -182,14 +182,14 @@ def detect_career_gap(experience_text: str, threshold_months: int = 6) -> int:
         if start_val is None:
             continue
 
+        end_val: int | None = None
         if re.search(r"current|present", end_str, re.IGNORECASE):
             end_val = 2026 * 12 + 10
         else:
             end_val = _parse_month_year(end_str, default_month=12)
-            if end_val is None:
-                continue
 
-        intervals.append((start_val, end_val))
+        if end_val is not None:
+            intervals.append((start_val, end_val))
 
     if len(intervals) < 2:
         return 0

@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     MAX_BATCH_RESUMES: int = Field(default=200, ge=1, le=1000)
     MAX_UPLOAD_FILE_SIZE_MB: int = Field(default=10, ge=1, le=100)
 
+    # Retrieval & Embeddings Configuration
+    EMBEDDING_MODEL: Literal["minilm", "bge-small"] = "minilm"
+    PRIMARY_RETRIEVAL_ENGINE: Literal["bm25", "hybrid", "dense"] = "bm25"
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: object) -> object:

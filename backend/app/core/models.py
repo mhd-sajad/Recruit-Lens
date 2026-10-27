@@ -1,6 +1,6 @@
 """Data models for resume parsing, extraction, and ingestion."""
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -66,3 +66,22 @@ class JDScrapeResult(BaseModel):
     company: str | None = None
     clean_text: str
     word_count: int
+
+
+class ResumeChunk(BaseModel):
+    """Section-aware chunk extracted from parsed resume for retrieval."""
+
+    chunk_id: str
+    resume_id: str
+    section: str
+    text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class JDChunk(BaseModel):
+    """Query chunk extracted from a job description."""
+
+    chunk_id: str
+    jd_id: str
+    text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)

@@ -68,6 +68,18 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it helps here:** Enforces the stop-the-line security rule by preventing accidental leaks of keys or credentials.
 - **Alternatives considered:** TruffleHog (rejected: heavier container requirements on lightweight CI runners).
 
+### ONNX Runtime & Tokenizers (Quantized CPU Inference)
+- **What it is:** High-performance inference engine running quantized Transformer neural networks directly on CPU without PyTorch.
+- **Why chosen:** Keeps process RSS memory under 150 MB (MiniLM-L6 measured at 132.3 MB RSS, +51.7 MB delta) compared to PyTorch which consumes 750-980 MB, easily exceeding Render/free-tier memory ceilings.
+- **How it helps here:** Generates L2-normalized 384-dimensional dense vectors for semantic candidate chunk retrieval in ~74 ms per chunk.
+- **Alternatives considered:** PyTorch + `sentence-transformers` (rejected: pulls heavy torch wheels, bloated Docker images, and exceeds RAM limits); cloud embedding APIs (rejected: costs money and violates self-hosted privacy constraints).
+
+### bm25s (In-Memory Lexical Search)
+- **What it is:** Ultra-fast, pure-Python/NumPy implementation of the BM25 lexical ranking algorithm.
+- **Why chosen:** Sub-millisecond in-memory indexing and querying per candidate, zero SQLite lock contention, and zero native binary baggage.
+- **How it helps here:** Serves as the primary retrieval signal, achieving 100% Hit@5 and 0.8456 MRR on the locked evaluation set.
+- **Alternatives considered:** Full-text database engines like SQLite FTS5 or Elasticsearch (rejected: SQLite FTS lacks isolated ephemeral scoring flexibility; Elasticsearch requires gigabytes of Java RAM).
+
 ---
 
 ## Section 3: The Plan
@@ -197,3 +209,42 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Uses `pdfplumber` character geometry to cluster columns with fallback to `pypdf`. Applies a deterministic rule-based gate scoring 8 resume markers vs negative document markers (invoices, papers, contracts). Isolates candidate contact details into a distinct `ContactPII` container and produces scrubbed `scoring_text`.
 - **How it helps here:** Measured on 100 real resumes and 20 non-resumes: achieved **98.0% clean title extraction** (jumping from old 33.3% baseline), **100% gate recall**, **100% gate precision**, and **0.0% parse failures**.
 - **Alternatives considered:** OCR-based layout analysis (rejected: excessive memory footprint exceeding the 400 MB RAM budget); unseparated PII in scoring text (rejected: violates privacy rules and biases scoring).
+
+### Component: Section-Aware Resume & JD Sliding-Window Chunkers (`backend/app/core/resume_chunker.py` & `jd_chunker.py`)
+- **What it is:** Granular sliding-window text chunkers for candidate resumes and job descriptions maintaining section provenance and metadata.
+- **Why:** Full resumes are too broad for dense semantic retrieval; small disjoint fragments lose job context. Section-aware chunking preserves coherent accomplishments with optimal retrieval density.
+- **How it works:** Applies configured sliding windows: Experience and Projects (200 words, 40-word overlap); Skills, Education, and Summary (150 words, 20-word overlap); JD query chunking (100 words, 20-word overlap). Every chunk retains `section`, `resume_id`/`jd_id`, and `word_count`.
+- **How it helps here:** Produces high-signal text chunks that enable sub-second BM25 and semantic matching while providing exact citation targets for generated candidate reviews.
+- **Alternatives considered:** Fixed-length character chunking (rejected: splits words and bullet points arbitrarily across sentences).
+
+### Component: Quantized ONNX Dense Embedder & Model Benchmark (`backend/app/core/embeddings.py` & `scripts/benchmark_retrieval_and_truth_test.py`)
+- **What it is:** Pure-ONNX Runtime embedding singleton behind an abstract `BaseEmbedder` interface, with offline model weight caching in `data/hf_cache/`.
+- **Why:** PyTorch dependencies consume 750-980 MB of RAM, instantly breaching the 400 MB backend RSS budget. Quantized ONNX keeps inference lightweight and deterministic.
+- **How it works:** Tokenizes with fast Rust-based `tokenizers`, executes 8-bit quantized ONNX models on CPU with 2 execution threads, performs weighted mean pooling with attention masks, and outputs unit-length L2-normalized float32 vectors (dim=384).
+- **Benchmark & Model Selection Result:**
+  - **MiniLM-L6 (quantized ONNX):** 132.3 MB RSS (+51.7 MB delta), 74.57 ms/chunk latency, Dense Hit@5: 94.1%, Dense MRR: 0.6768, Hybrid MRR: 0.7966.
+  - **BGE-small (quantized ONNX):** 750.5 MB RSS (+669.9 MB delta), 135.00 ms/chunk latency, Dense Hit@5: 82.4%, Dense MRR: 0.5854, Hybrid MRR: 0.7054.
+  - **Decision:** MiniLM-L6 selected. BGE-small violated the 350 MB RSS limit (750.5 MB) and exhibited slower latency and lower MRR.
+- **Alternatives considered:** SentenceTransformers / PyTorch (rejected: 750-980 MB RSS); raw unquantized FP32 ONNX (rejected: larger disk footprint and slower CPU throughput).
+
+### Component: Candidate-Isolated Hybrid Retrieval Engine & Truth Test (`backend/app/core/retrieval.py` & `scripts/benchmark_retrieval_and_truth_test.py`)
+- **What it is:** Candidate-isolated hybrid search engine combining in-memory BM25 lexical search (`bm25s`) and in-memory cosine dot-product dense retrieval via Reciprocal Rank Fusion (RRF $k=60$).
+- **Why:** Eliminates the overhead and concurrency locking of ChromaDB for per-candidate searches while strictly guaranteeing zero cross-candidate data leakage.
+- **How it works:** Stores embedding vectors as contiguous float32 binary blobs. Binds each `CandidateIsolatedIndex` to a single candidate ID. Reconstructs dense matrices and BM25 indices on demand in memory.
+- **Truth Test Results (34 Locked Gold Pairs, N=34):**
+  - **BM25 (Sparse):** Hit@1: 73.5%, Hit@3: 97.1%, Hit@5: 100.0% (95% CI: [100.0%, 100.0%]), Hit@10: 100.0%, MRR: **0.8456** (95% CI: [0.7573, 0.9289]).
+  - **Dense (MiniLM):** Hit@1: 50.0%, Hit@3: 79.4%, Hit@5: 94.1% (95% CI: [85.3%, 100.0%]), Hit@10: 100.0%, MRR: 0.6768 (95% CI: [0.5589, 0.7885]).
+  - **Hybrid (RRF $k=60$):** Hit@1: 67.6%, Hit@3: 88.2%, Hit@5: 97.1% (95% CI: [91.2%, 100.0%]), Hit@10: 100.0%, MRR: 0.7966 (95% CI: [0.6936, 0.8971]).
+  - **Cheap Improvements Evaluated (at most 3):**
+    1. RRF $k=20$: Hit@5=97.1%, MRR=0.7966 (Kept: False).
+    2. Section boosts: Hit@5=94.1%, MRR=0.5167 (Kept: False).
+    3. Dense weight 1.5: Hit@5=97.1%, MRR=0.7500 (Kept: False).
+  - **Architectural Decision:** Because BM25 MRR (0.8456) outperformed Hybrid (0.7966) on exact technical keywords in the locked set, **BM25 is designated as the primary retrieval signal**, with dense semantic retrieval acting as secondary verification.
+- **Alternatives considered:** Ephemeral ChromaDB collections per candidate (rejected: high memory allocation churn and SQLite metadata contention in batch loops).
+
+### Component: Interactive Pair Annotation CLI (`scripts/label_pairs.py`)
+- **What it is:** Command-line annotation tool for expanding the locked evaluation set by presenting queries and candidate resume chunks for rapid binary relevance judgment (`[y/n/s/q]`).
+- **Why:** Allows developers and recruiters to continuously expand ground-truth evaluation pairs across new job categories without blocking batch execution.
+- **How it works:** Iterates through local chunk files, prompts for queries and domains, displays candidate text previews, and appends valid positive pairs (`relevance_score: 2`) to `docs/eval_pairs_labeled.json`.
+- **How it helps here:** Provides a non-blocking workflow to grow $N$ beyond 34 pairs to narrow bootstrap confidence intervals over time.
+- **Alternatives considered:** Manual JSON editing (rejected: error-prone, slow, and risks syntax formatting bugs).

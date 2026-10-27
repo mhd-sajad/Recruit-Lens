@@ -40,6 +40,14 @@ class StructuredJsonFormatter(logging.Formatter):
         return json.dumps(log_payload)
 
 
+class RequestIdFilter(logging.Filter):
+    """Ensure record always has a valid request_id attribute for formatters."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = request_id_ctx.get() or "none"
+        return True
+
+
 def setup_logging(log_level: str = "INFO", log_format: str = "json") -> None:
     """Configure root logger with structured formatting."""
     root_logger = logging.getLogger()
@@ -49,6 +57,7 @@ def setup_logging(log_level: str = "INFO", log_format: str = "json") -> None:
     root_logger.handlers.clear()
 
     handler = logging.StreamHandler(sys.stdout)
+    handler.addFilter(RequestIdFilter())
     if log_format.lower() == "json":
         handler.setFormatter(StructuredJsonFormatter())
     else:
