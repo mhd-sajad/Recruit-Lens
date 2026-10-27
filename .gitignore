@@ -1,0 +1,42 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Data directory
+data/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Model binaries & weights
+*.bin
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.pkl
+*.h5
+models/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testing & linting caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
