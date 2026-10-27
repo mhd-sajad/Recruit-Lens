@@ -119,3 +119,31 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Extends the 10 core principles with explicit contract obligations and reporting standards.
 - **How it helps here:** Keeps every incremental commit disciplined, verified with measurements, and independently reviewable.
 - **Alternatives considered:** Relying on informal instructions (rejected: high risk of regressions or overlooked safety bars).
+
+### Component: Backend Service & Dependency Lock (`backend/`)
+- **What it is:** Python 3.11 FastAPI package configured via `pyproject.toml` and locked deterministically using `uv.lock`.
+- **Why:** Enforces modern, typed Python with sub-second dependency installation and zero drift across developer and CI environments.
+- **How it works:** Managed through `uv` with strict type checking (`mypy`), linting (`ruff`), and async testing with coverage (`pytest-cov`).
+- **How it helps here:** Provides the foundation for lightning-fast backend execution while keeping RAM footprints minimal.
+- **Alternatives considered:** Poetry or raw requirements.txt (rejected: Poetry is significantly slower; requirements.txt lacks deterministic dependency graph resolution).
+
+### Component: Dynamic Environment Configuration (`backend/app/config.py` & `.env.example`)
+- **What it is:** Type-safe settings management using `pydantic-settings` with zero hardcoded file paths.
+- **Why:** Protects against misconfiguration, crashes early on invalid parameters, and dynamically resolves paths relative to the project root.
+- **How it works:** Loads validated environment variables with constraints (e.g. port range, batch size ceilings) and auto-creates the isolated local data directory.
+- **How it helps here:** Ensures portability across local machines, Docker containers, and free-tier cloud hosts without modifying code.
+- **Alternatives considered:** Manual `os.getenv` lookups (rejected: no validation, silent type conversion failures, no default guarantees).
+
+### Component: Request Correlation & PII-Safe Logging (`backend/app/middleware.py` & `backend/app/logging.py`)
+- **What it is:** ContextVar-driven HTTP middleware and JSON log formatter that injects `X-Request-ID` headers into every response and redacts candidate personal data from logs.
+- **Why:** Delivers end-to-end request traceability while honoring data privacy by preventing applicant emails and phone numbers from being exposed in logs.
+- **How it works:** Intercepts requests, generates or preserves UUIDs, instruments response times, and passes messages through regex scrubbers before outputting JSON.
+- **How it helps here:** Debugging asynchronous batch candidate runs becomes deterministic without risking GDPR/privacy leaks in logs.
+- **Alternatives considered:** Standard unformatted console printing (rejected: impossible to correlate logs across concurrent async requests; risks logging candidate PII).
+
+### Component: FastAPI Core Application & 4xx Guardrails (`backend/app/main.py`)
+- **What it is:** FastAPI application instance featuring CORS controls, lifespan management, uptime health checks (`/health`, `/api/v1/ping`), and strict 4xx exception handlers.
+- **Why:** Guarantees that bad client requests or malformed payloads always yield structured 4xx responses (HTTP 422/404/400) and never leak unhandled 500 server crashes.
+- **How it works:** Registered custom exception handlers intercept `RequestValidationError` and `HTTPException`, returning structured JSON alongside the active `request_id`.
+- **How it helps here:** Robust API contract ensures frontend recruiter screens handle input errors gracefully without unexpected disconnects.
+- **Alternatives considered:** Default unformatted FastAPI exceptions (rejected: inconsistent schema, missing request ID correlation for clients).
