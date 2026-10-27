@@ -21,3 +21,30 @@ The following operating principles must be followed strictly:
 9. **DON'T LET "IT WORKS" SUBSTITUTE FOR "IT'S REVIEWED."** Finishing a build step is not the same as it being approved to move forward on. Always pause for review at the checkpoints defined in the project instructions, even if everything passed locally.
 
 10. **KEEP PROJECT_EXPLAINED.md LIVING.** Every time a new commit adds something meaningful (a new agent, a new feature, a new integration, a fix to something significant), you MUST add a new entry to Section 4 of docs/PROJECT_EXPLAINED.md using the exact template defined there BEFORE moving on to the next piece of work. If Section 1, 2, or 3 needs updating because something changed, update those too and note briefly what changed and why. This is part of what 'done' means for a commit.
+
+## Decision Principles
+- Priority order: correctness and safety, then explainability, then simplicity, then speed, then polish.
+- Prefer boring, proven, light dependencies. Free-tier hosting means small RAM and ephemeral disk.
+- Measure before choosing. Record each non-trivial decision, its alternatives and why you rejected them in docs/PROJECT_EXPLAINED.md.
+- Never claim an accuracy you did not measure. State limits plainly.
+- Decide yourself. Ask me only when you need my account, key or a physical action, and ask at the end of the batch with your recommended default.
+
+## Working Contract
+- Do as much of this batch as you can in one run with no compromise on quality. If you must split, split at a natural boundary, keep going without asking permission, and report where you stopped.
+- Commit and push after every working piece (feature branch per task group, merge to main when tests pass, conventional commit messages). Tag a release at the end of each batch (v0.1.0 for this batch, then v0.2.0 and so on).
+- Tests with every piece. No TODOs or dead code left behind.
+- HARD STOPS (only these): a secret appears in any file or history; you need my credentials or a manual action; something would modify anything outside this repo. Anything else: decide, record, continue.
+- End every batch with the report format:
+  1. Built (bullets).
+  2. Tests: counts and pass rate.
+  3. Metrics table (real numbers, with what could be wrong).
+  4. Decisions made and why.
+  5. Known limitations.
+  6. What I must do before the next batch.
+
+## Global Quality Bars (Apply to Every Batch)
+- Backend: typed code, ruff clean, tests on core logic at 80% coverage or better, 4xx (never 5xx) on bad input, structured logs with request IDs, no PII in logs.
+- Backend process stays under 400 MB RSS with one batch loaded. Retrieval plus scoring under 0.5 s per candidate. A 200-resume batch finishes in under 5 minutes excluding LLM text generation.
+- Every generated sentence carries citations to evidence chunks. Unsupported text is rewritten or blocked.
+- Frontend: strict TypeScript, keyboard-accessible, labelled inputs, loading/empty/error state on every screen.
+- Zero secrets in the repo or history (gitleaks in pre-commit and CI).
