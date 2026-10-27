@@ -147,3 +147,10 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Registered custom exception handlers intercept `RequestValidationError` and `HTTPException`, returning structured JSON alongside the active `request_id`.
 - **How it helps here:** Robust API contract ensures frontend recruiter screens handle input errors gracefully without unexpected disconnects.
 - **Alternatives considered:** Default unformatted FastAPI exceptions (rejected: inconsistent schema, missing request ID correlation for clients).
+
+### Component: Frontend React Client & Testing Suite (`frontend/`)
+- **What it is:** Vite + React + TypeScript application adhering to strict compiler rules, keyboard accessibility standards, and Vitest component verification.
+- **Why:** Delivers an interactive recruiter dashboard with labelled inputs, keyboard navigation, and explicit loading, empty, and error state handling on all views.
+- **How it works:** Built with vanilla CSS design tokens, ESLint 9 flat configuration, strict TypeScript flags, and accessibility-first Testing Library suites.
+- **How it helps here:** Serves as the recruiter-facing workspace for uploading resumes, inspecting cited evidence, and executing hiring workflow decisions without heavy frameworks.
+- **Alternatives considered:** Streamlit UI (rejected: limited keyboard accessibility and inability to support the full 17-screen audit-driven recruiter journey).
