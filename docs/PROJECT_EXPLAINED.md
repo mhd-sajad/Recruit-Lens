@@ -41,6 +41,7 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **What it is:** Fast next-generation frontend tooling pairing React with strict TypeScript compilation.
 - **Why chosen:** Sub-second HMR, lightweight production bundles, strict type safety, and rich component ecosystem.
 - **How it helps here:** Delivers the 17-screen interactive recruiter journey with keyboard accessibility, responsive state management, and clear loading/empty/error states.
+- **Styling Architecture & Correction:** While Batch 0 initialized a basic vanilla CSS shell, this was an unmeasured baseline. Batch 5 will migrate the shell to **Tailwind CSS + shadcn/ui** because the full 17-screen recruiter workflow requires highly accessible data tables (filtering, sorting, pagination), modal dialogs, candidate drag-and-drop boards, and metric charts. Custom CSS is unsuited for maintaining these complex accessible components reliably.
 - **Alternatives considered:** Streamlit (rejected: difficult to build customized, keyboard-accessible multi-step recruiter workflows and audit controls); Next.js (rejected: unnecessary SSR complexity and higher hosting overhead for a client-driven dashboard).
 
 ### uv (Python Package & Environment Manager)
@@ -153,7 +154,7 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **Why:** Delivers an interactive recruiter dashboard with labelled inputs, keyboard navigation, and explicit loading, empty, and error state handling on all views.
 - **How it works:** Built with vanilla CSS design tokens, ESLint 9 flat configuration, strict TypeScript flags, and accessibility-first Testing Library suites.
 - **How it helps here:** Serves as the recruiter-facing workspace for uploading resumes, inspecting cited evidence, and executing hiring workflow decisions without heavy frameworks.
-- **Alternatives considered:** Streamlit UI (rejected: limited keyboard accessibility and inability to support the full 17-screen audit-driven recruiter journey).
+- **Alternatives considered & Architectural Correction:** Streamlit UI (rejected: limited keyboard accessibility). Note: The initial shell was bootstrapped with vanilla CSS; however, per decision correction, Batch 5 will migrate the client to **Tailwind CSS + shadcn/ui** to provide robust, accessible data tables, dialogs, drag-and-drop boards, and charts required for the 17 recruiter screens.
 
 ### Component: Quality Tooling & Automated CI Pipeline (`.pre-commit-config.yaml`, `.github/workflows/ci.yml`, `scripts/`)
 - **What it is:** Pre-commit hooks for secret detection and linting, developer helper scripts (`scripts/run_checks.sh`), and GitHub Actions CI pipelines executing on free Ubuntu runners.
