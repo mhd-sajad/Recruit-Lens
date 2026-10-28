@@ -63,19 +63,55 @@ class CandidateExplanation(BaseModel):
         if isinstance(data, dict):
             import re
 
-            if "sentences" not in data:
+            if "sentences" in data and isinstance(data["sentences"], list):
+                norm_sentences = []
+                norm_cits = []
+                for item in data["sentences"]:
+                    if isinstance(item, dict):
+                        sent_text = str(
+                            item.get("text")
+                            or item.get("sentence")
+                            or item.get("claim")
+                            or item.get("content")
+                            or ""
+                        )
+                        norm_sentences.append(sent_text)
+                        item_cits = item.get("citations") or item.get("cited_chunk_ids") or []
+                        if isinstance(item_cits, str):
+                            item_cits = [item_cits]
+                        norm_cits.append(list(item_cits))
+                    else:
+                        norm_sentences.append(str(item))
+                data["sentences"] = norm_sentences
+                if norm_cits and ("citations" not in data or not data["citations"]):
+                    data["citations"] = norm_cits
+            elif "sentences" not in data:
                 text = str(data.get("explanation") or data.get("summary") or data.get("text") or "")
                 raw_sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
                 data["sentences"] = raw_sentences if raw_sentences else [text]
                 data["summary_text"] = text
+
             if "summary_text" not in data and "sentences" in data:
-                data["summary_text"] = " ".join(data["sentences"])
-            if ("citations" not in data or not data["citations"]) and "sentences" in data:
+                data["summary_text"] = " ".join(str(s) for s in data["sentences"])
+
+            if "citations" in data and isinstance(data["citations"], list):
+                clean_citations = []
+                for c in data["citations"]:
+                    if isinstance(c, list):
+                        clean_citations.append([str(x) for x in c])
+                    elif isinstance(c, str):
+                        clean_citations.append([c] if c else [])
+                    elif isinstance(c, dict):
+                        clean_citations.append([str(v) for v in c.values()])
+                    else:
+                        clean_citations.append([])
+                data["citations"] = clean_citations
+            elif ("citations" not in data or not data["citations"]) and "sentences" in data:
                 pat = re.compile(r"\[(c_\d{2}(?:,\s*c_\d{2})*)\]")
                 cites = []
                 for s in data["sentences"]:
                     found = []
-                    for m in pat.findall(s):
+                    for m in pat.findall(str(s)):
                         found.extend([cid.strip() for cid in m.split(",") if cid.strip()])
                     cites.append(found)
                 data["citations"] = cites

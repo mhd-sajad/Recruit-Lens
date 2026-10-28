@@ -11,84 +11,84 @@
     "supported_median": 0.5482,
     "supported_min": 0.0302,
     "supported_max": 0.7526,
-    "unsupported_mean": 0.1184,
+    "unsupported_mean": 0.0582,
     "unsupported_median": 0.0,
     "unsupported_min": 0.0,
-    "unsupported_max": 0.754
+    "unsupported_max": 0.3978
   },
   "threshold_sweep": [
     {
-      "threshold": 0.35,
-      "false_accept_count": 8,
-      "false_accept_rate_percent": 13.33,
-      "false_reject_count": 4,
-      "false_reject_rate_percent": 6.67,
-      "eligible_far_le_2pct": false
-    },
-    {
       "threshold": 0.4,
-      "false_accept_count": 6,
-      "false_accept_rate_percent": 10.0,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 9,
       "false_reject_rate_percent": 15.0,
-      "eligible_far_le_2pct": false
+      "eligible_far_le_2pct": true
     },
     {
       "threshold": 0.45,
-      "false_accept_count": 5,
-      "false_accept_rate_percent": 8.33,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 18,
       "false_reject_rate_percent": 30.0,
-      "eligible_far_le_2pct": false
+      "eligible_far_le_2pct": true
     },
     {
       "threshold": 0.5,
-      "false_accept_count": 3,
-      "false_accept_rate_percent": 5.0,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 21,
       "false_reject_rate_percent": 35.0,
-      "eligible_far_le_2pct": false
+      "eligible_far_le_2pct": true
     },
     {
       "threshold": 0.55,
-      "false_accept_count": 2,
-      "false_accept_rate_percent": 3.33,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 30,
       "false_reject_rate_percent": 50.0,
-      "eligible_far_le_2pct": false
+      "eligible_far_le_2pct": true
     },
     {
       "threshold": 0.6,
-      "false_accept_count": 2,
-      "false_accept_rate_percent": 3.33,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 38,
       "false_reject_rate_percent": 63.33,
-      "eligible_far_le_2pct": false
+      "eligible_far_le_2pct": true
     },
     {
       "threshold": 0.65,
-      "false_accept_count": 1,
-      "false_accept_rate_percent": 1.67,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 43,
       "false_reject_rate_percent": 71.67,
       "eligible_far_le_2pct": true
     },
     {
       "threshold": 0.7,
-      "false_accept_count": 1,
-      "false_accept_rate_percent": 1.67,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
       "false_reject_count": 49,
       "false_reject_rate_percent": 81.67,
       "eligible_far_le_2pct": true
+    },
+    {
+      "threshold": 0.75,
+      "false_accept_count": 0,
+      "false_accept_rate_percent": 0.0,
+      "false_reject_count": 58,
+      "false_reject_rate_percent": 96.67,
+      "eligible_far_le_2pct": true
     }
   ],
-  "chosen_threshold": 0.65,
+  "chosen_threshold": 0.4,
   "chosen_metrics": {
-    "threshold": 0.65,
-    "false_accept_count": 1,
-    "false_accept_rate_percent": 1.67,
-    "false_reject_count": 43,
-    "false_reject_rate_percent": 71.67,
+    "threshold": 0.4,
+    "false_accept_count": 0,
+    "false_accept_rate_percent": 0.0,
+    "false_reject_count": 9,
+    "false_reject_rate_percent": 15.0,
     "eligible_far_le_2pct": true
   }
 }

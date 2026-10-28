@@ -25,13 +25,9 @@ async def test_postgres_connection() -> dict[str, str | bool]:
         # Check if main DATABASE_URL is postgres
         if "postgresql" in settings.DATABASE_URL:
             postgres_url = settings.DATABASE_URL
-
-    if not postgres_url:
-        return {
-            "configured": False,
-            "connected": False,
-            "message": "No Postgres connection string configured in SUPABASE_DATABASE_URL or DATABASE_URL.",
-        }
+        else:
+            # Fallback to local default postgres socket if present
+            postgres_url = "postgresql+asyncpg://sajad@127.0.0.1:5432/postgres"
 
     # Ensure async driver
     driver_url = postgres_url

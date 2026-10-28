@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "source_script": "scripts/compare_llm_models.py",
+    "candidates_tested_per_model": 20
+  },
+  "models": {
+    "qwen/qwen3.8-27b": {
+      "total_candidates": 20,
+      "successful_calls": 11,
+      "avg_queue_wait_ms": 119.89,
+      "avg_api_time_ms": 472.27,
+      "avg_total_latency_ms": 592.16,
+      "avg_prompt_tokens": 155.3,
+      "avg_completion_tokens": 113.2,
+      "avg_reasoning_tokens": 0.0,
+      "sample_calls": [
+        {
+          "model": "qwen/qwen3.8-27b",
+          "candidate_id": "cand_000",
+          "queue_wait_ms": 0.01,
+          "api_time_ms": 658.76,
+          "total_latency_ms": 658.78,
+          "prompt_tokens": 157,
+          "completion_tokens": 108,
+          "reasoning_tokens": 0,
+          "success": true,
+          "error": null,
+          "content_length": 473
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "candidate_id": "cand_001",
+          "queue_wait_ms": 0.02,
+          "api_time_ms": 500.95,
+          "total_latency_ms": 500.97,
+          "prompt_tokens": 154,
+          "completion_tokens": 113,
+          "reasoning_tokens": 0,
+          "success": true,
+          "error": null,
+          "content_length": 521
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "candidate_id": "cand_002",
+          "queue_wait_ms": 0.02,
+          "api_time_ms": 542.71,
+          "total_latency_ms": 542.73,
+          "prompt_tokens": 156,
+          "completion_tokens": 108,
+          "reasoning_tokens": 0,
+          "success": true,
+          "error": null,
+          "content_length": 471
+        }
+      ]
+    },
+    "openai/gpt-oss-120b": {
+      "total_candidates": 20,
+      "successful_calls": 5,
+      "avg_queue_wait_ms": 1978.59,
+      "avg_api_time_ms": 1504.81,
+      "avg_total_latency_ms": 3483.4,
+      "avg_prompt_tokens": 230.6,
+      "avg_completion_tokens": 338.4,
+      "avg_reasoning_tokens": 229.4,
+      "sample_calls": [
+        {
+          "model": "openai/gpt-oss-120b",
+          "candidate_id": "cand_000",
+          "queue_wait_ms": 2888.37,
+          "api_time_ms": 1281.73,
+          "total_latency_ms": 4170.11,
+          "prompt_tokens": 232,
+          "completion_tokens": 336,
+          "reasoning_tokens": 232,
+          "success": true,
+          "error": null,
+          "content_length": 487
+        },
+        {
+          "model": "openai/gpt-oss-120b",
+          "candidate_id": "cand_001",
+          "queue_wait_ms": 2102.28,
+          "api_time_ms": 2519.78,
+          "total_latency_ms": 4622.06,
+          "prompt_tokens": 229,
+          "completion_tokens": 330,
+          "reasoning_tokens": 236,
+          "success": true,
+          "error": null,
+          "content_length": 425
+        },
+        {
+          "model": "openai/gpt-oss-120b",
+          "candidate_id": "cand_002",
+          "queue_wait_ms": 713.87,
+          "api_time_ms": 1039.82,
+          "total_latency_ms": 1753.69,
+          "prompt_tokens": 231,
+          "completion_tokens": 325,
+          "reasoning_tokens": 215,
+          "success": true,
+          "error": null,
+          "content_length": 505
+        }
+      ]
+    },
+    "openai/gpt-oss-20b": {
+      "total_candidates": 20,
+      "successful_calls": 19,
+      "avg_queue_wait_ms": 2105.94,
+      "avg_api_time_ms": 1223.81,
+      "avg_total_latency_ms": 3329.74,
+      "avg_prompt_tokens": 230.3,
+      "avg_completion_tokens": 388.6,
+      "avg_reasoning_tokens": 298.7,
+      "sample_calls": [
+        {
+          "model": "openai/gpt-oss-20b",
+          "candidate_id": "cand_000",
+          "queue_wait_ms": 3238.92,
+          "api_time_ms": 1038.71,
+          "total_latency_ms": 4277.62,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "success": false,
+          "error": "HTTP 400: {\"error\":{\"message\":\"Failed to generate JSON. Please adjust your prompt. See 'failed_generation' for more details.\",\"typ",
+          "content_length": 0
+        },
+        {
+          "model": "openai/gpt-oss-20b",
+          "candidate_id": "cand_001",
+          "queue_wait_ms": 2271.23,
+          "api_time_ms": 2031.66,
+          "total_latency_ms": 4302.89,
+          "prompt_tokens": 229,
+          "completion_tokens": 215,
+          "reasoning_tokens": 102,
+          "success": true,
+          "error": null,
+          "content_length": 498
+        },
+        {
+          "model": "openai/gpt-oss-20b",
+          "candidate_id": "cand_002",
+          "queue_wait_ms": 1277.29,
+          "api_time_ms": 2043.08,
+          "total_latency_ms": 3320.37,
+          "prompt_tokens": 231,
+          "completion_tokens": 434,
+          "reasoning_tokens": 355,
+          "success": true,
+          "error": null,
+          "content_length": 332
+        }
+      ]
+    }
+  },
+  "explanation": {
+    "contradiction_resolved": "The 793 ms figure represents the raw API network round-trip time for a single completion call on a fast model with an empty rate-limiter queue. In contrast, the 18-35 s per candidate measured in the end-to-end pipeline represents the multi-agent sequence: Explainer agent + Question Generator + Email Drafter + multi-turn Critic and Refinement loop (up to 2 rewrites) under free-tier token-bucket throttling (30 RPM, 7,000 TPM limit) where calls queue for 2-5 seconds between steps. Reasoning models also generate hundreds of chain-of-thought tokens before returning the JSON payload, multiplying the time-to-first-token and overall latency.",
+    "production_recommendation": "Use deterministic template generation immediately in the request-response loop (0 ms LLM wait, guaranteed safe). Queue LLM generation asynchronously for FastTrack and Review candidates only using llama-3.1-8b-instant or llama-3.3-70b-versatile, capping daily tokens at 50,000 to prevent quota starvation."
+  }
+}

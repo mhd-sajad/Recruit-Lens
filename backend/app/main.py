@@ -101,12 +101,13 @@ def create_app() -> FastAPI:
         return JSONResponse(
             status_code=exc.status_code,
             content={
+                "detail": exc.detail,
                 "error": {
                     "code": "HTTP_ERROR",
                     "message": exc.detail,
                     "status_code": exc.status_code,
                     "request_id": request_id_ctx.get(),
-                }
+                },
             },
         )
 

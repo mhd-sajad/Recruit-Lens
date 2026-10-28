@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "source_script": "scripts/evaluate_scoring_validity.py",
+    "resumes_count": 200,
+    "total_chunks": 1528
+  },
+  "stages": {
+    "parse": {
+      "duration_seconds": 156.35,
+      "candidates_per_second": 1.28
+    },
+    "chunk": {
+      "duration_seconds": 1.7,
+      "candidates_per_second": 117.75
+    },
+    "embed": {
+      "duration_seconds": 115.02,
+      "candidates_per_second": 1.74,
+      "chunks_per_second": 13.29
+    },
+    "retrieve": {
+      "duration_seconds": 0.0,
+      "candidates_per_second": 63961.4
+    },
+    "score": {
+      "duration_seconds": 69.48,
+      "candidates_per_second": 2.88
+    }
+  },
+  "total_wall_time_seconds": 342.55,
+  "total_throughput_candidates_per_sec": 0.58,
+  "peak_rss_mb": 447.4,
+  "rss_compliant": false,
+  "time_compliant": false
+}

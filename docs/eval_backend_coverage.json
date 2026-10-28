@@ -1,0 +1,9 @@
+{
+  "percent_covered": 80.43,
+  "covered_lines": 3415,
+  "num_statements": 4246,
+  "missing_lines": 831,
+  "test_count": 116,
+  "pass_count": 116,
+  "pass_rate_pct": 100.0
+}

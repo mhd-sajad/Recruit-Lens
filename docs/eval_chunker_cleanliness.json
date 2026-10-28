@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "source_script": "scripts/measure_chunk_cleanliness.py",
+    "chunks_directory": "data/chunks_batch1_verified",
+    "total_resumes_chunked": 300
+  },
+  "before_cleaning": {
+    "total_chunks": 2318,
+    "mojibake_chunks": 994,
+    "placeholder_chunks": 147
+  },
+  "after_cleaning": {
+    "total_chunks": 2275,
+    "mojibake_chunks": 0,
+    "placeholder_chunks": 0
+  },
+  "target_met": true
+}

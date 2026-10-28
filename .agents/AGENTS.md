@@ -30,6 +30,12 @@ The following operating principles must be followed strictly:
 - Retract in writing every figure from your last report that was not read from a saved file.
 - Never open or print .env or shell history. Do not use transcripts.
 
+13. **REPORT SCRIPT AND STRICT AUDIT RULES.**
+- `scripts/make_report.py` must exit non-zero and print `MISSING <file:key>` for any key it cannot read. It must never default to 0, [], or "not measured". A missing metric is NOT DONE.
+- No hand-written content in a report: no checklists, explanations, coverage tables or percentages typed by hand. Test status comes from pytest output saved to a file; coverage from coverage.json; route lists from the app's OpenAPI; a stated cause must cite the measurement that shows it.
+- Merge to main only after CI is green on the branch. Tag only after CI is green on main for that exact commit. Report run IDs and conclusions, including failures and reruns. A tag made on an unverified commit is not moved: make a new tag on a verified commit and record it.
+- Never edit a test to make it pass without showing the diff and the reason in the report. Never lower a quality bar to pass a test.
+
 ## Decision Principles
 - Priority order: correctness and safety, then explainability, then simplicity, then speed, then polish.
 - Prefer boring, proven, light dependencies. Free-tier hosting means small RAM and ephemeral disk.

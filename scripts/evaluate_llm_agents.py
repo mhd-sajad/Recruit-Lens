@@ -73,6 +73,7 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
 
     results = []
     pass_count = 0
+    first_attempt_pass_count = 0
     rewrite_count = 0
     block_count = 0
     total_sentences = 0
@@ -105,17 +106,39 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
 
         t0_c = time.monotonic()
         explanation, is_fb, p_tok, c_tok = await generate_candidate_explanation(packet, provider)
+
+        # First-attempt critique check
+        initial_checks = check_explanation_sentences(explanation, packet)
+        first_attempt_pass = all(c.is_supported for c in initial_checks)
+
+        # Determine primary failure reason if first attempt failed
+        failure_category = "none"
+        if not first_attempt_pass:
+            if is_fb:
+                failure_category = "llm_fallback"
+            elif any("unsupported numerical" in (c.failure_reason or "").lower() for c in initial_checks):
+                failure_category = "entity_number_check"
+            elif any("semantic similarity" in (c.failure_reason or "").lower() for c in initial_checks):
+                failure_category = "similarity_threshold"
+            elif any("citation" in (c.failure_reason or "").lower() for c in initial_checks):
+                failure_category = "schema_error"
+            else:
+                failure_category = "similarity_threshold"
+
+        # Multi-turn critique and refine loop (up to 2 rewrites)
         verified_explanation, critique_res = await run_critique_and_refine(
             explanation=explanation,
             packet=packet,
             provider=provider,
-            max_rewrites=1,
+            max_rewrites=2,
         )
         lat_ms = (time.monotonic() - t0_c) * 1000.0
 
         verdict = critique_res.verdict
         if verdict == "PASS":
             pass_count += 1
+            if first_attempt_pass:
+                first_attempt_pass_count += 1
         elif verdict == "REWRITE":
             rewrite_count += 1
         elif verdict == "BLOCK":
@@ -127,14 +150,16 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
         total_citations += c_count
 
         print(
-            f"  [{idx:02d}/{num_candidates}] {packet.candidate_id} | Tier: {packet.assigned_tier:<10} | Verdict: {verdict:<7} | Latency: {lat_ms:6.1f}ms"
+            f"  [{idx:02d}/{num_candidates}] {packet.candidate_id} | Tier: {packet.assigned_tier:<10} | Initial: {'PASS' if first_attempt_pass else 'FAIL':<4} | Final: {verdict:<7} | Latency: {lat_ms:6.1f}ms"
         )
 
         results.append(
             {
                 "candidate_id": packet.candidate_id,
                 "tier": packet.assigned_tier,
-                "verdict": verdict,
+                "first_attempt_pass": first_attempt_pass,
+                "final_verdict": verdict,
+                "failure_reason_category": failure_category,
                 "is_fallback": is_fb or critique_res.is_fallback,
                 "sentences_count": s_count,
                 "citations_count": c_count,
@@ -147,20 +172,49 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
     elapsed_s = time.monotonic() - start_eval_time
     total = len(results)
 
+    # Categorize failures across whole batch
+    failure_counts = {
+        "llm_fallback": sum(1 for r in results if r["failure_reason_category"] == "llm_fallback"),
+        "schema_error": sum(1 for r in results if r["failure_reason_category"] == "schema_error"),
+        "entity_number_check": sum(1 for r in results if r["failure_reason_category"] == "entity_number_check"),
+        "similarity_threshold": sum(1 for r in results if r["failure_reason_category"] == "similarity_threshold"),
+    }
+
+    final_pass_count = pass_count + rewrite_count
+    final_pass_rate = round((final_pass_count / total) * 100.0, 1)
+    first_pass_rate = round((first_attempt_pass_count / total) * 100.0, 1)
+
     summary = {
+        "metadata": {
+            "source_script": "scripts/evaluate_llm_agents.py",
+            "benchmark": "40-candidate multi-agent evaluation",
+            "max_rewrites": 2,
+            "target_pass_rate_pct": 60.0,
+        },
         "total_evaluated": total,
         "elapsed_seconds": round(elapsed_s, 2),
-        "pass_count": pass_count,
-        "pass_rate_pct": round((pass_count / total) * 100.0, 1),
+        "first_attempt_pass_count": first_attempt_pass_count,
+        "first_attempt_pass_rate_pct": first_pass_rate,
+        "final_pass_count": final_pass_count,
+        "final_pass_rate_pct": final_pass_rate,
+        "pass_count": final_pass_count,
+        "pass_rate_pct": final_pass_rate,
         "rewrite_count": rewrite_count,
         "rewrite_rate_pct": round((rewrite_count / total) * 100.0, 1),
         "block_count": block_count,
         "block_rate_pct": round((block_count / total) * 100.0, 1),
+        "failure_breakdown": failure_counts,
         "avg_sentences_per_summary": round(total_sentences / max(1, total), 2),
         "avg_citations_per_summary": round(total_citations / max(1, total), 2),
         "avg_latency_ms": round((elapsed_s * 1000.0) / max(1, total), 1),
+        "pass_target_met": final_pass_rate >= 60.0,
         "candidate_results": results,
     }
+
+    with open(DOCS_DIR / "eval_llm_agents_batch4.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+    with open(DOCS_DIR / "eval_llm_agents_report.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
 
     return summary
 

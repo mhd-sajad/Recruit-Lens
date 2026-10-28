@@ -10,11 +10,11 @@ export type EvaluationStage = "screened" | "shortlisted" | "interview_scheduled"
 /** Audit log event entry. */
 export interface AuditLogResponse {
   id: string;
-  user_id: string | any;
+  user_id: string | null;
   action: string;
   target_type: string;
   target_id: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   created_at: string;
 }
 
@@ -25,8 +25,8 @@ export interface BackgroundTaskResponse {
   status: string;
   progress: number;
   total: number;
-  error_message: string | any;
-  result: Record<string, any>;
+  error_message: string | null;
+  result: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -49,8 +49,8 @@ export interface EmailDraftResponse {
   subject: string;
   body: string;
   status: string;
-  sent_at: string | any;
-  error_message: string | any;
+  sent_at: string | null;
+  error_message: string | null;
   created_at: string;
 }
 
@@ -65,8 +65,8 @@ export interface EmailSendResponse {
 
 /** Recruiter edit to an email draft. */
 export interface EmailUpdateRequest {
-  subject?: string | any;
-  body?: string | any;
+  subject?: string | null;
+  body?: string | null;
 }
 
 /** Comprehensive candidate dossier with scores, breakdown, explanation, questions, drafts. */
@@ -80,11 +80,11 @@ export interface EvaluationDetailResponse {
   tier: string;
   confidence: number;
   stage: string;
-  breakdown: Record<string, any>;
-  explanation: Record<string, any>;
+  breakdown: Record<string, unknown>;
+  explanation: Record<string, unknown>;
   explanation_type: string;
-  interview_questions: Record<string, any>;
-  email_drafts: Record<string, any>;
+  interview_questions: Record<string, unknown>;
+  email_drafts: Record<string, unknown>;
   evidence_hash: string;
   llm_generated: boolean;
   created_at: string;
@@ -142,7 +142,7 @@ export interface JobCreateRequest {
   title: string;
   department?: string;
   raw_text: string;
-  weights?: Record<string, any> | any;
+  weights?: Record<string, unknown> | null;
 }
 
 /** Job requisition response representation. */
@@ -152,8 +152,8 @@ export interface JobResponse {
   title: string;
   department: string;
   raw_text: string;
-  requirements_json: Record<string, any>;
-  weights_json: Record<string, any>;
+  requirements_json: Record<string, unknown>;
+  weights_json: Record<string, unknown>;
   status: string;
   created_at: string;
   updated_at: string;
@@ -161,11 +161,11 @@ export interface JobResponse {
 
 /** Job requisition update payload. */
 export interface JobUpdateRequest {
-  title?: string | any;
-  department?: string | any;
-  raw_text?: string | any;
-  weights?: Record<string, any> | any;
-  status?: string | any;
+  title?: string | null;
+  department?: string | null;
+  raw_text?: string | null;
+  weights?: Record<string, unknown> | null;
+  status?: string | null;
 }
 
 /** Refresh token request payload. */
@@ -181,7 +181,7 @@ export interface ResumeResponse {
   file_hash: string;
   status: string;
   storage_backend: string;
-  signed_url?: string | any;
+  signed_url?: string | null;
   created_at: string;
 }
 
@@ -231,14 +231,14 @@ export interface ValidationError {
   loc: string | number[];
   msg: string;
   type: string;
-  input?: any;
-  ctx?: Record<string, any>;
+  input?: unknown;
+  ctx?: Record<string, unknown>;
 }
 
 /** What-if sensitivity simulation request. */
 export interface WhatIfRequest {
-  weights?: Record<string, any> | any;
-  min_years_experience?: number | any;
+  weights?: Record<string, unknown> | null;
+  min_years_experience?: number | null;
 }
 
 /** What-if calculation result without mutating database. */
@@ -248,5 +248,5 @@ export interface WhatIfResponse {
   original_tier: string;
   new_tier: string;
   score_delta: number;
-  breakdown: Record<string, any>;
+  breakdown: Record<string, unknown>;
 }

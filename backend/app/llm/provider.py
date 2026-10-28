@@ -361,8 +361,27 @@ class GroqProvider(BaseLLMProvider):
                     # If rate limited (429) or temporary server error (503), back off with jitter
                     if resp.status_code in (429, 503):
                         retry_after = float(resp.headers.get("retry-after", "2.0"))
+                        chat_pool = [
+                            "qwen/qwen3.8-27b",
+                            "openai/gpt-oss-120b",
+                            "openai/gpt-oss-20b",
+                        ]
+                        if retry_after > 15.0:
+                            current_idx = (
+                                chat_pool.index(self.model) if self.model in chat_pool else -1
+                            )
+                            next_model = chat_pool[(current_idx + 1) % len(chat_pool)]
+                            if next_model != self.model and attempt < len(chat_pool):
+                                logger.warning(
+                                    f"Groq 429 on model {self.model} with long cooldown ({retry_after:.1f}s). Switching to fallback model {next_model}"
+                                )
+                                self.model = next_model
+                                payload["model"] = self.model
+                                continue
+
+                        # Cap backoff to max 15.0s to respect performance bounds
                         jitter = random.uniform(0.5, 1.5)
-                        backoff = max(retry_after, (2**attempt) * jitter)
+                        backoff = min(15.0, max(retry_after, (2**attempt) * jitter))
                         logger.warning(
                             f"Groq {resp.status_code} on model {self.model}. Backing off {backoff:.2f}s (attempt {attempt + 1})"
                         )

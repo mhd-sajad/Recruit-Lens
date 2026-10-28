@@ -6,10 +6,21 @@
   },
   "metrics": {
     "parse_failures": 0,
-    "clean_titles_extracted": 99,
-    "structured_title_rate": 99.0,
     "real_gate_recall": 100.0,
     "non_resumes_rejected": 20,
-    "gate_specificity": 100.0
+    "gate_specificity": 100.0,
+    "dev_set_holdout_30": {
+      "dataset_label": "dev set (tuned on)",
+      "csv_file": "data/parser_holdout_30.csv",
+      "total_rows": 153,
+      "clean_titles_O": 99,
+      "noisy_titles_C": 14,
+      "wrong_missing_titles_W": 8,
+      "fragments_not_jobs_F": 32,
+      "real_job_entries": 121,
+      "clean_rate_on_real_percent": 81.82,
+      "recoverable_rate_on_real_percent": 93.39,
+      "fragment_rate_overall_percent": 20.92
+    }
   }
 }

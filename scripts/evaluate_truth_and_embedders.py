@@ -443,14 +443,18 @@ if __name__ == "__main__":
 
     # Full execution
     all_chunks = get_or_create_new_chunks()
-    remapped_gold = remap_gold_pairs(all_chunks)
-    pool_stats = compute_pool_statistics(remapped_gold, all_chunks)
-
-    # Save remapped pairs
     remap_path = Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_remapped_v2.json"
-    with open(remap_path, "w", encoding="utf-8") as f:
-        json.dump(remapped_gold, f, indent=2)
-    print(f"Saved {len(remapped_gold)} remapped pairs to {remap_path}")
+    if remap_path.exists():
+        with open(remap_path, encoding="utf-8") as f:
+            remapped_gold = json.load(f)
+        print(f"Loaded {len(remapped_gold)} verified remapped pairs from {remap_path}")
+    else:
+        remapped_gold = remap_gold_pairs(all_chunks)
+        with open(remap_path, "w", encoding="utf-8") as f:
+            json.dump(remapped_gold, f, indent=2)
+        print(f"Saved {len(remapped_gold)} remapped pairs to {remap_path}")
+
+    pool_stats = compute_pool_statistics(remapped_gold, all_chunks)
 
     # Now evaluate within-resume and corpus-wide for MiniLM
     print("\n--- EVALUATING MINILM (WITHIN-RESUME & CORPUS-WIDE) ---")
@@ -486,6 +490,8 @@ if __name__ == "__main__":
     for m in ["bm25", "dense", "hybrid"]:
         res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_minilm, mode=m)
         corpus_results["within_resume"][f"{m}_minilm" if m != "bm25" else "bm25"] = res_within
+        if m == "bm25":
+            corpus_results["within_resume"]["bm25_minilm"] = res_within
         print(
             f"Within-Resume [{m.upper()}]: Hit@1={res_within['hit1'] * 100:.1f}%, Hit@3={res_within['hit3'] * 100:.1f}%, Hit@5={res_within['hit5'] * 100:.1f}%, Hit@10={res_within['hit10'] * 100:.1f}%, MRR={res_within['mrr']:.4f}"
         )
@@ -495,6 +501,8 @@ if __name__ == "__main__":
     for m in ["bm25", "dense", "hybrid"]:
         res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_minilm, mode=m)
         corpus_results["corpus_wide"][f"{m}_minilm" if m != "bm25" else "bm25"] = res_corpus
+        if m == "bm25":
+            corpus_results["corpus_wide"]["bm25_minilm"] = res_corpus
         print(
             f"Corpus-Wide [{m.upper()} MiniLM]: Hit@1={res_corpus['hit1'] * 100:.1f}%, Hit@3={res_corpus['hit3'] * 100:.1f}%, Hit@5={res_corpus['hit5'] * 100:.1f}%, Hit@10={res_corpus['hit10'] * 100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )

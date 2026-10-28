@@ -22,7 +22,7 @@ EMPLOYER_PATTERN = re.compile(
     r"\b(?:at|for|from|by)\s+([A-Z][A-Za-z0-9]+(?:\s+[A-Z][A-Za-z0-9]+)?)\b"
 )
 TECH_PATTERN = re.compile(
-    r"\b(Rust|Erlang|GitLab|ArgoCD|Flink|RabbitMQ|Vue|Elm|DynamoDB|Solidity|SvelteKit|SolidJS|Jax|DeepSpeed|Puppet|Chef|Datadog|Dynatrace|OpenStack|Tanzu|Azure|Bicep)\b",
+    r"\b(Rust|Erlang|GitLab|ArgoCD|Flink|RabbitMQ|Vue|Elm|DynamoDB|Solidity|SvelteKit|SolidJS|Jax|DeepSpeed|Puppet|Chef|Datadog|Dynatrace|OpenStack|Tanzu|Azure|Bicep|Oracle|Cassandra|CoreML|TensorRT|iOS|O'Reilly|CVPR|PyTorch|TensorFlow|AWS|GCP|Snowflake|dbt|Quantum|Scrum|SAFe)\b",
     re.IGNORECASE,
 )
 METRIC_UNIT_PATTERN = re.compile(
@@ -832,7 +832,7 @@ def evaluate_harder_calibration() -> None:
         f"Unsupported Claims: Mean={np.mean(unsupported_sims):.4f}, Median={np.median(unsupported_sims):.4f}, Min={np.min(unsupported_sims):.4f}, Max={np.max(unsupported_sims):.4f}"
     )
 
-    thresholds = [0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70]
+    thresholds = [0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75]
     calibration_table = []
     chosen_threshold = 0.50
 
@@ -878,7 +878,7 @@ def evaluate_harder_calibration() -> None:
         f"\nRecommended Calibration Threshold: tau = {chosen_threshold} (False Accept Rate <= 2.0%)"
     )
 
-    # Save to docs/eval_critic_calibration.json
+    # Save to docs/eval_critic_calibration.json and docs/eval_critic_benchmark_harder.json
     docs_dir = Path(__file__).resolve().parent.parent / "docs"
     docs_dir.mkdir(parents=True, exist_ok=True)
     report = {
@@ -906,7 +906,9 @@ def evaluate_harder_calibration() -> None:
 
     with open(docs_dir / "eval_critic_calibration.json", "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
-    print(f"Saved critic calibration report to {docs_dir / 'eval_critic_calibration.json'}")
+    with open(docs_dir / "eval_critic_benchmark_harder.json", "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
+    print(f"Saved critic calibration reports to {docs_dir / 'eval_critic_benchmark_harder.json'}")
 
 
 if __name__ == "__main__":

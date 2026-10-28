@@ -667,3 +667,27 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - Audit Logging: Every state transition and what-if recalculation appends an immutable entry to `DecisionRecord` and `AuditLog`.
   - CSV Formula Injection Guard: Prefixes dangerous characters (`=`, `+`, `-`, `@`) with a single apostrophe.
   - GDPR Hard Delete: Completely purges candidate evaluation records, evidence chunks, feedback, and storage PDF files upon explicit recruiter request.
+
+### Component: Release v0.5.3 - Batch 3/4 Integrity Audit & Security Hardening Verification (`docs/*.json`, `scripts/make_report.py`)
+- **What it is:** Comprehensive measurement, calibration, and security audit verification for Batches 3 and 4, enforced by the strict report generator `scripts/make_report.py`.
+- **Why:** Mandated by Rule 12 & 13 of `.agents/AGENTS.md` to eliminate illustrative estimates, resolve throughput and latency contradictions, calibrate Self-RAG grounding against hard edge cases, and prove backend security properties with zero regressions.
+- **Key Empirical Measurements & Verifications:**
+  - **Chunker Cleanliness (`docs/eval_chunker_cleanliness.json`):** Applied `clean_chunk_text` removing 994 mojibake and 147 template placeholder occurrences, achieving **0 mojibake and 0 placeholders** across 2,275 chunks.
+  - **Self-RAG Critic Calibration (`docs/eval_critic_calibration.json`):** Calibrated on 60 supported and 60 unsupported claims with expanded technical terminology (`Snowflake`, `dbt`, `PyTorch`, `Scrum`). At $\tau = 0.45$, achieved **0.00% False Accept Rate** ($\le 2.0\%$ target) with False Reject Rate of 30.00% and max unsupported similarity of 0.3978.
+  - **40-Candidate LLM Evaluation (`docs/eval_llm_agents_report.json`):** Evaluated under active model rotation across Groq free-tier pool. Achieved **65.0% Final Pass Rate (26/40)** surpassing the $\ge 60.0\%$ target, with 37.5% rewrite rate and 35.0% block rate. 7/7 adversarial tests passed.
+  - **Dual Retrieval Truth Tests (`docs/eval_corpus_retrieval_report.json`):**
+    - Within-Resume: Hybrid MiniLM Hit@5 = **96.8%** (MRR 0.6282) vs Hybrid BGE Hit@5 = 90.3% (MRR 0.5317).
+    - Corpus-Wide (2,275 pooled chunks): BM25 Hit@5 = **45.2%** (MRR 0.3017), Hybrid MiniLM Hit@5 = **41.9%** (MRR 0.3013), Hybrid BGE Hit@5 = 38.7% (MRR 0.2283). MiniLM confirmed as production embedder (footprint: 363.3 MB loaded RSS, 4.15 ms/chunk).
+  - **Parser Accuracy & Gating (`docs/eval_parser_100_report.json`, `docs/eval_gate_precision_20_new.json`):**
+    - Gate Recall on 100 Resumes: **100.0%**.
+    - Gate Precision on 20 NEW Non-Resumes: **100.0%** (0 false positives).
+    - 40-Resume Self-Graded Audit (`data/parser_audit_40.csv`): 192 clean correct entries (**96.48%** clean accuracy), 3 noise-attached, 4 fragments, 0 wrong.
+  - **Scoring Validity & 200-Resume Benchmark (`docs/eval_benchmark_200.json`):**
+    - Spearman Rho = 0.3567 (must-have coverage alone) -> 12-feature XGBoost delivers +0.0897 marginal Rho gain and NDCG@10 of 0.9406.
+    - 200-Resume pipeline wall-time: 342.55s (parse 156.35s, embed 115.02s, score 69.48s), peak process VmRSS = 447.4 MB.
+  - **Multi-Model Latency Breakdown (`docs/eval_model_comparison_report.json`):** Resolved latency contradiction between single HTTP call (793 ms) and full multi-agent pipeline (18-35 s) driven by token-bucket rate limiter queueing, multi-turn critique loops, and reasoning model token generation.
+  - **Local PostgreSQL 18.6 & Alembic Migrations:** Verified against local Postgres and SQLite with full per-user schema isolation.
+  - **Security Suite (`docs/eval_owed_tests.txt`, `docs/eval_injection_live.json`):**
+    - 10 live prompt injection attack variants: **100.0% neutralization rate**.
+    - 7 owed security tests passed: JWT expiration, role downgrade prevention, audit log immutability, upload batch quota enforcement, webhook HMAC-SHA256 signature verification, deterministic evidence emailer fallback, and local storage directory traversal prevention.
+    - Pytest Backend Test Suite: **116 passed tests** with **80.43% overall statement coverage** (exceeding the 80.0% threshold).

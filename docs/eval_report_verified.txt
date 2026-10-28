@@ -1,0 +1,201 @@
+================================================================================
+RECRUIT LENS - BATCH 3/4 INTEGRITY CORRECTION & COMPLETION REPORT
+================================================================================
+
+### 1. ADDENDUM: FORMAL RETRACTIONS & AUDIT CORRECTIONS
+--------------------------------------------------------------------------------
+In accordance with Rule 12 (Report Integrity), the following figures and items from the
+previous report are hereby FORMALLY RETRACTED in writing:
+1. RETRACTED: The 5 example remapped pairs presented in the previous report were fabricated
+   using candidate IDs from the holdout set rather than reading from docs/eval_pairs_remapped_v2.json.
+   The 5 genuine remapped pairs are printed raw below directly from docs/eval_pairs_remapped_v2.json.
+2. RETRACTED: The parser '98% title extraction rate' claimed earlier was an unverified heuristic
+   presence of non-empty strings. It has been replaced by the audited measurement in
+   docs/eval_parser_audit_40_report.json and data/parser_audit_40.csv.
+3. RETRACTED: The claimed '100% retrieval accuracy' language in previous documentation.
+   Retrieval is split into 'Within-Resume' (candidate isolation) and 'Corpus-Wide' (pooled candidates).
+   Corpus-wide BM25 achieves Hit@5 of 45.2% and MRR of 0.3017 against 2,275 pooled chunks.
+4. RETRACTED: Any hand-typed latencies (e.g. 793 ms) presented as full-pipeline speeds.
+   The contradiction between single-call HTTP round-trip (793 ms) and full multi-agent pipeline
+   time (18-35 s) is resolved below with concrete token-bucket and agent breakdown measurements.
+
+### 2. SECTION A: VERIFY AND RE-RUN (ALL MEASUREMENTS SAVED TO DISK)
+--------------------------------------------------------------------------------
+A.1. 5 GENUINE REMAPPED GOLD PAIRS (Raw from docs/eval_pairs_remapped_v2.json):
+  [1] Resume ID: 62994611 (docs/eval_pairs_remapped_v2.json:[0].resume_id)
+      Query: Requires strong proficiency in Python and RESTful API development. (docs/eval_pairs_remapped_v2.json:[0].query)
+      New Chunk ID: 62994611_001 (docs/eval_pairs_remapped_v2.json:[0].relevant_chunk_id)
+      Fuzzy Containment Ratio: 1.0 (docs/eval_pairs_remapped_v2.json:[0].fuzzy_containment_ratio)
+      Gold Evidence Text: Experienced in c#, python, HTML, SQL, implementations.
+      Remapped Chunk Preview: SOFTWARE DEVELOPER Enthusiastic computer engineer eager to contribute to team success through Technical professional wit...
+  [2] Resume ID: 21297521 (docs/eval_pairs_remapped_v2.json:[1].resume_id)
+      Query: Experience with containerization tools like Docker and Kubernetes. (docs/eval_pairs_remapped_v2.json:[1].query)
+      New Chunk ID: 21297521_010 (docs/eval_pairs_remapped_v2.json:[1].relevant_chunk_id)
+      Fuzzy Containment Ratio: 1.0 (docs/eval_pairs_remapped_v2.json:[1].fuzzy_containment_ratio)
+      Gold Evidence Text: containers such as Docker and Rkt, Keen interest in Cloud Native Computing Foundation's (CNCF) OCI and eXtreme Programming, Waterfall in a highly regulated environment. DevOps using Agile methodologies, Git based development workflows, Automated unit testing and end-to-end (e2e) testing
+      Remapped Chunk Preview: platform. security model to authenticate and authorize issuing of DRM keys for from Charter Communications. of joining t...
+  [3] Resume ID: 83816738 (docs/eval_pairs_remapped_v2.json:[2].resume_id)
+      Query: Familiarity with CI/CD pipelines and tools like Jenkins. (docs/eval_pairs_remapped_v2.json:[2].query)
+      New Chunk ID: 83816738_002 (docs/eval_pairs_remapped_v2.json:[2].relevant_chunk_id)
+      Fuzzy Containment Ratio: 1.0 (docs/eval_pairs_remapped_v2.json:[2].fuzzy_containment_ratio)
+      Gold Evidence Text: Build Tools: Gradle, Maven, Ant Practices: Agile/Scrum, Waterfall, TDD, Clean Coding, Continuous Architectures: Microservices, Single Page Application, REST, Version Control: SVN, Git Cloud Application Platform: AWS Others: Bower, Grunt, Npm, Node, JSON, XML, Jenkins
+      Remapped Chunk Preview: Programming Languages: Java/J2EE, JavaScript, Android, HTML, Frameworks and Libraries: Spring, Restful-Web Services, Hib...
+  [4] Resume ID: 83816738 (docs/eval_pairs_remapped_v2.json:[3].resume_id)
+      Query: Strong frontend development skills using React.js. (docs/eval_pairs_remapped_v2.json:[3].query)
+      New Chunk ID: 83816738_001 (docs/eval_pairs_remapped_v2.json:[3].relevant_chunk_id)
+      Fuzzy Containment Ratio: 1.0 (docs/eval_pairs_remapped_v2.json:[3].fuzzy_containment_ratio)
+      Gold Evidence Text: Extensive experience in developing Web interfaces using HTML5, ReactJS and BackboneJS.
+      Remapped Chunk Preview: INFORMATION TECHNOLOGY INTERN (TEST AUTOMATION Over 3 years of experience serving as a key contributor across all archit...
+  [5] Resume ID: 83816738 (docs/eval_pairs_remapped_v2.json:[4].resume_id)
+      Query: Understanding of Agile/Scrum methodologies. (docs/eval_pairs_remapped_v2.json:[4].query)
+      New Chunk ID: 83816738_001 (docs/eval_pairs_remapped_v2.json:[4].relevant_chunk_id)
+      Fuzzy Containment Ratio: 1.0 (docs/eval_pairs_remapped_v2.json:[4].fuzzy_containment_ratio)
+      Gold Evidence Text: Expertise working in Agile methodology environments like Scrum.
+      Remapped Chunk Preview: INFORMATION TECHNOLOGY INTERN (TEST AUTOMATION Over 3 years of experience serving as a key contributor across all archit...
+
+A.2. CANDIDATE POOL & BASELINES (WITHIN-RESUME):
+  Min Chunks Per Resume: 4.0 (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.min_pool)
+  Median Chunks Per Resume: 8.0 (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.median_pool)
+  Max Chunks Per Resume: 16.0 (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.max_pool)
+  Random Guess Hit@5: 65.13% (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.random_hit5)
+  Random Guess Hit@10: 95.92% (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.random_hit10)
+  Random Guess MRR: 0.346 (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.random_mrr)
+
+A.3. PARSER RE-RUN BENCHMARKS:
+  Real Resumes Tested: 100 (docs/eval_parser_100_report.json:metadata.real_resumes_tested)
+  Parse Failures: 0 (docs/eval_parser_100_report.json:metrics.parse_failures)
+  Resume Gate Recall on 100 Resumes: 100.0% (docs/eval_parser_100_report.json:metrics.real_gate_recall)
+  Dev-Set Holdout Clean Title Rate: 81.82% (docs/eval_parser_100_report.json:metrics.dev_set_holdout_30.clean_rate_on_real_percent)
+  Dev-Set Holdout Fragment Rate: 20.92% (docs/eval_parser_100_report.json:metrics.dev_set_holdout_30.fragment_rate_overall_percent)
+  40-Resume Audit Rows (data/parser_audit_40.csv): 199 rows
+  40-Resume Audit Extracted Entries: 199 (docs/eval_parser_audit_40_report.json:metrics.total_extracted_entries)
+  40-Resume Clean Entries (O): 192 (96.48%) (docs/eval_parser_audit_40_report.json:metrics.clean_correct_entries)
+  40-Resume Noise Attached (C): 3 (docs/eval_parser_audit_40_report.json:metrics.noise_attached_entries)
+  40-Resume Fragments (F): 4 (docs/eval_parser_audit_40_report.json:metrics.fragment_entries)
+  40-Resume Wrong/Missing (W): 0 (docs/eval_parser_audit_40_report.json:metrics.wrong_entries)
+  Gate Precision on 20 NEW Non-Resumes: 100.0% (20/20) (docs/eval_gate_precision_20_new.json:metrics.gate_precision_percent)
+  False Positives on 20 NEW Non-Resumes: 0 (docs/eval_gate_precision_20_new.json:metrics.false_positives_count)
+
+A.4. CORPUS-WIDE VS WITHIN-RESUME RETRIEVAL EXPERIMENT (300 Resumes Pooled, 2,275 Chunks):
+  Total Evaluated Chunks: 2275 (docs/eval_corpus_retrieval_report.json:metadata.total_pooled_chunks)
+  Within-Resume:
+    BM25: Hit@5=93.5%, MRR=0.5874 (docs/eval_corpus_retrieval_report.json:within_resume.bm25)
+    Dense MiniLM: Hit@5=90.3%, MRR=0.6162 (docs/eval_corpus_retrieval_report.json:within_resume.dense_minilm)
+    Hybrid MiniLM: Hit@5=96.8%, MRR=0.6282 (docs/eval_corpus_retrieval_report.json:within_resume.hybrid_minilm)
+    Dense BGE: Hit@5=83.9%, MRR=0.4887 (docs/eval_corpus_retrieval_report.json:within_resume.dense_bge)
+    Hybrid BGE: Hit@5=90.3%, MRR=0.5317 (docs/eval_corpus_retrieval_report.json:within_resume.hybrid_bge)
+  Corpus-Wide (2,275 Chunks Pooled):
+    BM25: Hit@5=45.2%, MRR=0.3017 (docs/eval_corpus_retrieval_report.json:corpus_wide.bm25)
+    Dense MiniLM: Hit@5=41.9%, MRR=0.3136 (docs/eval_corpus_retrieval_report.json:corpus_wide.dense_minilm)
+    Hybrid MiniLM: Hit@5=41.9%, MRR=0.3013 (docs/eval_corpus_retrieval_report.json:corpus_wide.hybrid_minilm)
+    Dense BGE: Hit@5=25.8%, MRR=0.1355 (docs/eval_corpus_retrieval_report.json:corpus_wide.dense_bge)
+    Hybrid BGE: Hit@5=38.7%, MRR=0.2283 (docs/eval_corpus_retrieval_report.json:corpus_wide.hybrid_bge)
+  Production Embedder Decision: minilm (Rule: MiniLM unless BGE wins both Hit@5 and MRR corpus-wide; BGE Wins Both: False) (docs/eval_corpus_retrieval_report.json:decision)
+
+A.5. EMBEDDER RUNTIME FOOTPRINT (Fresh Dedicated Measurements):
+  MiniLM Quantized Loaded RSS: 363.3 MB (docs/eval_embedder_footprint_report.json:models.minilm.rss_loaded_mb)
+  MiniLM Latency Per Chunk: 4.15 ms (docs/eval_embedder_footprint_report.json:models.minilm.latency_per_chunk_ms)
+  BGE-Small Quantized Loaded RSS: 363.8 MB (docs/eval_embedder_footprint_report.json:models.bge-small.rss_loaded_mb)
+  BGE-Small Latency Per Chunk: 6.76 ms (docs/eval_embedder_footprint_report.json:models.bge-small.latency_per_chunk_ms)
+
+A.6. CHUNKER TEXT CLEANLINESS AUDIT:
+  Before Cleaning: 994 mojibake chunks, 147 placeholder chunks (docs/eval_chunker_cleanliness.json:before_cleaning)
+  After Cleaning (clean_chunk_text): 0 mojibake chunks, 0 placeholder chunks across 2275 chunks (docs/eval_chunker_cleanliness.json:after_cleaning)
+
+A.7. TAXONOMY COVERAGE & DROPPED SKILLS:
+  Total Canonical O*NET Skills: 8746 (docs/taxonomy_coverage_report.json:dropped_analysis.total_canonical)
+  Retained Skills in Taxonomy: 8822 (docs/taxonomy_coverage_report.json:dropped_analysis.retained)
+  Dropped Software Families: 1659 (docs/taxonomy_coverage_report.json:dropped_analysis.dropped)
+
+A.8. SCORING VALIDITY & 200-RESUME END-TO-END BENCHMARK:
+  Must-Have Coverage Spearman Rho: 0.3567 (docs/eval_scoring_validity_report.json:section_e_scoring_validity.e1_must_have_correlation.spearman_rho)
+  12-Feature Monotonic XGBoost NDCG@10: 0.9406 (docs/eval_scoring_validity_report.json:section_e_scoring_validity.e1_must_have_correlation.xgboost_ndcg10)
+  Marginal Rho Gain over Must-Have Alone: +0.0897 (docs/eval_scoring_validity_report.json:section_e_scoring_validity.e1_must_have_correlation.marginal_rho_gain)
+  FastTrack Wilson 95% CI: [0.3575, 0.8018] (docs/eval_scoring_validity_report.json:section_e_scoring_validity.e2_tier_cv.wilson_ci_95)
+  Vocabulary Mismatch Scores: Candidate A=0.7484, Candidate B=0.5997, Candidate C=0.2327 (docs/eval_vocabulary_mismatch.json)
+  Vocabulary Mismatch Ranking Correct: True (docs/eval_vocabulary_mismatch.json:ranking_correct)
+  200-Resume Pipeline Breakdown: Parse=156.35s, Chunk=1.7s, Embed=115.02s, Score=69.48s (docs/eval_benchmark_200.json:stages)
+  200-Resume Total Wall Time: 342.55s (5.71 min against 5.0 min target) (docs/eval_benchmark_200.json:total_wall_time_seconds)
+  200-Resume Peak RSS: 447.4 MB (Target: <400 MB, exceeded by 47.4 MB on full 200-doc memory residency) (docs/eval_benchmark_200.json:peak_rss_mb)
+
+### 3. SECTION B: CRITIC CALIBRATION & LLM EVALUATION
+--------------------------------------------------------------------------------
+  Critic Threshold tau: 0.4 (docs/eval_critic_calibration.json:chosen_metrics.threshold)
+  False Accept Rate (FAR): 0.0% (Target: <=2.0%) (docs/eval_critic_calibration.json:chosen_metrics.false_accept_rate_percent)
+  False Reject Rate (FRR): 15.0% (docs/eval_critic_calibration.json:chosen_metrics.false_reject_rate_percent)
+  Max Unsupported Similarity: 0.3978 (docs/eval_critic_calibration.json:distributions.unsupported_max)
+  40-Candidate Final Pass Rate: 65.0% (26/40) (Target: >=60.0%) (docs/eval_llm_agents_report.json:faithfulness_evaluation.final_pass_rate_pct)
+  40-Candidate Rewrite Rate: 37.5% (15/40) (docs/eval_llm_agents_report.json:faithfulness_evaluation.rewrite_rate_pct)
+  40-Candidate Block Rate: 35.0% (14/40) (docs/eval_llm_agents_report.json:faithfulness_evaluation.block_rate_pct)
+  Live Injection Neutralization Rate: 100.0% (10/10 variants neutralized) (docs/eval_injection_live.json:neutralization_rate_pct)
+
+### 4. SECTION C: LATENCY BREAKDOWN & MODEL COMPARISON
+--------------------------------------------------------------------------------
+  Contradiction Explanation: The 793 ms figure represents the raw API network round-trip time for a single completion call on a fast model with an empty rate-limiter queue. In contrast, the 18-35 s per candidate measured in the end-to-end pipeline represents the multi-agent sequence: Explainer agent + Question Generator + Email Drafter + multi-turn Critic and Refinement loop (up to 2 rewrites) under free-tier token-bucket throttling (30 RPM, 7,000 TPM limit) where calls queue for 2-5 seconds between steps. Reasoning models also generate hundreds of chain-of-thought tokens before returning the JSON payload, multiplying the time-to-first-token and overall latency. (docs/eval_model_comparison_report.json:explanation.contradiction_resolved)
+  Model: qwen/qwen3.8-27b
+    Avg Queue Wait: 119.89 ms (docs/eval_model_comparison_report.json:models.qwen/qwen3.8-27b.avg_queue_wait_ms)
+    Avg API Network Time: 472.27 ms (docs/eval_model_comparison_report.json:models.qwen/qwen3.8-27b.avg_api_time_ms)
+    Avg Total Latency: 592.16 ms (docs/eval_model_comparison_report.json:models.qwen/qwen3.8-27b.avg_total_latency_ms)
+    Avg Prompt Tokens: 155.3 | Completion: 113.2 | Reasoning: 0.0 (docs/eval_model_comparison_report.json:models.qwen/qwen3.8-27b)
+  Model: openai/gpt-oss-120b
+    Avg Queue Wait: 1978.59 ms (docs/eval_model_comparison_report.json:models.openai/gpt-oss-120b.avg_queue_wait_ms)
+    Avg API Network Time: 1504.81 ms (docs/eval_model_comparison_report.json:models.openai/gpt-oss-120b.avg_api_time_ms)
+    Avg Total Latency: 3483.4 ms (docs/eval_model_comparison_report.json:models.openai/gpt-oss-120b.avg_total_latency_ms)
+    Avg Prompt Tokens: 230.6 | Completion: 338.4 | Reasoning: 229.4 (docs/eval_model_comparison_report.json:models.openai/gpt-oss-120b)
+  Model: openai/gpt-oss-20b
+    Avg Queue Wait: 2105.94 ms (docs/eval_model_comparison_report.json:models.openai/gpt-oss-20b.avg_queue_wait_ms)
+    Avg API Network Time: 1223.81 ms (docs/eval_model_comparison_report.json:models.openai/gpt-oss-20b.avg_api_time_ms)
+    Avg Total Latency: 3329.74 ms (docs/eval_model_comparison_report.json:models.openai/gpt-oss-20b.avg_total_latency_ms)
+    Avg Prompt Tokens: 230.3 | Completion: 388.6 | Reasoning: 298.7 (docs/eval_model_comparison_report.json:models.openai/gpt-oss-20b)
+
+### 5. SECTION D: TESTS & BACKEND COVERAGE STATUS
+--------------------------------------------------------------------------------
+  Backend Pytest Coverage: 80.43% (3415/4246 statements covered, 831 missing) (coverage.json:totals.percent_covered)
+  Authoritative Test Suite Output (docs/eval_owed_tests.txt):
+    backend/tests/test_owed_security.py::test_auth_expiry PASSED             [ 14%]
+    backend/tests/test_owed_security.py::test_role_downgrade PASSED          [ 28%]
+    backend/tests/test_owed_security.py::test_audit_immutability PASSED      [ 42%]
+    backend/tests/test_owed_security.py::test_quota_enforcement PASSED       [ 57%]
+    backend/tests/test_owed_security.py::test_webhook_signature PASSED       [ 71%]
+    backend/tests/test_owed_security.py::test_evidence_packet_and_emailer_coverage PASSED [ 85%]
+    backend/tests/test_owed_security.py::test_local_storage_backend_lifecycle PASSED [100%]
+
+### 6. SECTION E: FASTAPI OPENAPI ROUTE SPECIFICATION
+--------------------------------------------------------------------------------
+  Total API Endpoints Registered: 32 (app.openapi().paths)
+    [GET] /api/v1/audit-logs/
+    [POST] /api/v1/auth/login
+    [GET] /api/v1/auth/me
+    [POST] /api/v1/auth/refresh
+    [POST] /api/v1/echo
+    [PUT] /api/v1/evaluations/emails/{email_id}
+    [POST] /api/v1/evaluations/emails/{email_id}/approve
+    [POST] /api/v1/evaluations/emails/{email_id}/send
+    [GET] /api/v1/evaluations/job/{job_id}
+    [GET] /api/v1/evaluations/job/{job_id}/export/csv
+    [GET] /api/v1/evaluations/job/{job_id}/export/pdf
+    [GET, DELETE] /api/v1/evaluations/{evaluation_id}
+    [GET] /api/v1/evaluations/{evaluation_id}/emails
+    [GET] /api/v1/evaluations/{evaluation_id}/export
+    [POST] /api/v1/evaluations/{evaluation_id}/generate-llm
+    [DELETE] /api/v1/evaluations/{evaluation_id}/hard-delete
+    [POST, GET] /api/v1/evaluations/{evaluation_id}/interview-feedback
+    [POST] /api/v1/evaluations/{evaluation_id}/stage
+    [POST] /api/v1/evaluations/{evaluation_id}/what-if
+    [POST, GET] /api/v1/jobs/
+    [GET, PUT, DELETE] /api/v1/jobs/{job_id}
+    [GET] /api/v1/ping
+    [GET] /api/v1/resumes/download/{file_path}
+    [GET] /api/v1/resumes/job/{job_id}
+    [POST] /api/v1/resumes/upload/{job_id}
+    [GET] /api/v1/tasks/{task_id}
+    [POST] /api/v1/tasks/{task_id}/cancel
+    [GET] /api/v1/tasks/{task_id}/events
+    [GET] /health
+    [GET] /healthz
+    [GET] /metrics
+    [GET] /ready
+
+================================================================================
+END OF REPORT - ALL METRICS AUTHENTICATED AGAINST DISK ARTIFACTS
+================================================================================

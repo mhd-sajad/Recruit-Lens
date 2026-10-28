@@ -261,7 +261,9 @@ async def run_comparison() -> dict[str, Any]:
     out_file.parent.mkdir(parents=True, exist_ok=True)
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
-    print(f"\nSaved model comparison report to {out_file}")
+    with open(out_file.parent / "eval_llm_comparison_batch4.json", "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2)
+    print(f"\nSaved model comparison reports to {out_file} and docs/eval_llm_comparison_batch4.json")
     return report
 
 

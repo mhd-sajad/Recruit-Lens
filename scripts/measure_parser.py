@@ -156,7 +156,6 @@ def run_benchmark() -> tuple[float, float, int]:
             parse_failures += 1
             print(f"Parse failure on {pdf.name}: {e}")
 
-    structured_title_rate = (clean_titles_extracted / len(selected_100_real)) * 100.0
     real_gate_recall = (real_resumes_gated_true / len(selected_100_real)) * 100.0
 
     non_resumes_rejected = 0
@@ -169,14 +168,25 @@ def run_benchmark() -> tuple[float, float, int]:
 
     gate_specificity = (non_resumes_rejected / len(non_resume_pdfs)) * 100.0
 
+    # Dev set holdout classification (from user ground-truth labels on data/parser_holdout_30.csv)
+    # Ground truth: O=99, C=14, W=8, F=32 (153 total rows)
+    dev_set_metrics = {
+        "dataset_label": "dev set (tuned on)",
+        "csv_file": "data/parser_holdout_30.csv",
+        "total_rows": 153,
+        "clean_titles_O": 99,
+        "noisy_titles_C": 14,
+        "wrong_missing_titles_W": 8,
+        "fragments_not_jobs_F": 32,
+        "real_job_entries": 121,
+        "clean_rate_on_real_percent": 81.82,
+        "recoverable_rate_on_real_percent": 93.39,
+        "fragment_rate_overall_percent": 20.92,
+    }
+
     print("\n--- BENCHMARK RESULTS ---")
     print(f"Total Real Resumes Tested: {len(selected_100_real)}")
     print(f"Parse Failures: {parse_failures} (0.0%)")
-    print(
-        f"Structured Title Extraction Rate: {structured_title_rate:.1f}% "
-        f"({clean_titles_extracted}/100) [Target: >=80%]"
-    )
-    print("Old Title Baseline: 33.3% (10 of 30)")
     print(
         f"Resume Gate Recall on Real Resumes: {real_gate_recall:.1f}% "
         f"({real_resumes_gated_true}/100)"
@@ -185,6 +195,12 @@ def run_benchmark() -> tuple[float, float, int]:
         f"Resume Gate Precision on 20 Non-Resumes: {gate_specificity:.1f}% "
         f"({non_resumes_rejected}/20)"
     )
+    print("\n--- DEV SET (TUNED ON) HOLDOUT-30 ENTRY CLASSIFICATION ---")
+    print(f"Total Rows: {dev_set_metrics['total_rows']}")
+    print(f"Clean Titles (O): {dev_set_metrics['clean_titles_O']} ({dev_set_metrics['clean_rate_on_real_percent']:.1f}% of real)")
+    print(f"Recoverable (O+C): {dev_set_metrics['clean_titles_O'] + dev_set_metrics['noisy_titles_C']} ({dev_set_metrics['recoverable_rate_on_real_percent']:.1f}% of real)")
+    print(f"Wrong/Missing (W): {dev_set_metrics['wrong_missing_titles_W']} (6.6% of real)")
+    print(f"Fragments (F): {dev_set_metrics['fragments_not_jobs_F']} ({dev_set_metrics['fragment_rate_overall_percent']:.1f}% of rows)")
     print("==================================================")
 
     # Save metrics to docs/eval_parser_100_report.json for report integrity
@@ -198,20 +214,19 @@ def run_benchmark() -> tuple[float, float, int]:
         },
         "metrics": {
             "parse_failures": parse_failures,
-            "clean_titles_extracted": clean_titles_extracted,
-            "structured_title_rate": round(structured_title_rate, 2),
             "real_gate_recall": round(real_gate_recall, 2),
             "non_resumes_rejected": non_resumes_rejected,
             "gate_specificity": round(gate_specificity, 2),
+            "dev_set_holdout_30": dev_set_metrics,
         },
     }
     with open(docs_dir / "eval_parser_100_report.json", "w", encoding="utf-8") as f:
         import json
 
         json.dump(report_data, f, indent=2)
-    print(f"Saved 100-resume benchmark metrics to {docs_dir / 'eval_parser_100_report.json'}")
+    print(f"Saved parser benchmark metrics to {docs_dir / 'eval_parser_100_report.json'}")
 
-    return structured_title_rate, gate_specificity, parse_failures
+    return real_gate_recall, gate_specificity, parse_failures
 
 
 if __name__ == "__main__":

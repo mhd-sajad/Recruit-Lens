@@ -7,7 +7,12 @@
   },
   "metrics": {
     "total_extracted_entries": 199,
-    "plausible_correct_entries": 198,
-    "accuracy_estimate_percent": 99.5
+    "clean_correct_entries": 192,
+    "noise_attached_entries": 3,
+    "fragment_entries": 4,
+    "wrong_entries": 0,
+    "self_graded_clean_accuracy_percent": 96.48,
+    "self_graded_recoverable_accuracy_percent": 97.99,
+    "accuracy_estimate_percent": 96.48
   }
 }

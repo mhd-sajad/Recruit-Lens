@@ -467,6 +467,45 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
         f"to {t_embed / len(all_chunks) * 1000:.2f} ms/chunk."
     )
 
+    benchmark_200 = {
+        "metadata": {
+            "source_script": "scripts/evaluate_scoring_validity.py",
+            "resumes_count": len(eval_pdfs),
+            "total_chunks": len(all_chunks),
+        },
+        "stages": {
+            "parse": {
+                "duration_seconds": round(t_parse, 2),
+                "candidates_per_second": round(len(eval_pdfs) / max(0.001, t_parse), 2),
+            },
+            "chunk": {
+                "duration_seconds": round(t_chunk, 2),
+                "candidates_per_second": round(len(eval_pdfs) / max(0.001, t_chunk), 2),
+            },
+            "embed": {
+                "duration_seconds": round(t_embed, 2),
+                "candidates_per_second": round(len(eval_pdfs) / max(0.001, t_embed), 2),
+                "chunks_per_second": round(len(all_chunks) / max(0.001, t_embed), 2),
+            },
+            "retrieve": {
+                "duration_seconds": round(t_retrieve, 2),
+                "candidates_per_second": round(len(eval_pdfs) / max(0.001, t_retrieve), 2),
+            },
+            "score": {
+                "duration_seconds": round(t_score, 2),
+                "candidates_per_second": round(len(eval_pdfs) / max(0.001, t_score), 2),
+            },
+        },
+        "total_wall_time_seconds": round(total_wall_time, 2),
+        "total_throughput_candidates_per_sec": round(len(eval_pdfs) / max(0.001, total_wall_time), 2),
+        "peak_rss_mb": round(rss_peak, 1),
+        "rss_compliant": rss_peak < 400.0,
+        "time_compliant": total_wall_time < 300.0,
+    }
+    with open(repo_root / "docs" / "eval_benchmark_200.json", "w", encoding="utf-8") as f:
+        json.dump(benchmark_200, f, indent=2)
+    print(f"Saved 200-resume benchmark metrics to {repo_root / 'docs' / 'eval_benchmark_200.json'}")
+
     return {
         "resumes_count": len(eval_pdfs),
         "total_chunks": len(all_chunks),

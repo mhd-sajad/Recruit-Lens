@@ -20,8 +20,9 @@ TYPE_MAPPING = {
     "integer": "number",
     "number": "number",
     "boolean": "boolean",
-    "array": "any[]",
-    "object": "Record<string, any>",
+    "null": "null",
+    "array": "unknown[]",
+    "object": "Record<string, unknown>",
 }
 
 
@@ -35,6 +36,8 @@ def python_type_to_ts(schema: dict, openapi_schemas: dict) -> str:
         return " | ".join(types)
 
     t = schema.get("type")
+    if t == "null":
+        return "null"
     if t == "array":
         items = schema.get("items", {})
         item_ts = python_type_to_ts(items, openapi_schemas)
@@ -45,7 +48,7 @@ def python_type_to_ts(schema: dict, openapi_schemas: dict) -> str:
         return TYPE_MAPPING[t]
     elif "enum" in schema:
         return " | ".join(f'"{e}"' for e in schema["enum"])
-    return "any"
+    return "unknown"
 
 
 def generate_ts():

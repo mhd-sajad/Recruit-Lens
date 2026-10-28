@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas import JobCreateRequest, JobResponse, JobUpdateRequest
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_role
 from app.core.jd_requirements import extract_job_requirements
 from app.core.taxonomy import SkillTaxonomy
 from app.db.models import AuditLog, Job, User
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"])
 @router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 async def create_job(
     payload: JobCreateRequest,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(require_role(["recruiter", "admin"]))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> JobResponse:
     """Create job requisition, extract structured requirements, and initialize scoring weights."""

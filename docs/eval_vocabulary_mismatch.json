@@ -1,6 +1,6 @@
 {
   "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
-  "timestamp": "2026-10-28T11:38:28Z",
+  "timestamp": "2026-10-28T15:15:32Z",
   "candidate_a_synonyms": {
     "exact_matches_without_taxonomy": [
       "docker",

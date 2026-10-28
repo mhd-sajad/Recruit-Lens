@@ -6,19 +6,19 @@
   "models": {
     "minilm": {
       "model_type": "minilm",
-      "rss_initial_mb": 425.8,
-      "rss_loaded_mb": 425.8,
-      "rss_after_mb": 425.9,
-      "init_time_s": 0.7,
-      "latency_per_chunk_ms": 2.46
+      "rss_initial_mb": 340.6,
+      "rss_loaded_mb": 363.3,
+      "rss_after_mb": 363.5,
+      "init_time_s": 0.75,
+      "latency_per_chunk_ms": 4.15
     },
     "bge-small": {
       "model_type": "bge-small",
-      "rss_initial_mb": 425.9,
-      "rss_loaded_mb": 425.9,
-      "rss_after_mb": 425.9,
-      "init_time_s": 0.45,
-      "latency_per_chunk_ms": 4.86
+      "rss_initial_mb": 363.8,
+      "rss_loaded_mb": 363.8,
+      "rss_after_mb": 363.9,
+      "init_time_s": 0.66,
+      "latency_per_chunk_ms": 6.76
     }
   },
   "chosen_production_model": "minilm"

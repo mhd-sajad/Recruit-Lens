@@ -88,6 +88,7 @@ def generate_audit_csv() -> tuple[Path, float]:
                         "start_date": "NONE",
                         "end_date": "NONE",
                         "heuristic_assessment": "EMPTY_EXTRACT",
+                        "correctness": "FRAGMENT",
                     }
                 )
                 total_entries += 1
@@ -105,21 +106,39 @@ def generate_audit_csv() -> tuple[Path, float]:
                     else exp_section_text[:400].replace("\n", " -- ")
                 )
 
-                # Heuristic plausibility check
+                # Strict self-graded correctness evaluation
                 t_lower = title.strip().lower()
-                is_plausible = True
-                if len(title.strip()) < 3:
-                    is_plausible = False
-                elif t_lower in known_bad_words:
-                    is_plausible = False
-                elif t_lower.startswith("company name"):
-                    is_plausible = False
-
-                if is_plausible:
-                    plausible_correct_entries += 1
-                    assessment = "PLAUSIBLE_VALID"
-                else:
+                if not title.strip() or title.strip() in ("NONE", "ERROR"):
+                    correctness = "FRAGMENT"
                     assessment = "IMPLAUSIBLE_NOISY"
+                elif any(
+                    k in t_lower
+                    for k in [
+                        "salary:",
+                        "usd per hour",
+                        "hours per week",
+                        "supervisor:",
+                        "responsibilities",
+                        "duties",
+                    ]
+                ):
+                    correctness = "FRAGMENT"
+                    assessment = "IMPLAUSIBLE_NOISY"
+                elif t_lower.startswith("company name"):
+                    correctness = "FRAGMENT"
+                    assessment = "IMPLAUSIBLE_NOISY"
+                elif "company name" in t_lower or "--" in title:
+                    correctness = "NOISE_ATTACHED"
+                    assessment = "PLAUSIBLE_VALID"
+                elif len(title.strip()) < 3:
+                    correctness = "FRAGMENT"
+                    assessment = "IMPLAUSIBLE_NOISY"
+                else:
+                    correctness = "CORRECT"
+                    assessment = "PLAUSIBLE_VALID"
+
+                if correctness in ("CORRECT", "NOISE_ATTACHED"):
+                    plausible_correct_entries += 1
 
                 rows.append(
                     {
@@ -130,6 +149,7 @@ def generate_audit_csv() -> tuple[Path, float]:
                         "start_date": start,
                         "end_date": end,
                         "heuristic_assessment": assessment,
+                        "correctness": correctness,
                     }
                 )
         except Exception as e:
@@ -143,6 +163,7 @@ def generate_audit_csv() -> tuple[Path, float]:
                     "start_date": "ERROR",
                     "end_date": "ERROR",
                     "heuristic_assessment": "ERROR",
+                    "correctness": "FRAGMENT",
                 }
             )
             total_entries += 1
@@ -157,16 +178,25 @@ def generate_audit_csv() -> tuple[Path, float]:
             "start_date",
             "end_date",
             "heuristic_assessment",
+            "correctness",
         ]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
-    accuracy_est = (plausible_correct_entries / max(1, total_entries)) * 100.0
+    clean_count = sum(1 for r in rows if r["correctness"] == "CORRECT")
+    noise_count = sum(1 for r in rows if r["correctness"] == "NOISE_ATTACHED")
+    frag_count = sum(1 for r in rows if r["correctness"] == "FRAGMENT")
+    wrong_count = sum(1 for r in rows if r["correctness"] == "WRONG")
+
+    clean_acc = (clean_count / max(1, total_entries)) * 100.0
+    recov_acc = ((clean_count + noise_count) / max(1, total_entries)) * 100.0
+
     print(f"\nWrote {len(rows)} experience rows from 40 test resumes to: {csv_path}")
     print(
-        f"Heuristic Correctness Estimate (self-graded): {plausible_correct_entries}/{total_entries} entries ({accuracy_est:.1f}%)"
+        f"Self-Graded Audit: Clean={clean_count} ({clean_acc:.1f}%), Noise-Attached={noise_count}, Fragments={frag_count}, Wrong={wrong_count}"
     )
+    print(f"Total Recoverable Accuracy: {recov_acc:.1f}%")
 
     # Save to docs/eval_parser_audit_40_report.json
     docs_dir = Path(__file__).resolve().parent.parent / "docs"
@@ -180,8 +210,13 @@ def generate_audit_csv() -> tuple[Path, float]:
         },
         "metrics": {
             "total_extracted_entries": total_entries,
-            "plausible_correct_entries": plausible_correct_entries,
-            "accuracy_estimate_percent": round(accuracy_est, 2),
+            "clean_correct_entries": clean_count,
+            "noise_attached_entries": noise_count,
+            "fragment_entries": frag_count,
+            "wrong_entries": wrong_count,
+            "self_graded_clean_accuracy_percent": round(clean_acc, 2),
+            "self_graded_recoverable_accuracy_percent": round(recov_acc, 2),
+            "accuracy_estimate_percent": round(clean_acc, 2),
         },
     }
     import json
@@ -190,6 +225,7 @@ def generate_audit_csv() -> tuple[Path, float]:
         json.dump(audit_report, f, indent=2)
     print(f"Saved 40-resume audit report to {docs_dir / 'eval_parser_audit_40_report.json'}")
 
+    accuracy_est = clean_acc
     return csv_path, accuracy_est
 
 
@@ -407,4 +443,5 @@ def create_and_eval_non_resumes() -> dict[str, Any]:
 
 if __name__ == "__main__":
     generate_audit_csv()
+    create_and_eval_non_resumes()
     create_and_eval_non_resumes()
