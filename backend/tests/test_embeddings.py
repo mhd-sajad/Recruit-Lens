@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-
 from app.core.embeddings import ONNXEmbedder, _l2_normalize, _mean_pooling
 
 

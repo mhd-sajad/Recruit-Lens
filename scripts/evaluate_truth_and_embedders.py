@@ -26,12 +26,12 @@ import numpy as np
 backend_dir = Path(__file__).resolve().parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
+import bm25s  # noqa: E402
 from app.core.embeddings import ONNXEmbedder  # noqa: E402
 from app.core.models import ResumeChunk  # noqa: E402
 from app.core.pdf_parser import parse_resume_pdf  # noqa: E402
 from app.core.resume_chunker import chunk_resume  # noqa: E402
 from app.core.retrieval import CandidateIsolatedIndex  # noqa: E402
-import bm25s  # noqa: E402
 
 
 def get_current_rss_mb() -> float:
@@ -71,9 +71,7 @@ def harmonic_mean_rr(n: int) -> float:
 
 def get_or_create_new_chunks() -> dict[str, list[ResumeChunk]]:
     """Parse all 300 resumes and generate fresh chunks."""
-    cache_dir = (
-        Path(__file__).resolve().parent.parent / "data" / "chunks_batch1_verified"
-    )
+    cache_dir = Path(__file__).resolve().parent.parent / "data" / "chunks_batch1_verified"
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     resumes_dir = Path(__file__).resolve().parent.parent / "data" / "resumes_sample_300"
@@ -140,9 +138,7 @@ def remap_gold_pairs(
     all_new_chunks: dict[str, list[ResumeChunk]],
 ) -> list[dict[str, Any]]:
     """Remap 34 gold pairs to new chunk IDs based on text overlap."""
-    gold_path = (
-        Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_locked.json"
-    )
+    gold_path = Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_locked.json"
     old_chunks_dir = Path(__file__).resolve().parent.parent / "data" / "chunks"
 
     with open(gold_path, encoding="utf-8") as f:
@@ -169,9 +165,7 @@ def remap_gold_pairs(
 
         new_chunks = all_new_chunks.get(rid, [])
         if not new_chunks:
-            remapped_pairs.append(
-                {**pair, "remapped_chunk_id": old_cid, "jaccard": 0.0}
-            )
+            remapped_pairs.append({**pair, "remapped_chunk_id": old_cid, "jaccard": 0.0})
             continue
 
         best_cid = new_chunks[0].chunk_id
@@ -265,9 +259,7 @@ def run_within_resume_eval(
     for pair in gold_pairs:
         rid = pair["relevant_chunk_id"].split("_")[0]
         if rid not in indices and rid in all_chunks:
-            indices[rid] = CandidateIsolatedIndex(
-                rid, all_chunks[rid], embedder=embedder
-            )
+            indices[rid] = CandidateIsolatedIndex(rid, all_chunks[rid], embedder=embedder)
 
     hit1, hit3, hit5, hit10, mrr = [], [], [], [], []
 
@@ -341,9 +333,7 @@ class CorpusWideGlobalIndex:
     ) -> list[str]:
         if mode == "bm25":
             query_tokens = bm25s.tokenize([query], show_progress=False)
-            indices, _ = self.bm25_retriever.retrieve(
-                query_tokens, k=top_k, show_progress=False
-            )
+            indices, _ = self.bm25_retriever.retrieve(query_tokens, k=top_k, show_progress=False)
             return [self.chunks[int(idx)].chunk_id for idx in indices[0]]
         elif mode == "dense":
             q_vec = self.embedder.embed_query(query)
@@ -363,18 +353,12 @@ class CorpusWideGlobalIndex:
             rrf_scores: dict[int, float] = {}
             for rank_0, idx in enumerate(bm25_indices[0]):
                 idx_int = int(idx)
-                rrf_scores[idx_int] = rrf_scores.get(idx_int, 0.0) + (
-                    1.0 / (rrf_k + rank_0 + 1)
-                )
+                rrf_scores[idx_int] = rrf_scores.get(idx_int, 0.0) + (1.0 / (rrf_k + rank_0 + 1))
             for rank_0, idx in enumerate(dense_indices):
                 idx_int = int(idx)
-                rrf_scores[idx_int] = rrf_scores.get(idx_int, 0.0) + (
-                    1.0 / (rrf_k + rank_0 + 1)
-                )
+                rrf_scores[idx_int] = rrf_scores.get(idx_int, 0.0) + (1.0 / (rrf_k + rank_0 + 1))
 
-            sorted_items = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[
-                :top_k
-            ]
+            sorted_items = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
             return [self.chunks[idx].chunk_id for idx, _ in sorted_items]
 
 
@@ -463,9 +447,7 @@ if __name__ == "__main__":
     pool_stats = compute_pool_statistics(remapped_gold, all_chunks)
 
     # Save remapped pairs
-    remap_path = (
-        Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_remapped_v2.json"
-    )
+    remap_path = Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_remapped_v2.json"
     with open(remap_path, "w", encoding="utf-8") as f:
         json.dump(remapped_gold, f, indent=2)
     print(f"Saved {len(remapped_gold)} remapped pairs to {remap_path}")
@@ -475,9 +457,7 @@ if __name__ == "__main__":
     embedder_minilm = ONNXEmbedder(model_type="minilm")
 
     for m in ["bm25", "dense", "hybrid"]:
-        res_within = run_within_resume_eval(
-            remapped_gold, all_chunks, embedder_minilm, mode=m
-        )
+        res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_minilm, mode=m)
         print(
             f"Within-Resume [{m.upper()}]: Hit@1={res_within['hit1']*100:.1f}%, Hit@3={res_within['hit3']*100:.1f}%, Hit@5={res_within['hit5']*100:.1f}%, Hit@10={res_within['hit10']*100:.1f}%, MRR={res_within['mrr']:.4f}"
         )
@@ -490,9 +470,7 @@ if __name__ == "__main__":
     # Build MiniLM Global Index
     global_index_minilm = CorpusWideGlobalIndex(pooled_chunks, embedder_minilm)
     for m in ["bm25", "dense", "hybrid"]:
-        res_corpus = run_corpus_wide_eval_with_index(
-            remapped_gold, global_index_minilm, mode=m
-        )
+        res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_minilm, mode=m)
         print(
             f"Corpus-Wide [{m.upper()} MiniLM]: Hit@1={res_corpus['hit1']*100:.1f}%, Hit@3={res_corpus['hit3']*100:.1f}%, Hit@5={res_corpus['hit5']*100:.1f}%, Hit@10={res_corpus['hit10']*100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )
@@ -501,18 +479,14 @@ if __name__ == "__main__":
     embedder_bge = ONNXEmbedder(model_type="bge-small")
 
     for m in ["dense", "hybrid"]:
-        res_within = run_within_resume_eval(
-            remapped_gold, all_chunks, embedder_bge, mode=m
-        )
+        res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_bge, mode=m)
         print(
             f"Within-Resume [{m.upper()} BGE]: Hit@1={res_within['hit1']*100:.1f}%, Hit@3={res_within['hit3']*100:.1f}%, Hit@5={res_within['hit5']*100:.1f}%, Hit@10={res_within['hit10']*100:.1f}%, MRR={res_within['mrr']:.4f}"
         )
 
     global_index_bge = CorpusWideGlobalIndex(pooled_chunks, embedder_bge)
     for m in ["dense", "hybrid"]:
-        res_corpus = run_corpus_wide_eval_with_index(
-            remapped_gold, global_index_bge, mode=m
-        )
+        res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_bge, mode=m)
         print(
             f"Corpus-Wide [{m.upper()} BGE]: Hit@1={res_corpus['hit1']*100:.1f}%, Hit@3={res_corpus['hit3']*100:.1f}%, Hit@5={res_corpus['hit5']*100:.1f}%, Hit@10={res_corpus['hit10']*100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )

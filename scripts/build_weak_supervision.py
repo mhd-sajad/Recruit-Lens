@@ -28,9 +28,7 @@ from app.core.pdf_parser import parse_resume_pdf
 from app.core.skill_extractor import extract_skills_from_parsed_resume
 from app.core.taxonomy import SkillTaxonomy
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("weak_supervision")
 
 # Occupational family taxonomy mapping 24 resume folders to macro families
@@ -286,14 +284,7 @@ def calculate_weak_supervision_target(
     years_penalty = 0.10 if years_gap < -2.0 else 0.0
     edu_bonus = 0.05 * edu_match
 
-    score = (
-        0.20
-        + 0.50 * must_cov
-        + 0.15 * nice_cov
-        + 0.10 * title_sim
-        + edu_bonus
-        - years_penalty
-    )
+    score = 0.20 + 0.50 * must_cov + 0.15 * nice_cov + 0.10 * title_sim + edu_bonus - years_penalty
     score = min(1.0, max(0.15, score))
 
     # Tier assignment with strict must-have override:
@@ -351,16 +342,12 @@ def main() -> None:
         for cat_dir in cat_dirs:
             cat_name = cat_dir.name
             family = RESUME_CATEGORY_FAMILIES.get(cat_name, "General")
-            pdf_files = sorted(cat_dir.glob("*.pdf"))[
-                :5
-            ]  # Take 5 balanced per category
+            pdf_files = sorted(cat_dir.glob("*.pdf"))[:5]  # Take 5 balanced per category
 
             for pdf_path in pdf_files:
                 try:
                     parsed = parse_resume_pdf(pdf_path)
-                    skills = extract_skills_from_parsed_resume(
-                        parsed, taxonomy=taxonomy
-                    )
+                    skills = extract_skills_from_parsed_resume(parsed, taxonomy=taxonomy)
                     candidate_cache.append(
                         {
                             "resume_id": parsed.resume_id,
@@ -383,9 +370,7 @@ def main() -> None:
 
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(serializable_cache, f)
-        logger.info(
-            "Saved %d parsed resumes to %s", len(serializable_cache), cache_path
-        )
+        logger.info("Saved %d parsed resumes to %s", len(serializable_cache), cache_path)
 
     logger.info("Loaded %d candidates for weak supervision.", len(candidate_cache))
 
@@ -411,9 +396,7 @@ def main() -> None:
 
             if len(jds_by_family[family]) < 10:  # Up to 10 JDs per family
                 job_id = row.get("job_id", f"job_{len(jds_by_family[family])}")
-                reqs = extract_job_requirements(
-                    desc, job_id=job_id, title=title, taxonomy=taxonomy
-                )
+                reqs = extract_job_requirements(desc, job_id=job_id, title=title, taxonomy=taxonomy)
                 # Keep JDs with at least some skills identified
                 if len(reqs.must_have_skills) + len(reqs.nice_to_have_skills) >= 2:
                     jds_by_family[family].append(
@@ -484,9 +467,7 @@ def main() -> None:
                     candidate_skills=cand_skills,
                     taxonomy=taxonomy,
                 )
-                score, tier = calculate_weak_supervision_target(
-                    "hard_negative", feats, False
-                )
+                score, tier = calculate_weak_supervision_target("hard_negative", feats, False)
                 pairs.append(
                     {
                         "pair_id": f"pair_{pair_id_counter:05d}",
@@ -506,9 +487,7 @@ def main() -> None:
                 pair_id_counter += 1
 
         # Easy negative pairs: completely disjoint families
-        disjoint_families = [
-            f for f in jds_by_family if f != cand_family and f not in adj_families
-        ]
+        disjoint_families = [f for f in jds_by_family if f != cand_family and f not in adj_families]
         disjoint_jds: list[dict[str, Any]] = []
         for df in disjoint_families:
             disjoint_jds.extend(jds_by_family.get(df, []))
@@ -522,9 +501,7 @@ def main() -> None:
                     candidate_skills=cand_skills,
                     taxonomy=taxonomy,
                 )
-                score, tier = calculate_weak_supervision_target(
-                    "easy_negative", feats, False
-                )
+                score, tier = calculate_weak_supervision_target("easy_negative", feats, False)
                 pairs.append(
                     {
                         "pair_id": f"pair_{pair_id_counter:05d}",
@@ -552,12 +529,8 @@ def main() -> None:
             "total_jobs": total_jds,
             "pair_distribution": {
                 "positive": sum(1 for p in pairs if p["pair_type"] == "positive"),
-                "hard_negative": sum(
-                    1 for p in pairs if p["pair_type"] == "hard_negative"
-                ),
-                "easy_negative": sum(
-                    1 for p in pairs if p["pair_type"] == "easy_negative"
-                ),
+                "hard_negative": sum(1 for p in pairs if p["pair_type"] == "hard_negative"),
+                "easy_negative": sum(1 for p in pairs if p["pair_type"] == "easy_negative"),
             },
             "tier_distribution": {
                 "3_strong_fit": sum(1 for p in pairs if p["target_tier"] == 3),
@@ -585,9 +558,7 @@ def main() -> None:
         output_path,
     )
     logger.info("Distribution: %s", dataset_summary["metadata"]["pair_distribution"])
-    logger.info(
-        "Tier Distribution: %s", dataset_summary["metadata"]["tier_distribution"]
-    )
+    logger.info("Tier Distribution: %s", dataset_summary["metadata"]["tier_distribution"])
 
 
 if __name__ == "__main__":

@@ -58,9 +58,7 @@ def bootstrap_ci(
 
 
 def load_gold_pairs() -> list[dict[str, Any]]:
-    eval_file = (
-        Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_locked.json"
-    )
+    eval_file = Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_locked.json"
     with open(eval_file, encoding="utf-8") as f:
         return json.load(f)
 
@@ -203,13 +201,9 @@ def run_benchmarks() -> None:
 
     candidate_chunks = load_candidate_chunks(gold_pairs)
     total_chunks = sum(len(c) for c in candidate_chunks.values())
-    print(
-        f"Loaded {total_chunks} chunks across {len(candidate_chunks)} evaluation resumes."
-    )
+    print(f"Loaded {total_chunks} chunks across {len(candidate_chunks)} evaluation resumes.")
 
-    all_chunk_texts = [c.text for chunks in candidate_chunks.values() for c in chunks][
-        :100
-    ]
+    all_chunk_texts = [c.text for chunks in candidate_chunks.values() for c in chunks][:100]
 
     # ---------------------------------------------------------
     # PART 1: Model Benchmark (MiniLM-L6 vs BGE-small)
@@ -233,17 +227,11 @@ def run_benchmarks() -> None:
     minilm_total_time = time.time() - t0
     minilm_latency_per_chunk_ms = (minilm_total_time / len(all_chunk_texts)) * 1000.0
 
-    minilm_dense_res = evaluate_engine(
-        minilm, gold_pairs, candidate_chunks, mode="dense"
-    )
-    minilm_hybrid_res = evaluate_engine(
-        minilm, gold_pairs, candidate_chunks, mode="hybrid"
-    )
+    minilm_dense_res = evaluate_engine(minilm, gold_pairs, candidate_chunks, mode="dense")
+    minilm_hybrid_res = evaluate_engine(minilm, gold_pairs, candidate_chunks, mode="hybrid")
 
     print(f"  MiniLM Load Time: {minilm_load_time:.2f}s")
-    print(
-        f"  MiniLM Post-load RSS: {minilm_rss:.1f} MB (Delta: +{minilm_rss - base_rss:.1f} MB)"
-    )
+    print(f"  MiniLM Post-load RSS: {minilm_rss:.1f} MB (Delta: +{minilm_rss - base_rss:.1f} MB)")
     print(f"  MiniLM Latency / Chunk: {minilm_latency_per_chunk_ms:.2f} ms")
     h5_m = minilm_dense_res["hit5"] * 100
     mrr_m = minilm_dense_res["mrr"]
@@ -268,9 +256,7 @@ def run_benchmarks() -> None:
     bge_hybrid_res = evaluate_engine(bge, gold_pairs, candidate_chunks, mode="hybrid")
 
     print(f"  BGE-small Load Time: {bge_load_time:.2f}s")
-    print(
-        f"  BGE-small Post-load RSS: {bge_rss:.1f} MB (Delta: +{bge_rss - base_rss:.1f} MB)"
-    )
+    print(f"  BGE-small Post-load RSS: {bge_rss:.1f} MB (Delta: +{bge_rss - base_rss:.1f} MB)")
     print(f"  BGE-small Latency / Chunk: {bge_latency_per_chunk_ms:.2f} ms")
     h5_b = bge_dense_res["hit5"] * 100
     mrr_b = bge_dense_res["mrr"]
@@ -305,15 +291,9 @@ def run_benchmarks() -> None:
     print("\n[PART 2] TRUTH TEST ON 34 GOLD PAIRS (BM25 vs Dense vs Hybrid)")
     print("-" * 70)
 
-    bm25_res = evaluate_engine(
-        winning_embedder, gold_pairs, candidate_chunks, mode="bm25"
-    )
-    dense_res = evaluate_engine(
-        winning_embedder, gold_pairs, candidate_chunks, mode="dense"
-    )
-    hybrid_res = evaluate_engine(
-        winning_embedder, gold_pairs, candidate_chunks, mode="hybrid"
-    )
+    bm25_res = evaluate_engine(winning_embedder, gold_pairs, candidate_chunks, mode="bm25")
+    dense_res = evaluate_engine(winning_embedder, gold_pairs, candidate_chunks, mode="dense")
+    hybrid_res = evaluate_engine(winning_embedder, gold_pairs, candidate_chunks, mode="hybrid")
 
     # Bootstrap 95% Confidence Intervals
     bm25_h5_ci = bootstrap_ci(bm25_res["hit5_list"])
@@ -325,12 +305,8 @@ def run_benchmarks() -> None:
     hybrid_h5_ci = bootstrap_ci(hybrid_res["hit5_list"])
     hybrid_mrr_ci = bootstrap_ci(hybrid_res["mrr_list"])
 
-    print(
-        "\n| Metric      | BM25 (Sparse)      | Dense (Embedder)   | Hybrid (RRF k=60)  |"
-    )
-    print(
-        "|:------------|:-------------------|:-------------------|:-------------------|"
-    )
+    print("\n| Metric      | BM25 (Sparse)      | Dense (Embedder)   | Hybrid (RRF k=60)  |")
+    print("|:------------|:-------------------|:-------------------|:-------------------|")
     row_h1 = (
         f"| Hit@1       | {bm25_res['hit1'] * 100:6.1f}%            | "
         f"{dense_res['hit1'] * 100:6.1f}%            | "
@@ -370,9 +346,7 @@ def run_benchmarks() -> None:
     h_mrr_str = f"[{hybrid_mrr_ci[0]:.4f}, {hybrid_mrr_ci[1]:.4f}]"
     print(f"| MRR 95% CI  | {b_mrr_str:<18} | {d_mrr_str:<18} | {h_mrr_str:<18} |")
 
-    print(
-        "\n* Note: N=34 is small. Wide confidence intervals reflect sample size variance."
-    )
+    print("\n* Note: N=34 is small. Wide confidence intervals reflect sample size variance.")
 
     # Category breakdown for Hybrid
     print("\n--- PER-CATEGORY BREAKDOWN (Hybrid Engine) ---")
@@ -387,9 +361,7 @@ def run_benchmarks() -> None:
     # ---------------------------------------------------------
     # PART 3: Cheap Improvements Evaluation (at most 3)
     # ---------------------------------------------------------
-    print(
-        "\n[PART 3] TESTING CHEAP IMPROVEMENTS (Keep only if BOTH Hit@5 and MRR improve)"
-    )
+    print("\n[PART 3] TESTING CHEAP IMPROVEMENTS (Keep only if BOTH Hit@5 and MRR improve)")
     print("-" * 70)
 
     baseline_h5 = hybrid_res["hit5"]
@@ -437,9 +409,7 @@ def run_benchmarks() -> None:
 
     print("\n--- HYBRID VS BM25 VERDICT ---")
     if hybrid_res["mrr"] >= bm25_res["mrr"]:
-        print(
-            "Verdict: Hybrid matches or outperforms BM25. Hybrid serves as primary engine."
-        )
+        print("Verdict: Hybrid matches or outperforms BM25. Hybrid serves as primary engine.")
     else:
         print("Verdict: BM25 outperforms Hybrid. BM25 will serve as primary signal.")
 

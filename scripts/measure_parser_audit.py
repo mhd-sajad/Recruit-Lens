@@ -20,6 +20,7 @@ import random
 import sys
 from pathlib import Path
 from typing import Any
+
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
@@ -80,9 +81,7 @@ def generate_audit_csv() -> tuple[Path, float]:
                 rows.append(
                     {
                         "resume_id": rid,
-                        "raw_experience_lines": exp_section_text[:400].replace(
-                            "\n", " -- "
-                        ),
+                        "raw_experience_lines": exp_section_text[:400].replace("\n", " -- "),
                         "extracted_title": "NONE",
                         "extracted_company": "NONE",
                         "start_date": "NONE",
@@ -353,9 +352,7 @@ def create_and_eval_non_resumes() -> dict[str, Any]:
     )
     print(f"  False Positives: {len(false_positives)}")
     for fp in false_positives:
-        print(
-            f"    - {fp['file']} ({fp['type']}) with gate confidence: {fp['confidence']:.2f}"
-        )
+        print(f"    - {fp['file']} ({fp['type']}) with gate confidence: {fp['confidence']:.2f}")
 
     return {
         "total_tested": len(non_resume_files),

@@ -8,10 +8,9 @@ from pathlib import Path
 backend_dir = Path(__file__).resolve().parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
+from app.core.pdf_parser import parse_resume_pdf  # noqa: E402
 from reportlab.lib.pagesizes import letter  # noqa: E402
 from reportlab.pdfgen import canvas  # noqa: E402
-
-from app.core.pdf_parser import parse_resume_pdf  # noqa: E402
 
 NON_RESUME_TEMPLATES = [
     (
@@ -166,9 +165,7 @@ def run_benchmark() -> tuple[float, float, int]:
         if not res.is_resume:
             non_resumes_rejected += 1
         else:
-            print(
-                f"False Positive on Non-Resume: {pdf.name} (score: {res.gate_confidence})"
-            )
+            print(f"False Positive on Non-Resume: {pdf.name} (score: {res.gate_confidence})")
 
     gate_specificity = (non_resumes_rejected / len(non_resume_pdfs)) * 100.0
 

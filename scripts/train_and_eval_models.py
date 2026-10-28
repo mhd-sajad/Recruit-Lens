@@ -27,9 +27,7 @@ from scipy.stats import spearmanr
 from sklearn.metrics import ndcg_score
 from sklearn.model_selection import GroupKFold
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("model_eval")
 
 
@@ -83,23 +81,15 @@ def dict_to_feature_vector(
         matched_nice_count=make_fv(
             "matched_nice_count", feat_dict.get("matched_nice_count", 0.0), 0.0, 50.0
         ),
-        inferred_count=make_fv(
-            "inferred_count", feat_dict.get("inferred_count", 0.0), 0.0, 50.0
-        ),
+        inferred_count=make_fv("inferred_count", feat_dict.get("inferred_count", 0.0), 0.0, 50.0),
         missing_must_count=make_fv(
             "missing_must_count", feat_dict.get("missing_must_count", 0.0), 0.0, 50.0
         ),
         years_gap=make_fv("years_gap", feat_dict.get("years_gap", 0.0), -10.0, 15.0),
-        seniority_gap=make_fv(
-            "seniority_gap", feat_dict.get("seniority_gap", 0.0), -4.0, 4.0
-        ),
-        education_match=make_fv(
-            "education_match", feat_dict.get("education_match", 0.0), 0.0, 1.0
-        ),
+        seniority_gap=make_fv("seniority_gap", feat_dict.get("seniority_gap", 0.0), -4.0, 4.0),
+        education_match=make_fv("education_match", feat_dict.get("education_match", 0.0), 0.0, 1.0),
         title_match=make_fv("title_match", feat_dict.get("title_match", 0.0), 0.0, 1.0),
-        skill_recency=make_fv(
-            "skill_recency", feat_dict.get("skill_recency", 0.0), 0.0, 1.0
-        ),
+        skill_recency=make_fv("skill_recency", feat_dict.get("skill_recency", 0.0), 0.0, 1.0),
         dense_similarity=make_fv(
             "dense_similarity", feat_dict.get("dense_similarity", 0.0), 0.0, 1.0
         ),
@@ -132,9 +122,7 @@ def evaluate_predictions(
                 # Require non-zero variance in true scores for NDCG
                 if np.std(y_t_job) > 1e-6:
                     ndcg_5 = float(ndcg_score(y_t_job, y_p_job, k=min(5, len(indices))))
-                    ndcg_10 = float(
-                        ndcg_score(y_t_job, y_p_job, k=min(10, len(indices)))
-                    )
+                    ndcg_10 = float(ndcg_score(y_t_job, y_p_job, k=min(10, len(indices))))
                     ndcg_5_list.append(ndcg_5)
                     ndcg_10_list.append(ndcg_10)
             except ValueError as e:
@@ -184,9 +172,7 @@ def main() -> None:
         y_vector[i] = float(p["target_score"])
         resumes.append(p["resume_id"])
         jobs.append(p["job_id"])
-        feature_vectors.append(
-            dict_to_feature_vector(f_dict, p["resume_id"], p["job_id"])
-        )
+        feature_vectors.append(dict_to_feature_vector(f_dict, p["resume_id"], p["job_id"]))
 
     # 5-fold GroupKFold by resume_id
     gkf = GroupKFold(n_splits=5)
@@ -196,19 +182,14 @@ def main() -> None:
     base_metrics_list: list[dict[str, float]] = []
 
     logger.info("Starting 5-fold GroupKFold cross-validation (grouped by resume_id)...")
-    for fold, (train_idx, val_idx) in enumerate(
-        gkf.split(x_matrix, y_vector, groups=resumes), 1
-    ):
+    for fold, (train_idx, val_idx) in enumerate(gkf.split(x_matrix, y_vector, groups=resumes), 1):
         x_tr, y_tr = x_matrix[train_idx], y_vector[train_idx]
         x_va, y_va = x_matrix[val_idx], y_vector[val_idx]
         val_jobs = [jobs[idx] for idx in val_idx]
 
         # 1. Evaluate Weighted Baseline on validation set
         base_preds = np.array(
-            [
-                baseline_scorer.score(feature_vectors[idx]).final_score
-                for idx in val_idx
-            ],
+            [baseline_scorer.score(feature_vectors[idx]).final_score for idx in val_idx],
             dtype=np.float32,
         )
         base_eval = evaluate_predictions(y_va, base_preds, val_jobs)
@@ -238,13 +219,8 @@ def main() -> None:
         )
 
     # Average metrics
-    avg_base = {
-        k: float(np.mean([m[k] for m in base_metrics_list]))
-        for k in base_metrics_list[0]
-    }
-    avg_xgb = {
-        k: float(np.mean([m[k] for m in xgb_metrics_list])) for k in xgb_metrics_list[0]
-    }
+    avg_base = {k: float(np.mean([m[k] for m in base_metrics_list])) for k in base_metrics_list[0]}
+    avg_xgb = {k: float(np.mean([m[k] for m in xgb_metrics_list])) for k in xgb_metrics_list[0]}
 
     logger.info("=== 5-Fold GroupKFold Cross-Validation Results ===")
     logger.info(

@@ -39,9 +39,7 @@ def main() -> None:
     parser.add_argument(
         "--output-file",
         type=Path,
-        default=Path(__file__).resolve().parent.parent
-        / "docs"
-        / "eval_pairs_labeled.json",
+        default=Path(__file__).resolve().parent.parent / "docs" / "eval_pairs_labeled.json",
         help="Path to JSON file where labeled pairs will be saved.",
     )
     parser.add_argument(
@@ -102,9 +100,7 @@ def main() -> None:
     resumes_list = list(candidate_chunks.keys())
     random.shuffle(resumes_list)
 
-    print(
-        "\nCommands: [y]es (relevant), [n]o (not relevant), [s]kip, [q]uit and save\n"
-    )
+    print("\nCommands: [y]es (relevant), [n]o (not relevant), [s]kip, [q]uit and save\n")
 
     for resume_id in resumes_list:
         chunks = candidate_chunks[resume_id]
@@ -118,16 +114,11 @@ def main() -> None:
             print(f"Content:\n{text[:300]}...")
             print("-" * 60)
 
-            user_query = input(
-                "Enter query statement (or press Enter to skip): "
-            ).strip()
+            user_query = input("Enter query statement (or press Enter to skip): ").strip()
             if not user_query:
                 continue
 
-            domain = (
-                input("Domain category [e.g. Software Engineering]: ").strip()
-                or "General"
-            )
+            domain = input("Domain category [e.g. Software Engineering]: ").strip() or "General"
 
             ans = input("Is this chunk relevant? [y/n/s/q]: ").strip().lower()
             if ans == "q":

@@ -23,15 +23,11 @@ from app.core.scoring import (
 )
 from app.core.tiers import assign_candidate_tier
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("run_eval")
 
 
-def dict_to_fv(
-    f_dict: dict[str, float], resume_id: str, job_id: str
-) -> CandidateFeatureVector:
+def dict_to_fv(f_dict: dict[str, float], resume_id: str, job_id: str) -> CandidateFeatureVector:
     def make_fv(name: str, val: float, mi: float, ma: float) -> FeatureValue:
         return FeatureValue(
             name=name,
@@ -57,32 +53,18 @@ def dict_to_fv(
         matched_nice_count=make_fv(
             "matched_nice_count", f_dict.get("matched_nice_count", 0.0), 0.0, 50.0
         ),
-        inferred_count=make_fv(
-            "inferred_count", f_dict.get("inferred_count", 0.0), 0.0, 50.0
-        ),
+        inferred_count=make_fv("inferred_count", f_dict.get("inferred_count", 0.0), 0.0, 50.0),
         missing_must_count=make_fv(
             "missing_must_count", f_dict.get("missing_must_count", 0.0), 0.0, 50.0
         ),
         years_gap=make_fv("years_gap", f_dict.get("years_gap", 0.0), -10.0, 15.0),
-        seniority_gap=make_fv(
-            "seniority_gap", f_dict.get("seniority_gap", 0.0), -4.0, 4.0
-        ),
-        education_match=make_fv(
-            "education_match", f_dict.get("education_match", 0.0), 0.0, 1.0
-        ),
+        seniority_gap=make_fv("seniority_gap", f_dict.get("seniority_gap", 0.0), -4.0, 4.0),
+        education_match=make_fv("education_match", f_dict.get("education_match", 0.0), 0.0, 1.0),
         title_match=make_fv("title_match", f_dict.get("title_match", 0.0), 0.0, 1.0),
-        skill_recency=make_fv(
-            "skill_recency", f_dict.get("skill_recency", 0.0), 0.0, 1.0
-        ),
-        dense_similarity=make_fv(
-            "dense_similarity", f_dict.get("dense_similarity", 0.0), 0.0, 1.0
-        ),
-        matched_must_skills=["SkillA"]
-        if f_dict.get("must_have_coverage", 0.0) > 0.5
-        else [],
-        missing_must_skills=["SkillB"]
-        if f_dict.get("must_have_coverage", 0.0) < 0.85
-        else [],
+        skill_recency=make_fv("skill_recency", f_dict.get("skill_recency", 0.0), 0.0, 1.0),
+        dense_similarity=make_fv("dense_similarity", f_dict.get("dense_similarity", 0.0), 0.0, 1.0),
+        matched_must_skills=["SkillA"] if f_dict.get("must_have_coverage", 0.0) > 0.5 else [],
+        missing_must_skills=["SkillB"] if f_dict.get("must_have_coverage", 0.0) < 0.85 else [],
     )
 
 
@@ -94,8 +76,7 @@ def evaluate_tier_metrics(
     # Mapping: 3=Strong Fit, 2=Interview, 1=Hold, 0=Reject
     tier_names = {3: "Strong Fit", 2: "Interview", 1: "Hold", 0: "Reject"}
     tier_confusion = {
-        name: {"true_pos": 0, "false_pos": 0, "false_neg": 0}
-        for name in tier_names.values()
+        name: {"true_pos": 0, "false_pos": 0, "false_neg": 0} for name in tier_names.values()
     }
 
     overrides_triggered = 0
@@ -128,9 +109,7 @@ def evaluate_tier_metrics(
         precision = round(tp / (tp + fp) if (tp + fp) > 0 else 0.0, 4)
         recall = round(tp / (tp + fn) if (tp + fn) > 0 else 0.0, 4)
         f1 = round(
-            2 * precision * recall / (precision + recall)
-            if (precision + recall) > 0
-            else 0.0,
+            2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0,
             4,
         )
         tier_pr_results[t_name] = {
@@ -285,9 +264,7 @@ def main() -> None:
         "performance_and_slas": {
             "scoring_latency_per_candidate_ms": avg_score_latency_ms,
             "scoring_latency_p95_ms": p95_score_latency_ms,
-            "retrieval_and_scoring_latency_per_candidate_ms": round(
-                avg_score_latency_ms + 5.05, 3
-            ),
+            "retrieval_and_scoring_latency_per_candidate_ms": round(avg_score_latency_ms + 5.05, 3),
             "latency_sla_target_ms": 500.0,
             "latency_sla_met": True,
             "embedder_peak_rss_mb": 164.2,
@@ -311,9 +288,7 @@ def main() -> None:
     with open(out_general, "w", encoding="utf-8") as f:
         json.dump(unified_report, f, indent=2)
 
-    logger.info(
-        "Successfully written evaluation metrics to %s and %s", out_batch2, out_general
-    )
+    logger.info("Successfully written evaluation metrics to %s and %s", out_batch2, out_general)
     logger.info(
         "Latency SLA: %.2f ms / candidate (SLA < 500 ms): PASSED",
         avg_score_latency_ms + 5.05,

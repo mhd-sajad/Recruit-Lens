@@ -166,9 +166,7 @@ def clean_skill_name(name: str) -> str:
 
 
 def compile_taxonomy() -> dict[str, Any]:
-    raw_path = (
-        Path(__file__).resolve().parent.parent / "data" / "onet_technology_skills.txt"
-    )
+    raw_path = Path(__file__).resolve().parent.parent / "data" / "onet_technology_skills.txt"
     out_dir = Path(__file__).resolve().parent.parent / "backend" / "app" / "data"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "skills_taxonomy.json"
@@ -238,9 +236,7 @@ def compile_taxonomy() -> dict[str, Any]:
             score += 5
         return score
 
-    sorted_skills = sorted(
-        skills_by_canonical.values(), key=priority_score, reverse=True
-    )
+    sorted_skills = sorted(skills_by_canonical.values(), key=priority_score, reverse=True)
     selected_skills = sorted_skills[:2500]
 
     # Build reverse alias lookup map

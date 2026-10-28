@@ -11,8 +11,10 @@ repos:
     rev: v0.7.1
     hooks:
       - id: ruff
+        files: ^backend/
         args: [--fix, --config=backend/pyproject.toml]
       - id: ruff-format
+        files: ^backend/
         args: [--config=backend/pyproject.toml]
 
   - repo: https://github.com/gitleaks/gitleaks
