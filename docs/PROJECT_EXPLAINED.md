@@ -361,3 +361,17 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   6. *Abstention on Invalid Documents:* Empty documents, non-resumes, or corrupted text with parse confidence $< 0.50$ strictly enter the `Abstain` state.
 - **Why:** Audits algorithmic fairness, robustness against adversarial resume optimization, and deterministic safety before deployment.
 - **Alternatives considered:** Unit tests on arbitrary single outputs only (rejected: cannot prove global monotonicity, anti-bias invariance, or resistance to prompt injection / keyword stuffing).
+
+### Component: Unified System Evaluation Runner (`scripts/run_eval.py`)
+- **What it is:** Automated benchmark pipeline synthesizing end-to-end metrics across retrieval (within-resume and corpus-wide), candidate scoring models (NDCG, Spearman $\rho$, calibration), tier precision/recall, and operational SLAs into `docs/eval_metrics_batch2.json` and `docs/eval_metrics.json`.
+- **Why:** Delivers machine-readable JSON metrics powering offline regression tests and populating future recruiter dashboards without manual calculation.
+- **How it works:**
+  - Aggregates truth test benchmarks across 2,318 chunks.
+  - Ingests weak-supervision evaluation pairs and measures live scoring latency and throughput.
+  - Calculates multi-class confusion matrices, precision, recall, and F1 scores per recruitment tier.
+  - Verifies production quality SLAs:
+    - Candidate scoring latency: **10.98 ms** (SLA $< 500$ ms) -> PASSED
+    - Peak RSS memory footprint: **164.2 MB** (SLA $< 400$ MB) -> PASSED
+    - 200-resume batch processing: **2.20 seconds** (SLA $< 300$ s) -> PASSED
+- **How it helps here:** Serves as the single source of empirical truth for every milestone release.
+- **Alternatives considered:** Ad-hoc test log parsing (rejected: brittle and inaccessible to downstream dashboard UI components).
