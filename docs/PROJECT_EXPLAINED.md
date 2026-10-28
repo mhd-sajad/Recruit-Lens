@@ -286,3 +286,18 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - Computes title similarity via token overlap and seniority level gap via ordinal distance (-4 to +4).
 - **How it helps here:** Serves as the immutable feature foundation for both baseline linear scoring and monotonic XGBoost ranking models.
 - **Alternatives considered:** Raw unnormalized feature dictionaries (rejected: lack bounds checking, hide missing-data errors, and vulnerable to keyword manipulation).
+
+### Component: Weak-Supervision Pair Dataset Generator (`scripts/build_weak_supervision.py`)
+- **What it is:** Dataset synthesis pipeline crossing 120 diverse candidate resumes (5 per category across all 24 occupational categories) with 105 representative job descriptions across 11 macro occupational families. Produces 1,080 graded candidate-job pairs (`data/weak_supervision_pairs.json`).
+- **Why:** Machine learning ranking models and tier threshold calibration require thousands of graded candidate-job pairs without incurring hundreds of hours of manual annotation or relying on costly LLM labelers.
+- **How it works:**
+  - Classifies JDs and resumes into macro occupational families (e.g. Technology & Engineering, Finance & Accounting, Healthcare & Wellness, Legal & Compliance).
+  - Generates three distinct pair regimes:
+    1. **Positives (480 pairs):** Candidate and job from the same functional family, graded primarily by must-have skill coverage ($C_{\text{must}}$), nice-to-have bonus, experience gap penalty, and title overlap.
+    2. **Hard Negatives (360 pairs):** Candidate and job from adjacent functional families (e.g., Tech paired with Digital Media/Creative or Sales; Finance paired with Legal or HR).
+    3. **Easy Negatives (240 pairs):** Candidate and job from completely disjoint families (e.g., Chef paired with IT Engineer; Healthcare nurse paired with Accountant).
+  - Assigns continuous proxy scores $y \in [0.0, 1.0]$ and discrete recruitment tiers (0=Reject: 652, 1=Hold: 341, 2=Interview: 70, 3=Strong Fit: 17).
+- **Documented Limitations & Honest Boundaries:**
+  - *Proxy Labels, Not Hiring Outcomes:* Labels are automated heuristic proxies based on occupational alignment and deterministic requirement coverage. They do not capture soft skills, interview presence, culture fit, or real-world hiring outcomes.
+  - *Conservative Strong Fit Bar:* Only 1.6% (17 / 1,080) achieve Tier 3 ("Strong Fit"), enforcing strict must-have skill coverage ($\ge 80\%$) and no significant experience deficit.
+- **Alternatives considered:** Zero-shot LLM labeling (rejected: violates zero-cost offline principle, introduces hallucination risks, and produces inconsistent label distributions); random pair sampling without family structure (rejected: yields $>95\%$ trivial negatives with zero hard boundaries).
