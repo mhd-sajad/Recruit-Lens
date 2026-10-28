@@ -22,6 +22,8 @@ The following operating principles must be followed strictly:
 
 10. **KEEP PROJECT_EXPLAINED.md LIVING.** Every time a new commit adds something meaningful (a new agent, a new feature, a new integration, a fix to something significant), you MUST add a new entry to Section 4 of docs/PROJECT_EXPLAINED.md using the exact template defined there BEFORE moving on to the next piece of work. If Section 1, 2, or 3 needs updating because something changed, update those too and note briefly what changed and why. This is part of what 'done' means for a commit.
 
+11. **NEVER READ SHELL HISTORY OR UNAPPROVED EXTERNAL PATHS.** Do not read shell history or user dotfiles (`.zshrc`, `.bashrc`, `.bash_history`, `.zsh_history`, etc.) or anything outside this repository except the explicitly authorized read-only sources (`~/recruit_lens_vault` and `/home/sajad/PROJECTS/RESUME AND JOB DESCRIPTION/data`). Never inspect or copy content from unauthorized external files.
+
 ## Decision Principles
 - Priority order: correctness and safety, then explainability, then simplicity, then speed, then polish.
 - Prefer boring, proven, light dependencies. Free-tier hosting means small RAM and ephemeral disk.
