@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -45,7 +46,7 @@ async def stream_task_events(
 ) -> StreamingResponse:
     """Stream real-time task progress events via Server-Sent Events (SSE)."""
 
-    async def event_generator():
+    async def event_generator() -> AsyncGenerator[str, None]:
         last_progress = -1
         while True:
             async with AsyncSessionLocal() as db:
