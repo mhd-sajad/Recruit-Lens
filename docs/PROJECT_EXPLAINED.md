@@ -321,3 +321,15 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
     - Expected Calibration Error (ECE): **0.0191** ($6\times$ superior probability calibration)
 - **Model Decision:** Monotonic XGBoost achieved a **+0.0888 Spearman Rho gain** and superior calibration (ECE 0.0191 vs 0.1196), easily clearing the $\ge 0.03$ margin requirement. Monotonic XGBoost is shipped as the primary ranking model (`backend/app/data/scoring_xgb.json` at 106 KB), with Weighted Baseline retained for zero-dependency instant fallback.
 - **Alternatives considered:** Linear regression without missing-data handling (rejected: silently penalizes missing dates as 0); unconstrained neural network or Deep Ranker (rejected: non-monotonic, non-interpretable, high RAM consumption).
+
+### Component: Plain-Language Reasons Generator (`backend/app/core/reasons.py`)
+- **What it is:** Translation engine transforming mathematical feature attributions (exact additive baseline weights or tree attributions) into grounded, recruiter-facing plain-language statements.
+- **Why:** Machine scores in recruiting are dangerous without explicit, human-auditable reasons explaining *why* a candidate received a score.
+- **How it works:**
+  - Evaluates feature attributions and values into three discrete categories: `strength`, `gap`, and `neutral`.
+  - Maps mandatory skill coverage to factual statements (e.g. "Covers 5 of 6 must-have skills (83%)", "Missing 2 of 4 required skills: Docker, Kubernetes").
+  - Maps experience delta to tenure comparisons (e.g. "Exceeds required experience by 2.5 years", "Experience deficit: 3.0 years below requirement").
+  - Highlights secondary bonuses (e.g. "Bonus: covers 3 preferred skills") and credential alignment ("Education requirement fully satisfied").
+  - Synthesizes an executive summary headline grounded in mathematical score tiers.
+- **How it helps here:** Equips recruiters with instant, factual interview briefing cards eliminating black-box bias.
+- **Alternatives considered:** Free-form LLM reason generation for all candidates (rejected: violates zero-cost and strict grounding rules; susceptible to sycophancy or hallucinating skills not present in resume text).
