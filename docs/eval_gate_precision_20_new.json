@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "source_script": "scripts/measure_parser_audit.py",
+    "non_resumes_tested": 20
+  },
+  "metrics": {
+    "total_tested": 20,
+    "true_negatives": 20,
+    "false_positives_count": 0,
+    "gate_precision_percent": 100.0,
+    "false_positive_rate_percent": 0.0,
+    "false_positives": []
+  }
+}

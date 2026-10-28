@@ -650,3 +650,20 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - Requisition 2: Lead Data Scientist (Machine Learning & NLP)
   - 15 Synthetic Candidates: Spans Staff SWE (Tier 1 / FastTrack), Senior Backend (Tier 2 / Review), Junior SWE (Tier 3 / Hold), Non-Tech Operations (Tier 4 / Reject), and Scanned/OCR (Abstain).
   - TypeScript Types: `frontend/src/types/api.ts` provides strict TypeScript definitions matching backend Pydantic models for jobs, evaluations, breakdowns, candidate decisions, audit logs, and background tasks.
+
+### Component: Per-User Scoped Architecture & Migration (`backend/alembic/versions/eab4a0bfbd5a_per_user_schema.py`)
+- **What it is:** Strict user-scoped relational schema and security isolation where every job, resume, evaluation, decision, audit log, and background task is bound directly to `user_id`.
+- **Why:** Simplifies the architecture for a single-recruiter / multi-recruiter model by removing unnecessary organizational tenant complexity while strictly preserving anti-IDOR isolation across independent accounts.
+- **How it works:** All foreign keys and query filters enforce `user_id == current_user.id` across every API endpoint and background worker routine. Cross-user access is blocked with 404/403 errors.
+
+### Component: Storage Backend Abstraction (`backend/app/core/storage.py`)
+- **What it is:** Unified storage interface (`StorageBackend`) implementing local filesystem storage (`LocalStorage`) and remote cloud object storage (`SupabaseStorage`).
+- **Why:** Ensures seamless development offline with zero dependencies while enabling production deployment to free cloud tiers with persistent file storage and signed download URLs.
+- **Security Hardening:** Strictly sanitizes all storage keys against directory traversal attacks (blocking `../` sequences and absolute paths).
+
+### Component: Decision Workflow State Machine & GDPR Hard Delete (`backend/app/api/v1/evaluations.py`)
+- **What it is:** Recruiter candidate workflow state machine governing stage transitions (`screened -> shortlisted -> interviewed -> offered -> hired` or `rejected`, `withdrawn`, `on_hold`), interactive what-if scoring sensitivity analysis, formula-injection-protected CSV exports, and GDPR-compliant candidate hard deletion.
+- **Compliance & Security:**
+  - Audit Logging: Every state transition and what-if recalculation appends an immutable entry to `DecisionRecord` and `AuditLog`.
+  - CSV Formula Injection Guard: Prefixes dangerous characters (`=`, `+`, `-`, `@`) with a single apostrophe.
+  - GDPR Hard Delete: Completely purges candidate evaluation records, evidence chunks, feedback, and storage PDF files upon explicit recruiter request.

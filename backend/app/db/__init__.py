@@ -1,32 +1,38 @@
-"""Database module exports."""
+"""Database package initializing Base, models, and session management."""
 
-from app.db.base import Base, TenantScopedMixin, TimestampMixin
+from app.db.base import Base, TimestampMixin, UserScopedMixin
 from app.db.models import (
     AuditLog,
     BackgroundTask,
+    DecisionRecord,
+    EmailRecord,
     Evaluation,
     EvidenceChunkModel,
+    InterviewFeedbackRecord,
     Job,
+    RefreshTokenRecord,
     Resume,
-    Tenant,
     User,
 )
 from app.db.session import AsyncSessionLocal, engine, get_db, init_db
 
 __all__ = [
     "Base",
-    "TenantScopedMixin",
     "TimestampMixin",
-    "Tenant",
+    "UserScopedMixin",
     "User",
+    "RefreshTokenRecord",
     "Job",
     "Resume",
     "Evaluation",
+    "DecisionRecord",
+    "InterviewFeedbackRecord",
+    "EmailRecord",
     "EvidenceChunkModel",
     "AuditLog",
     "BackgroundTask",
-    "AsyncSessionLocal",
     "engine",
+    "AsyncSessionLocal",
     "get_db",
     "init_db",
 ]

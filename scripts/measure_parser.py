@@ -187,6 +187,30 @@ def run_benchmark() -> tuple[float, float, int]:
     )
     print("==================================================")
 
+    # Save metrics to docs/eval_parser_100_report.json for report integrity
+    docs_dir = Path(__file__).resolve().parent.parent / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    report_data = {
+        "metadata": {
+            "source_script": "scripts/measure_parser.py",
+            "real_resumes_tested": len(selected_100_real),
+            "non_resumes_tested": len(non_resume_pdfs),
+        },
+        "metrics": {
+            "parse_failures": parse_failures,
+            "clean_titles_extracted": clean_titles_extracted,
+            "structured_title_rate": round(structured_title_rate, 2),
+            "real_gate_recall": round(real_gate_recall, 2),
+            "non_resumes_rejected": non_resumes_rejected,
+            "gate_specificity": round(gate_specificity, 2),
+        },
+    }
+    with open(docs_dir / "eval_parser_100_report.json", "w", encoding="utf-8") as f:
+        import json
+
+        json.dump(report_data, f, indent=2)
+    print(f"Saved 100-resume benchmark metrics to {docs_dir / 'eval_parser_100_report.json'}")
+
     return structured_title_rate, gate_specificity, parse_failures
 
 

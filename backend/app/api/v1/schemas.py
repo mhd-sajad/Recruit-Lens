@@ -1,7 +1,7 @@
 """Pydantic API request and response schemas for REST endpoints."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -31,7 +31,7 @@ class JobResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    tenant_id: str
+    user_id: str
     title: str
     department: str
     raw_text: str
@@ -48,11 +48,12 @@ class ResumeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    tenant_id: str
     job_id: str
     filename: str
     file_hash: str
     status: str
+    storage_backend: str
+    signed_url: str | None = None
     created_at: datetime
 
 
@@ -68,7 +69,8 @@ class EvaluationSummaryResponse(BaseModel):
     total_score: float
     tier: str
     confidence: float
-    decision: str
+    stage: str
+    explanation_type: str
     llm_generated: bool
     created_at: datetime
 
@@ -79,17 +81,17 @@ class EvaluationDetailResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    tenant_id: str
+    user_id: str
     job_id: str
     resume_id: str
     candidate_filename: str
     total_score: float
     tier: str
     confidence: float
-    decision: str
-    decision_notes: str
+    stage: str
     breakdown: dict[str, Any]
     explanation: dict[str, Any]
+    explanation_type: str
     interview_questions: dict[str, Any]
     email_drafts: dict[str, Any]
     evidence_hash: str
@@ -98,22 +100,108 @@ class EvaluationDetailResponse(BaseModel):
     updated_at: datetime
 
 
-class CandidateDecisionRequest(BaseModel):
-    """Recruiter workflow decision action."""
+class StageTransitionRequest(BaseModel):
+    """Candidate stage workflow transition according to state machine."""
 
-    decision: str = Field(pattern=r"^(shortlisted|interviewed|held|rejected|hired)$")
-    decision_notes: str = Field(default="", max_length=2000)
+    to_stage: str = Field(
+        pattern=r"^(shortlisted|interview_scheduled|interviewed|offer_extended|hired|held|rejected|declined|screened)$"
+    )
+    notes: str = Field(default="", max_length=2000)
 
 
-class CandidateDecisionResponse(BaseModel):
-    """Recruiter decision response confirmation."""
+class StageTransitionResponse(BaseModel):
+    """Stage transition confirmation response."""
 
     id: str
     evaluation_id: str
-    decision: str
-    decision_notes: str
+    from_stage: str
+    to_stage: str
+    notes: str
     audit_log_id: str
     updated_at: datetime
+
+
+class InterviewFeedbackCreate(BaseModel):
+    """Post-interview structured scorecard submission."""
+
+    interviewer_name: str = Field(min_length=2, max_length=255)
+    overall_score: int = Field(ge=1, le=5)
+    technical_rating: int = Field(default=3, ge=1, le=5)
+    communication_rating: int = Field(default=3, ge=1, le=5)
+    recommendation: Literal["hire", "no_hire", "strong_hire", "mixed"]
+    strengths: str = Field(default="", max_length=3000)
+    concerns: str = Field(default="", max_length=3000)
+    notes: str = Field(default="", max_length=3000)
+
+
+class InterviewFeedbackResponse(BaseModel):
+    """Structured interview scorecard response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    evaluation_id: str
+    interviewer_name: str
+    overall_score: int
+    technical_rating: int
+    communication_rating: int
+    recommendation: str
+    strengths: str
+    concerns: str
+    notes: str
+    created_at: datetime
+
+
+class EmailDraftResponse(BaseModel):
+    """Email record representation."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    evaluation_id: str
+    email_type: str
+    recipient_email: str
+    subject: str
+    body: str
+    status: str
+    sent_at: datetime | None
+    error_message: str | None
+    created_at: datetime
+
+
+class EmailUpdateRequest(BaseModel):
+    """Recruiter edit to an email draft."""
+
+    subject: str | None = None
+    body: str | None = None
+
+
+class EmailSendResponse(BaseModel):
+    """Result of sending an email."""
+
+    id: str
+    status: str
+    dry_run: bool
+    sent_at: datetime
+    message: str
+
+
+class WhatIfRequest(BaseModel):
+    """What-if sensitivity simulation request."""
+
+    weights: dict[str, float] | None = None
+    min_years_experience: float | None = None
+
+
+class WhatIfResponse(BaseModel):
+    """What-if calculation result without mutating database."""
+
+    original_score: float
+    new_score: float
+    original_tier: str
+    new_tier: str
+    score_delta: float
+    breakdown: dict[str, Any]
 
 
 class AuditLogResponse(BaseModel):
@@ -122,7 +210,6 @@ class AuditLogResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: str
-    tenant_id: str
     user_id: str | None
     action: str
     target_type: str

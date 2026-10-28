@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -39,11 +39,12 @@ class TimestampMixin:
     )
 
 
-class TenantScopedMixin:
-    """Mixin enforcing multi-tenant isolation via tenant_id."""
+class UserScopedMixin:
+    """Mixin enforcing strict per-user data isolation via user_id foreign key."""
 
-    tenant_id: Mapped[str] = mapped_column(
-        String(64),
+    user_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="CASCADE"),
         index=True,
         nullable=False,
     )

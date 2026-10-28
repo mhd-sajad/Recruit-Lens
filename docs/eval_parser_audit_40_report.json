@@ -1,0 +1,13 @@
+{
+  "metadata": {
+    "source_script": "scripts/measure_parser_audit.py",
+    "audit_type": "self-graded",
+    "resumes_tested": 40,
+    "csv_file": "data/parser_audit_40.csv"
+  },
+  "metrics": {
+    "total_extracted_entries": 199,
+    "plausible_correct_entries": 198,
+    "accuracy_estimate_percent": 99.5
+  }
+}

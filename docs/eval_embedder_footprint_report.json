@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "source_script": "scripts/evaluate_truth_and_embedders.py",
+    "test_description": "Runtime RSS and batch CPU inference latency per chunk"
+  },
+  "models": {
+    "minilm": {
+      "model_type": "minilm",
+      "rss_initial_mb": 425.8,
+      "rss_loaded_mb": 425.8,
+      "rss_after_mb": 425.9,
+      "init_time_s": 0.7,
+      "latency_per_chunk_ms": 2.46
+    },
+    "bge-small": {
+      "model_type": "bge-small",
+      "rss_initial_mb": 425.9,
+      "rss_loaded_mb": 425.9,
+      "rss_after_mb": 425.9,
+      "init_time_s": 0.45,
+      "latency_per_chunk_ms": 4.86
+    }
+  },
+  "chosen_production_model": "minilm"
+}

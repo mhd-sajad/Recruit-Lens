@@ -1,8 +1,8 @@
-"""Job requisition management endpoints."""
+"""Job requisition CRUD endpoints with automatic requirements extraction."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,46 +10,53 @@ from app.api.v1.schemas import JobCreateRequest, JobResponse, JobUpdateRequest
 from app.auth.dependencies import get_current_user
 from app.core.jd_requirements import extract_job_requirements
 from app.core.taxonomy import SkillTaxonomy
-from app.db.models import Job, User
+from app.db.models import AuditLog, Job, User
 from app.db.session import get_db
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
-_taxonomy: SkillTaxonomy | None = None
-
-
-def get_taxonomy() -> SkillTaxonomy:
-    """Lazily load taxonomy."""
-    global _taxonomy
-    if _taxonomy is None:
-        _taxonomy = SkillTaxonomy.get_instance()
-    return _taxonomy
-
 
 @router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 async def create_job(
-    req: JobCreateRequest,
+    payload: JobCreateRequest,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> JobResponse:
-    """Create a new job posting with automatic structured requirement extraction."""
-    tax = get_taxonomy()
-    reqs = extract_job_requirements(
-        jd_text=req.raw_text, job_id="temp", title=req.title, taxonomy=tax
-    )
+    """Create job requisition, extract structured requirements, and initialize scoring weights."""
+    taxonomy = SkillTaxonomy.get_instance()
+    extracted_reqs = extract_job_requirements(payload.raw_text, taxonomy=taxonomy)
+
+    default_weights = {
+        "skills": 0.40,
+        "experience": 0.30,
+        "education": 0.15,
+        "semantic": 0.15,
+    }
+    weights = payload.weights or default_weights
 
     job = Job(
-        tenant_id=current_user.tenant_id,
-        title=req.title,
-        department=req.department,
-        raw_text=req.raw_text,
-        requirements_json=reqs.model_dump(),
-        weights_json=req.weights or {},
+        user_id=current_user.id,
+        title=payload.title,
+        department=payload.department,
+        raw_text=payload.raw_text,
+        requirements_json=extracted_reqs.model_dump(),
+        weights_json=weights,
         status="active",
     )
     db.add(job)
+    await db.flush()
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="create_job",
+        target_type="job",
+        target_id=job.id,
+        details_json={"title": job.title, "department": job.department},
+    )
+    db.add(audit)
     await db.commit()
     await db.refresh(job)
+
     return JobResponse.model_validate(job)
 
 
@@ -57,12 +64,16 @@ async def create_job(
 async def list_jobs(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    status_filter: str | None = Query(None, alias="status", description="Filter by job status"),
 ) -> list[JobResponse]:
-    """List all job requisition postings for current tenant."""
-    res = await db.execute(
-        select(Job).where(Job.tenant_id == current_user.tenant_id).order_by(Job.created_at.desc())
-    )
-    jobs = res.scalars().all()
+    """Retrieve all job requisitions owned by authenticated user."""
+    query = select(Job).where(Job.user_id == current_user.id)
+    if status_filter:
+        query = query.where(Job.status == status_filter)
+    query = query.order_by(Job.created_at.desc())
+
+    result = await db.execute(query)
+    jobs = result.scalars().all()
     return [JobResponse.model_validate(j) for j in jobs]
 
 
@@ -72,14 +83,13 @@ async def get_job(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> JobResponse:
-    """Retrieve details for a single job requisition."""
-    res = await db.execute(
-        select(Job).where(Job.id == job_id, Job.tenant_id == current_user.tenant_id)
-    )
-    job = res.scalar_one_or_none()
-    if not job:
+    """Fetch single job requisition details. Cross-user access returns 404."""
+    result = await db.execute(select(Job).where(Job.id == job_id, Job.user_id == current_user.id))
+    job = result.scalar_one_or_none()
+    if job is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Job requisition not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job requisition '{job_id}' not found",
         )
     return JobResponse.model_validate(job)
 
@@ -87,39 +97,44 @@ async def get_job(
 @router.put("/{job_id}", response_model=JobResponse)
 async def update_job(
     job_id: str,
-    req: JobUpdateRequest,
+    payload: JobUpdateRequest,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> JobResponse:
-    """Update job title, description, or scoring weights."""
-    res = await db.execute(
-        select(Job).where(Job.id == job_id, Job.tenant_id == current_user.tenant_id)
-    )
-    job = res.scalar_one_or_none()
-    if not job:
+    """Update job requisition title, text, weights, or status. Cross-user access returns 404."""
+    result = await db.execute(select(Job).where(Job.id == job_id, Job.user_id == current_user.id))
+    job = result.scalar_one_or_none()
+    if job is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Job requisition not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job requisition '{job_id}' not found",
         )
 
-    if req.title is not None:
-        job.title = req.title
-    if req.department is not None:
-        job.department = req.department
-    if req.status is not None:
-        job.status = req.status
-    if req.weights is not None:
-        job.weights_json = req.weights
+    if payload.title is not None:
+        job.title = payload.title
+    if payload.department is not None:
+        job.department = payload.department
+    if payload.raw_text is not None:
+        job.raw_text = payload.raw_text
+        taxonomy = SkillTaxonomy.get_instance()
+        extracted = extract_job_requirements(job.raw_text, taxonomy=taxonomy)
+        job.requirements_json = extracted.model_dump()
+    if payload.weights is not None:
+        job.weights_json = payload.weights
+    if payload.status is not None:
+        job.status = payload.status
 
-    if req.raw_text is not None and req.raw_text != job.raw_text:
-        job.raw_text = req.raw_text
-        tax = get_taxonomy()
-        reqs = extract_job_requirements(
-            jd_text=job.raw_text, job_id=job.id, title=job.title, taxonomy=tax
-        )
-        job.requirements_json = reqs.model_dump()
-
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="update_job",
+        target_type="job",
+        target_id=job.id,
+        details_json={"updated_fields": list(payload.model_dump(exclude_unset=True).keys())},
+    )
+    db.add(audit)
     await db.commit()
     await db.refresh(job)
+
     return JobResponse.model_validate(job)
 
 
@@ -129,14 +144,22 @@ async def delete_job(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> None:
-    """Delete or archive job requisition."""
-    res = await db.execute(
-        select(Job).where(Job.id == job_id, Job.tenant_id == current_user.tenant_id)
-    )
-    job = res.scalar_one_or_none()
-    if not job:
+    """Delete job requisition. Cross-user access returns 404."""
+    result = await db.execute(select(Job).where(Job.id == job_id, Job.user_id == current_user.id))
+    job = result.scalar_one_or_none()
+    if job is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Job requisition not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job requisition '{job_id}' not found",
         )
+
+    audit = AuditLog(
+        user_id=current_user.id,
+        action="delete_job",
+        target_type="job",
+        target_id=job.id,
+        details_json={"deleted_title": job.title},
+    )
+    db.add(audit)
     await db.delete(job)
     await db.commit()

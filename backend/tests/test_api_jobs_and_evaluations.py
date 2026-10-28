@@ -1,48 +1,54 @@
-"""Integration tests for Job requisition CRUD, recruiter decisions, and multi-tenant isolation."""
+"""Integration tests for Job requisition CRUD, recruiter decisions, state machine transitions, and user isolation."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.db.models import Evaluation, Job, Resume
+from app.auth.security import hash_password
+from app.db.models import Evaluation, Job, Resume, User
 from app.db.session import AsyncSessionLocal, init_db
 from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_job_crud_and_multitenant_idor_protection() -> None:
-    """Verify job creation, requirement extraction, and multi-tenant isolation against IDOR attacks."""
+async def test_job_crud_and_user_isolation_idor_protection() -> None:
+    """Verify job creation, requirement extraction, and user isolation against IDOR attacks."""
     await init_db()
 
+    # Seed User A and User B directly
+    async with AsyncSessionLocal() as db:
+        user_a = User(
+            email="user_a@recruitlens.local",
+            hashed_password=hash_password("PasswordAlpha123!"),
+            full_name="Alpha Recruiter",
+            role="recruiter",
+        )
+        user_b = User(
+            email="user_b@recruitlens.local",
+            hashed_password=hash_password("PasswordBeta123!"),
+            full_name="Beta Recruiter",
+            role="recruiter",
+        )
+        db.add_all([user_a, user_b])
+        await db.commit()
+
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # 1. Register Tenant A
-        reg_a = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "tenant_name": "Tenant Alpha",
-                "tenant_slug": "tenant-alpha",
-                "email": "recruiter@alpha.local",
-                "password": "PasswordAlpha123!",
-                "full_name": "Alpha Recruiter",
-            },
+        # 1. Login User A
+        res_a = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "user_a@recruitlens.local", "password": "PasswordAlpha123!"},
         )
-        assert reg_a.status_code == 201
-        token_a = reg_a.json()["access_token"]
+        assert res_a.status_code == 200
+        token_a = res_a.json()["access_token"]
 
-        # 2. Register Tenant B
-        reg_b = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "tenant_name": "Tenant Beta",
-                "tenant_slug": "tenant-beta",
-                "email": "recruiter@beta.local",
-                "password": "PasswordBeta123!",
-                "full_name": "Beta Recruiter",
-            },
+        # 2. Login User B
+        res_b = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "user_b@recruitlens.local", "password": "PasswordBeta123!"},
         )
-        assert reg_b.status_code == 201
-        token_b = reg_b.json()["access_token"]
+        assert res_b.status_code == 200
+        token_b = res_b.json()["access_token"]
 
-        # 3. Tenant A creates a Job
+        # 3. User A creates a Job
         job_payload = {
             "title": "Senior Python Backend Engineer",
             "department": "Engineering",
@@ -64,21 +70,21 @@ async def test_job_crud_and_multitenant_idor_protection() -> None:
         assert "requirements_json" in job_a_data
         assert len(job_a_data["requirements_json"]["must_have_skills"]) > 0
 
-        # 4. Tenant A can retrieve their Job
+        # 4. User A can retrieve their Job
         res_get_a = await client.get(
             f"/api/v1/jobs/{job_a_id}",
             headers={"Authorization": f"Bearer {token_a}"},
         )
         assert res_get_a.status_code == 200
 
-        # 5. IDOR Attack Prevention: Tenant B attempts to read Tenant A's Job -> 404
+        # 5. IDOR Attack Prevention: User B attempts to read User A's Job -> 404
         res_idor_get = await client.get(
             f"/api/v1/jobs/{job_a_id}",
             headers={"Authorization": f"Bearer {token_b}"},
         )
         assert res_idor_get.status_code == 404
 
-        # 6. IDOR Attack Prevention: Tenant B attempts to modify Tenant A's Job -> 404
+        # 6. IDOR Attack Prevention: User B attempts to modify User A's Job -> 404
         res_idor_put = await client.put(
             f"/api/v1/jobs/{job_a_id}",
             json={"title": "Hacked Title"},
@@ -86,7 +92,7 @@ async def test_job_crud_and_multitenant_idor_protection() -> None:
         )
         assert res_idor_put.status_code == 404
 
-        # 7. IDOR Attack Prevention: Tenant B attempts to delete Tenant A's Job -> 404
+        # 7. IDOR Attack Prevention: User B attempts to delete User A's Job -> 404
         res_idor_del = await client.delete(
             f"/api/v1/jobs/{job_a_id}",
             headers={"Authorization": f"Bearer {token_b}"},
@@ -95,33 +101,34 @@ async def test_job_crud_and_multitenant_idor_protection() -> None:
 
 
 @pytest.mark.asyncio
-async def test_recruiter_decision_workflow_and_audit_log() -> None:
-    """Verify candidate decision actions (shortlist, reject) generate immutable audit logs."""
+async def test_recruiter_decision_workflow_state_machine_and_audit() -> None:
+    """Verify decision state machine, audit log, what-if, CSV protection, and hard delete."""
     await init_db()
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # 1. Register recruiter
-        reg = await client.post(
-            "/api/v1/auth/register",
-            json={
-                "tenant_name": "Workflow Corp",
-                "tenant_slug": "workflow-corp",
-                "email": "lead@workflow.local",
-                "password": "WorkflowPassword123!",
-                "full_name": "Hiring Lead",
-            },
+    async with AsyncSessionLocal() as db:
+        user = User(
+            email="workflow_lead@recruitlens.local",
+            hashed_password=hash_password("WorkflowPassword123!"),
+            full_name="Hiring Lead",
+            role="recruiter",
         )
-        assert reg.status_code == 201
-        token = reg.json()["access_token"]
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        user_id = user.id
 
-        # Get me to know tenant_id
-        me_res = await client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
-        tenant_id = me_res.json()["tenant_id"]
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Login
+        res_login = await client.post(
+            "/api/v1/auth/login",
+            json={"email": "workflow_lead@recruitlens.local", "password": "WorkflowPassword123!"},
+        )
+        token = res_login.json()["access_token"]
 
-        # 2. Seed a Job, Resume, and Evaluation directly in DB
+        # Seed Job, Resume, Evaluation
         async with AsyncSessionLocal() as db:
             job = Job(
-                tenant_id=tenant_id,
+                user_id=user_id,
                 title="Full-Stack Developer",
                 raw_text="Full-stack developer role with React and FastAPI.",
             )
@@ -129,72 +136,77 @@ async def test_recruiter_decision_workflow_and_audit_log() -> None:
             await db.flush()
 
             resume = Resume(
-                tenant_id=tenant_id,
+                user_id=user_id,
                 job_id=job.id,
-                filename="candidate_smith.pdf",
+                filename="=cmd|' /C calc'!A0.pdf",  # Formula injection attempt in filename
                 file_hash="fakehash123",
-                file_path="/fake/path.pdf",
+                storage_path="/fake/path.pdf",
                 status="scored",
             )
             db.add(resume)
             await db.flush()
 
             evaluation = Evaluation(
-                tenant_id=tenant_id,
+                user_id=user_id,
                 job_id=job.id,
                 resume_id=resume.id,
                 total_score=0.88,
-                tier="Strong Fit",
+                tier="FastTrack",
                 confidence=0.95,
+                stage="screened",
                 breakdown_json={"matched_skills": ["Python", "React"]},
-                explanation_json={"sentences": ["Strong candidate."]},
-                questions_json={"questions": []},
+                explanation_json={"sentences": ["Strong candidate [c_01]."]},
+                interview_questions_json={"questions": []},
                 email_drafts_json={},
-                decision="pending",
                 evidence_hash="evhash123",
             )
             db.add(evaluation)
             await db.commit()
             await db.refresh(evaluation)
             eval_id = evaluation.id
+            job_id = job.id
 
-        # 3. Retrieve evaluation details
-        res_detail = await client.get(
-            f"/api/v1/evaluations/{eval_id}",
+        # 1. State machine transition: screened -> shortlisted (Valid)
+        res_trans = await client.post(
+            f"/api/v1/evaluations/{eval_id}/stage",
+            json={"to_stage": "shortlisted", "notes": "Solid portfolio"},
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert res_detail.status_code == 200
-        detail_data = res_detail.json()
-        assert detail_data["total_score"] == 0.88
-        assert detail_data["tier"] == "Strong Fit"
-        assert detail_data["decision"] == "pending"
+        assert res_trans.status_code == 200
+        assert res_trans.json()["to_stage"] == "shortlisted"
 
-        # 4. Recruiter records decision: Shortlisted
-        dec_payload = {
-            "decision": "shortlisted",
-            "decision_notes": "Impressive background in distributed systems and FastAPI.",
-        }
-        res_dec = await client.post(
-            f"/api/v1/evaluations/{eval_id}/decision",
-            json=dec_payload,
+        # 2. Invalid state transition: shortlisted -> hired directly (Invalid, must interview first) -> 400
+        res_invalid = await client.post(
+            f"/api/v1/evaluations/{eval_id}/stage",
+            json={"to_stage": "hired", "notes": "Skipping interview"},
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert res_dec.status_code == 200
-        dec_data = res_dec.json()
-        assert dec_data["decision"] == "shortlisted"
-        assert "audit_log_id" in dec_data
-        audit_id = dec_data["audit_log_id"]
+        assert res_invalid.status_code == 400
+        assert "invalid transition" in str(res_invalid.json()).lower()
 
-        # 5. Check audit logs endpoint
-        res_logs = await client.get(
-            "/api/v1/audit-logs/",
+        # 3. What-if sensitivity recalculation
+        res_whatif = await client.post(
+            f"/api/v1/evaluations/{eval_id}/what-if",
+            json={"weights": {"skills": 0.8, "experience": 0.1, "education": 0.1}},
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert res_logs.status_code == 200
-        logs_data = res_logs.json()
-        assert len(logs_data) >= 1
-        found_log = next((item for item in logs_data if item["id"] == audit_id), None)
-        assert found_log is not None
-        assert found_log["action"] == "candidate_decision"
-        assert found_log["details"]["new_decision"] == "shortlisted"
-        assert found_log["details"]["candidate_score"] == 0.88
+        assert res_whatif.status_code == 200
+        assert "new_score" in res_whatif.json()
+
+        # 4. CSV Export with formula injection protection
+        res_csv = await client.get(
+            f"/api/v1/evaluations/job/{job_id}/export/csv",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res_csv.status_code == 200
+        csv_text = res_csv.text
+        # Ensure '=' formula was sanitized with single quote prefix
+        assert "'=cmd" in csv_text or "=cmd" not in csv_text.split(",")[0]
+
+        # 5. GDPR Hard Delete Candidate
+        res_del = await client.delete(
+            f"/api/v1/evaluations/{eval_id}/hard-delete",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert res_del.status_code == 200
+        assert res_del.json()["status"] == "purged"

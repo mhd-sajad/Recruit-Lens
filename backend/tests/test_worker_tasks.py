@@ -8,7 +8,8 @@ from reportlab.pdfgen import canvas
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.db.models import BackgroundTask, Evaluation, Job, Resume, Tenant
+from app.auth.security import hash_password
+from app.db.models import BackgroundTask, Evaluation, Job, Resume, User
 from app.db.session import AsyncSessionLocal, init_db
 from app.worker.tasks import generate_on_demand_llm_text, process_batch_ingestion
 
@@ -61,14 +62,26 @@ async def test_batch_ingestion_and_resumability(tmp_path: Path) -> None:
         ),
     )
 
-    # 2. Seed database records
+    # 2. Seed storage and database records
+    from app.core.storage import get_storage_backend
+
+    storage = get_storage_backend()
+
     async with AsyncSessionLocal() as db:
-        tenant = Tenant(name="Worker Test Org", slug="worker-test-org")
-        db.add(tenant)
+        user = User(
+            email="worker_tester@recruitlens.local",
+            hashed_password=hash_password("Password123!"),
+            full_name="Worker Tester",
+            role="recruiter",
+        )
+        db.add(user)
         await db.flush()
 
+        key1 = await storage.save_file(f"tests/{user.id}/resume_alice.pdf", pdf1.read_bytes())
+        key2 = await storage.save_file(f"tests/{user.id}/resume_bob.pdf", pdf2.read_bytes())
+
         job = Job(
-            tenant_id=tenant.id,
+            user_id=user.id,
             title="Senior Backend Engineer",
             department="Engineering",
             raw_text=(
@@ -91,39 +104,38 @@ async def test_batch_ingestion_and_resumability(tmp_path: Path) -> None:
         await db.flush()
 
         res1 = Resume(
-            tenant_id=tenant.id,
+            user_id=user.id,
             job_id=job.id,
             filename="resume_alice.pdf",
             file_hash="hash_alice_123",
-            file_path=str(pdf1),
+            storage_path=key1,
             status="uploaded",
         )
         res2 = Resume(
-            tenant_id=tenant.id,
+            user_id=user.id,
             job_id=job.id,
             filename="resume_bob.pdf",
             file_hash="hash_bob_456",
-            file_path=str(pdf2),
+            storage_path=key2,
             status="uploaded",
         )
         db.add_all([res1, res2])
         await db.flush()
 
         task = BackgroundTask(
-            tenant_id=tenant.id,
-            job_id=job.id,
+            user_id=user.id,
             task_type="batch_ingestion",
             status="pending",
             progress=0,
             total=2,
-            payload_json={},
+            payload_json={"job_id": job.id},
             result_json={},
         )
         db.add(task)
         await db.commit()
         await db.refresh(task)
         task_id = task.id
-        tenant_id = tenant.id
+        user_id = user.id
         job_id = job.id
 
     # 3. Execute batch ingestion task
@@ -141,26 +153,25 @@ async def test_batch_ingestion_and_resumability(tmp_path: Path) -> None:
         evals_res = await db.execute(
             select(Evaluation)
             .options(selectinload(Evaluation.resume))
-            .where(Evaluation.job_id == job_id, Evaluation.tenant_id == tenant_id)
+            .where(Evaluation.job_id == job_id, Evaluation.user_id == user_id)
         )
         evals = evals_res.scalars().all()
         assert len(evals) == 2
 
         alice_eval = next(e for e in evals if e.resume.filename == "resume_alice.pdf")
         assert alice_eval.total_score >= 0.50
-        assert alice_eval.tier in ["Strong Fit", "Interview"]
+        assert alice_eval.tier in ["FastTrack", "Review", "Strong Fit", "Interview"]
         assert len(alice_eval.explanation_json["sentences"]) >= 3
 
         # 5. Test Resumability: Run task again
         # It should see both are already evaluated and skip cleanly
         task2 = BackgroundTask(
-            tenant_id=tenant_id,
-            job_id=job_id,
+            user_id=user_id,
             task_type="batch_ingestion",
             status="pending",
             progress=0,
             total=2,
-            payload_json={},
+            payload_json={"job_id": job_id},
             result_json={},
         )
         db.add(task2)
@@ -177,11 +188,11 @@ async def test_batch_ingestion_and_resumability(tmp_path: Path) -> None:
         assert completed_t2.progress == 2
 
         # Test on-demand LLM generation
-        success = await generate_on_demand_llm_text(alice_eval.id, tenant_id)
+        success = await generate_on_demand_llm_text(alice_eval.id, user_id)
         assert success is True
 
         ev_updated = (
             await db.execute(select(Evaluation).where(Evaluation.id == alice_eval.id))
         ).scalar_one()
         assert ev_updated.llm_generated is True
-        assert len(ev_updated.questions_json["questions"]) > 0
+        assert len(ev_updated.interview_questions_json["questions"]) > 0

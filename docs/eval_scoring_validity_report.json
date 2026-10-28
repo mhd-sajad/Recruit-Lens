@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-28T09:19:10Z",
+  "timestamp": "2026-10-28T11:38:28Z",
   "section_e_scoring_validity": {
     "e1_must_have_correlation": {
       "spearman_rho": 0.3567,
@@ -82,25 +82,25 @@
   "section_e4_end_to_end_200_benchmark": {
     "resumes_count": 200,
     "total_chunks": 1557,
-    "total_wall_time_s": 223.79,
+    "total_wall_time_s": 225.91,
     "time_breakdown_s": {
-      "parsing": 98.95,
+      "parsing": 102.44,
       "chunking": 0.03,
-      "embedding": 78.45,
+      "embedding": 76.68,
       "retrieval": 0.0,
-      "scoring": 46.35
+      "scoring": 46.76
     },
-    "per_resume_ms": 1119.0,
-    "per_chunk_embed_ms": 50.39,
-    "peak_rss_mb": 376.2,
+    "per_resume_ms": 1129.6,
+    "per_chunk_embed_ms": 49.25,
+    "peak_rss_mb": 375.2,
     "rss_cap_mb": 400.0,
     "rss_compliant": true,
     "time_compliant": true,
-    "latency_explanation": "In Batch 1, MiniLM latency was measured at 74.57 ms/chunk because inference was executed on unquantized FP32 weights with batch_size=1 without multi-threading warm-up. In Batch 2+, quantized ONNX (INT8) with intra_op_threads=2 and batch_size=64 reduced per-chunk latency to 50.39 ms/chunk."
+    "latency_explanation": "In Batch 1, MiniLM latency was measured at 74.57 ms/chunk because inference was executed on unquantized FP32 weights with batch_size=1 without multi-threading warm-up. In Batch 2+, quantized ONNX (INT8) with intra_op_threads=2 and batch_size=64 reduced per-chunk latency to 49.25 ms/chunk."
   },
   "section_f1_vocabulary_mismatch": {
     "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
-    "timestamp": "2026-10-28T09:19:10Z",
+    "timestamp": "2026-10-28T11:38:28Z",
     "candidate_a_synonyms": {
       "exact_matches_without_taxonomy": [
         "docker",

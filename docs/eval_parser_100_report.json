@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "source_script": "scripts/measure_parser.py",
+    "real_resumes_tested": 100,
+    "non_resumes_tested": 20
+  },
+  "metrics": {
+    "parse_failures": 0,
+    "clean_titles_extracted": 99,
+    "structured_title_rate": 99.0,
+    "real_gate_recall": 100.0,
+    "non_resumes_rejected": 20,
+    "gate_specificity": 100.0
+  }
+}

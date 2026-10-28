@@ -1,4 +1,4 @@
-"""SQLAlchemy database models for Recruit Lens multi-tenant architecture."""
+"""SQLAlchemy database models for Recruit Lens per-user architecture."""
 
 from datetime import datetime
 from typing import Any
@@ -9,70 +9,68 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
-    LargeBinary,
     String,
     Text,
-    UniqueConstraint,
 )
 from sqlalchemy.dialects.sqlite import JSON as SQLiteJSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
-from app.db.base import Base, TenantScopedMixin, TimestampMixin, generate_uuid, utc_now
+from app.db.base import Base, TimestampMixin, UserScopedMixin, generate_uuid
 
 # Use JSON with SQLite fallback
 JSON_TYPE = JSON().with_variant(SQLiteJSON, "sqlite")
 
 
-class Tenant(Base, TimestampMixin):
-    """Organization/Company tenant for strict multi-tenant data isolation."""
-
-    __tablename__ = "tenants"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    slug: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-
-    users: Mapped[list["User"]] = relationship(
-        "User", back_populates="tenant", cascade="all, delete-orphan"
-    )
-    jobs: Mapped[list["Job"]] = relationship(
-        "Job", back_populates="tenant", cascade="all, delete-orphan"
-    )
-
-
-class User(Base, TenantScopedMixin, TimestampMixin):
-    """User account associated with a specific tenant."""
+class User(Base, TimestampMixin):
+    """Recruiter account with strict per-user isolation."""
 
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
-    email: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), default="", nullable=False)
     role: Mapped[str] = mapped_column(
         String(50), default="recruiter", nullable=False
     )  # admin, recruiter, reviewer
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    daily_token_usage: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_token_reset_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
 
-    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
+    jobs: Mapped[list["Job"]] = relationship(
+        "Job", back_populates="user", cascade="all, delete-orphan"
+    )
+    refresh_tokens: Mapped[list["RefreshTokenRecord"]] = relationship(
+        "RefreshTokenRecord", back_populates="user", cascade="all, delete-orphan"
+    )
 
-    __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),)
+
+class RefreshTokenRecord(Base, TimestampMixin):
+    """Refresh token record for rotation and theft/reuse detection."""
+
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    token_family: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="refresh_tokens")
 
 
-class Job(Base, TenantScopedMixin, TimestampMixin):
+class Job(Base, UserScopedMixin, TimestampMixin):
     """Job requisition / job description posting."""
 
     __tablename__ = "jobs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
     title: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     department: Mapped[str] = mapped_column(String(255), default="General", nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
@@ -84,7 +82,7 @@ class Job(Base, TenantScopedMixin, TimestampMixin):
         String(50), default="active", nullable=False, index=True
     )  # active, closed, draft
 
-    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="jobs")
+    user: Mapped["User"] = relationship("User", back_populates="jobs")
     resumes: Mapped[list["Resume"]] = relationship(
         "Resume", back_populates="job", cascade="all, delete-orphan"
     )
@@ -93,25 +91,24 @@ class Job(Base, TenantScopedMixin, TimestampMixin):
     )
 
 
-class Resume(Base, TenantScopedMixin, TimestampMixin):
+class Resume(Base, UserScopedMixin, TimestampMixin):
     """Uploaded candidate resume document associated with a specific job requisition."""
 
     __tablename__ = "resumes"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
     job_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, nullable=False
     )
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_path: Mapped[str] = mapped_column(String(512), nullable=False)
+    storage_backend: Mapped[str] = mapped_column(String(50), default="local", nullable=False)
     file_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
-    file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     status: Mapped[str] = mapped_column(
-        String(50), default="uploaded", nullable=False, index=True
-    )  # uploaded, parsed, scored, failed
-    parsed_data_json: Mapped[dict[str, Any]] = mapped_column(
+        String(50), default="pending", nullable=False, index=True
+    )  # pending, parsed, error
+    raw_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    parse_result_json: Mapped[dict[str, Any]] = mapped_column(
         JSON_TYPE, default=dict, nullable=False
     )
 
@@ -124,121 +121,183 @@ class Resume(Base, TenantScopedMixin, TimestampMixin):
     )
 
 
-class EvidenceChunkModel(Base, TenantScopedMixin):
-    """Granular extracted text chunk with optional binary embedding representation."""
-
-    __tablename__ = "evidence_chunks"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
-    resume_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("resumes.id", ondelete="CASCADE"), index=True, nullable=False
-    )
-    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
-    section: Mapped[str] = mapped_column(String(100), default="experience", nullable=False)
-    text: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding_bytes: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
-
-    resume: Mapped["Resume"] = relationship("Resume", back_populates="chunks")
-
-
-class Evaluation(Base, TenantScopedMixin, TimestampMixin):
-    """Scored evaluation result for a candidate with explainable metrics and generated texts."""
+class Evaluation(Base, UserScopedMixin, TimestampMixin):
+    """Comprehensive evaluation record, score breakdown, and workflow stage."""
 
     __tablename__ = "evaluations"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
     job_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("jobs.id", ondelete="CASCADE"), index=True, nullable=False
     )
     resume_id: Mapped[str] = mapped_column(
-        String(36),
-        ForeignKey("resumes.id", ondelete="CASCADE"),
-        unique=True,
-        index=True,
-        nullable=False,
+        String(36), ForeignKey("resumes.id", ondelete="CASCADE"), unique=True, nullable=False
     )
-
     total_score: Mapped[float] = mapped_column(Float, nullable=False, index=True)
     tier: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
-    )  # Strong Fit, Interview, Hold, Reject, Abstain
+    )  # FastTrack, Review, Hold, Reject, Abstain
     confidence: Mapped[float] = mapped_column(Float, default=1.0, nullable=False)
+
+    # Workflow stage according to validated state machine
+    stage: Mapped[str] = mapped_column(
+        String(50), default="screened", nullable=False, index=True
+    )  # screened, shortlisted, interview_scheduled, interviewed, offer_extended, hired, held, rejected, declined
 
     breakdown_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
     explanation_json: Mapped[dict[str, Any]] = mapped_column(
         JSON_TYPE, default=dict, nullable=False
     )
-    questions_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    explanation_type: Mapped[str] = mapped_column(
+        String(20), default="template", nullable=False
+    )  # template, llm
+    interview_questions_json: Mapped[dict[str, Any]] = mapped_column(
+        JSON_TYPE, default=dict, nullable=False
+    )
     email_drafts_json: Mapped[dict[str, Any]] = mapped_column(
         JSON_TYPE, default=dict, nullable=False
     )
-
-    # Workflow decision
-    decision: Mapped[str] = mapped_column(
-        String(50), default="pending", nullable=False, index=True
-    )  # pending, shortlisted, interviewed, held, rejected, hired
-    decision_notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
-
-    # Evidence hash for content caching
-    evidence_hash: Mapped[str] = mapped_column(String(64), index=True, default="", nullable=False)
+    evidence_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     llm_generated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     job: Mapped["Job"] = relationship("Job", back_populates="evaluations")
     resume: Mapped["Resume"] = relationship("Resume", back_populates="evaluation")
+    decisions: Mapped[list["DecisionRecord"]] = relationship(
+        "DecisionRecord", back_populates="evaluation", cascade="all, delete-orphan"
+    )
+    feedback: Mapped[list["InterviewFeedbackRecord"]] = relationship(
+        "InterviewFeedbackRecord", back_populates="evaluation", cascade="all, delete-orphan"
+    )
+    emails: Mapped[list["EmailRecord"]] = relationship(
+        "EmailRecord", back_populates="evaluation", cascade="all, delete-orphan"
+    )
 
 
-class AuditLog(Base, TenantScopedMixin):
-    """Immutable audit trail logging every human decision and administrative action."""
+class DecisionRecord(Base, TimestampMixin):
+    """Append-only audit record of candidate stage transitions."""
+
+    __tablename__ = "decisions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    evaluation_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("evaluations.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    from_stage: Mapped[str] = mapped_column(String(50), nullable=False)
+    to_stage: Mapped[str] = mapped_column(String(50), nullable=False)
+    notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
+
+    evaluation: Mapped["Evaluation"] = relationship("Evaluation", back_populates="decisions")
+
+
+class InterviewFeedbackRecord(Base, TimestampMixin):
+    """Post-interview structured scorecard and recruiter feedback."""
+
+    __tablename__ = "interview_feedback"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    evaluation_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("evaluations.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    interviewer_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)  # 1 to 5
+    technical_rating: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    communication_rating: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    recommendation: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # hire, no_hire, strong_hire, mixed
+    strengths: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    concerns: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
+
+    evaluation: Mapped["Evaluation"] = relationship("Evaluation", back_populates="feedback")
+
+
+class EmailRecord(Base, TimestampMixin):
+    """Email draft, approval, and send tracking log with daily cap enforcement."""
+
+    __tablename__ = "emails"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    evaluation_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("evaluations.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    email_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # interview_invitation, rejection, hold_update
+    recipient_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(50), default="draft", nullable=False, index=True
+    )  # draft, approved, sent, failed
+    approved_by_user_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    evaluation: Mapped["Evaluation"] = relationship("Evaluation", back_populates="emails")
+
+
+class EvidenceChunkModel(Base, TimestampMixin):
+    """Section-aware evidence chunk extracted from resume."""
+
+    __tablename__ = "evidence_chunks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    resume_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("resumes.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    section: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    char_start: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    char_end: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+
+    resume: Mapped["Resume"] = relationship("Resume", back_populates="chunks")
+
+
+class AuditLog(Base):
+    """Immutable audit event log capturing all state changes and human actions."""
 
     __tablename__ = "audit_logs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
     user_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True
     )
-    action: Mapped[str] = mapped_column(
-        String(100), nullable=False, index=True
-    )  # candidate_decision, job_created, weight_updated, etc.
-    target_type: Mapped[str] = mapped_column(String(50), nullable=False)  # evaluation, job, resume
-    target_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    target_type: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    target_id: Mapped[str] = mapped_column(String(36), index=True, nullable=False)
     details_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utc_now,
-        nullable=False,
-        index=True,
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True
     )
 
 
-class BackgroundTask(Base, TenantScopedMixin, TimestampMixin):
-    """Persistent task tracker for batch resume ingestion and asynchronous LLM jobs."""
+class BackgroundTask(Base, UserScopedMixin, TimestampMixin):
+    """Resumable asynchronous worker task tracker."""
 
     __tablename__ = "background_tasks"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
-    tenant_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenants.id", ondelete="CASCADE"), index=True, nullable=False
-    )
-    job_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True
-    )
-    task_type: Mapped[str] = mapped_column(
-        String(100), nullable=False, index=True
-    )  # batch_ingestion, llm_generation
+    task_type: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
     status: Mapped[str] = mapped_column(
         String(50), default="pending", nullable=False, index=True
     )  # pending, processing, completed, failed, cancelled
     progress: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     payload_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
     result_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)

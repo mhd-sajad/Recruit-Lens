@@ -467,10 +467,34 @@ if __name__ == "__main__":
     for chunks in all_chunks.values():
         pooled_chunks.extend(chunks)
 
+    corpus_results: dict[str, Any] = {
+        "metadata": {
+            "source_script": "scripts/evaluate_truth_and_embedders.py",
+            "total_pooled_chunks": len(pooled_chunks),
+            "total_resumes": len(all_chunks),
+            "total_gold_pairs": len(remapped_gold),
+            "pool_statistics": pool_stats,
+            "old_project_baseline_hit5": 64.7,
+        },
+        "within_resume": {},
+        "corpus_wide": {},
+    }
+
+    print("\n--- EVALUATING MINILM (WITHIN-RESUME & CORPUS-WIDE) ---")
+    embedder_minilm = ONNXEmbedder(model_type="minilm")
+
+    for m in ["bm25", "dense", "hybrid"]:
+        res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_minilm, mode=m)
+        corpus_results["within_resume"][f"{m}_minilm" if m != "bm25" else "bm25"] = res_within
+        print(
+            f"Within-Resume [{m.upper()}]: Hit@1={res_within['hit1'] * 100:.1f}%, Hit@3={res_within['hit3'] * 100:.1f}%, Hit@5={res_within['hit5'] * 100:.1f}%, Hit@10={res_within['hit10'] * 100:.1f}%, MRR={res_within['mrr']:.4f}"
+        )
+
     # Build MiniLM Global Index
     global_index_minilm = CorpusWideGlobalIndex(pooled_chunks, embedder_minilm)
     for m in ["bm25", "dense", "hybrid"]:
         res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_minilm, mode=m)
+        corpus_results["corpus_wide"][f"{m}_minilm" if m != "bm25" else "bm25"] = res_corpus
         print(
             f"Corpus-Wide [{m.upper()} MiniLM]: Hit@1={res_corpus['hit1'] * 100:.1f}%, Hit@3={res_corpus['hit3'] * 100:.1f}%, Hit@5={res_corpus['hit5'] * 100:.1f}%, Hit@10={res_corpus['hit10'] * 100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )
@@ -480,6 +504,7 @@ if __name__ == "__main__":
 
     for m in ["dense", "hybrid"]:
         res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_bge, mode=m)
+        corpus_results["within_resume"][f"{m}_bge"] = res_within
         print(
             f"Within-Resume [{m.upper()} BGE]: Hit@1={res_within['hit1'] * 100:.1f}%, Hit@3={res_within['hit3'] * 100:.1f}%, Hit@5={res_within['hit5'] * 100:.1f}%, Hit@10={res_within['hit10'] * 100:.1f}%, MRR={res_within['mrr']:.4f}"
         )
@@ -487,6 +512,53 @@ if __name__ == "__main__":
     global_index_bge = CorpusWideGlobalIndex(pooled_chunks, embedder_bge)
     for m in ["dense", "hybrid"]:
         res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_bge, mode=m)
+        corpus_results["corpus_wide"][f"{m}_bge"] = res_corpus
         print(
             f"Corpus-Wide [{m.upper()} BGE]: Hit@1={res_corpus['hit1'] * 100:.1f}%, Hit@3={res_corpus['hit3'] * 100:.1f}%, Hit@5={res_corpus['hit5'] * 100:.1f}%, Hit@10={res_corpus['hit10'] * 100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )
+
+    # Determine winning production embedder
+    minilm_cw_hit5 = corpus_results["corpus_wide"]["hybrid_minilm"]["hit5"]
+    minilm_cw_mrr = corpus_results["corpus_wide"]["hybrid_minilm"]["mrr"]
+    bge_cw_hit5 = corpus_results["corpus_wide"]["hybrid_bge"]["hit5"]
+    bge_cw_mrr = corpus_results["corpus_wide"]["hybrid_bge"]["mrr"]
+
+    bge_wins_both = (bge_cw_hit5 > minilm_cw_hit5) and (bge_cw_mrr > minilm_cw_mrr)
+    production_embedder = "bge-small" if bge_wins_both else "minilm"
+
+    corpus_results["decision"] = {
+        "production_embedder": production_embedder,
+        "rule": "MiniLM unless BGE wins both Hit@5 and MRR corpus-wide",
+        "minilm_hybrid_hit5": round(minilm_cw_hit5 * 100, 2),
+        "minilm_hybrid_mrr": round(minilm_cw_mrr, 4),
+        "bge_hybrid_hit5": round(bge_cw_hit5 * 100, 2),
+        "bge_hybrid_mrr": round(bge_cw_mrr, 4),
+        "bge_wins_both": bge_wins_both,
+    }
+
+    docs_dir = Path(__file__).resolve().parent.parent / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    with open(docs_dir / "eval_corpus_retrieval_report.json", "w", encoding="utf-8") as f:
+        json.dump(corpus_results, f, indent=2)
+    print(f"\nSaved corpus retrieval report to {docs_dir / 'eval_corpus_retrieval_report.json'}")
+
+    # Run fresh embedder footprints
+    print("\n--- MEASURING EMBEDDER RUNTIME FOOTPRINTS ---")
+    bench_minilm = run_embedder_benchmark("minilm")
+    bench_bge = run_embedder_benchmark("bge-small")
+
+    embedder_report = {
+        "metadata": {
+            "source_script": "scripts/evaluate_truth_and_embedders.py",
+            "test_description": "Runtime RSS and batch CPU inference latency per chunk",
+        },
+        "models": {
+            "minilm": bench_minilm,
+            "bge-small": bench_bge,
+        },
+        "chosen_production_model": production_embedder,
+    }
+
+    with open(docs_dir / "eval_embedder_footprint_report.json", "w", encoding="utf-8") as f:
+        json.dump(embedder_report, f, indent=2)
+    print(f"Saved embedder footprint report to {docs_dir / 'eval_embedder_footprint_report.json'}")

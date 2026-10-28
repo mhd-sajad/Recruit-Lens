@@ -1,9 +1,9 @@
-"""Authentication endpoints: registration, login, token refresh, and user profile."""
+"""Authentication API endpoints: login, token refresh with rotation, and user profile."""
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import get_current_user
@@ -11,141 +11,193 @@ from app.auth.schemas import (
     RefreshTokenRequest,
     TokenResponse,
     UserLoginRequest,
-    UserRegisterRequest,
     UserResponse,
 )
 from app.auth.security import (
+    check_login_throttle,
     create_access_token,
     create_refresh_token,
     decode_token,
-    hash_password,
+    hash_token,
+    record_failed_login,
+    reset_failed_logins,
     verify_password,
 )
 from app.config import settings
-from app.db.models import Tenant, User
+from app.db.models import AuditLog, RefreshTokenRecord, User
 from app.db.session import get_db
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-async def register_user(
-    req: UserRegisterRequest,
+@router.post("/login", response_model=TokenResponse)
+async def login(
+    payload: UserLoginRequest,
+    request: Request,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
-    """Register a new organization tenant and primary admin account."""
-    # Check if slug exists
-    slug_res = await db.execute(select(Tenant).where(Tenant.slug == req.tenant_slug))
-    tenant = slug_res.scalar_one_or_none()
-    if tenant is None:
-        tenant = Tenant(name=req.tenant_name, slug=req.tenant_slug)
-        db.add(tenant)
-        await db.flush()
+    """Authenticate recruiter via email and password, issuing access and refresh tokens.
 
-    # Check if email exists in this tenant
-    user_res = await db.execute(
-        select(User).where(User.tenant_id == tenant.id, User.email == req.email.lower())
-    )
-    if user_res.scalar_one_or_none():
+    Protected by IP/account login throttling.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    throttle_key = f"{client_ip}:{payload.email.lower()}"
+
+    allowed, seconds_left = check_login_throttle(throttle_key)
+    if not allowed:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A user with this email already exists in this organization",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many failed login attempts. Locked out for {seconds_left} seconds.",
         )
 
-    # Hash password with Argon2
-    hashed = hash_password(req.password)
-    user = User(
-        tenant_id=tenant.id,
-        email=req.email.lower(),
-        hashed_password=hashed,
-        full_name=req.full_name or req.email.split("@")[0],
-        role="admin",
-        is_active=True,
-    )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
+    result = await db.execute(select(User).where(User.email == payload.email.lower()))
+    user = result.scalar_one_or_none()
 
-    token_claims = {"sub": user.id, "tenant_id": tenant.id, "role": user.role}
-    access_tok = create_access_token(token_claims)
-    refresh_tok = create_refresh_token(token_claims)
-
-    return TokenResponse(
-        access_token=access_tok,
-        refresh_token=refresh_tok,
-        expires_in_seconds=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
-
-
-@router.post("/login", response_model=TokenResponse)
-async def login_user(
-    req: UserLoginRequest,
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> TokenResponse:
-    """Authenticate with email and password and receive JWT tokens."""
-    res = await db.execute(select(User).where(User.email == req.email.lower()))
-    user = res.scalar_one_or_none()
-    if not user or not verify_password(req.password, user.hashed_password):
+    if user is None or not verify_password(payload.password, user.hashed_password):
+        record_failed_login(throttle_key)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account has been deactivated",
+            detail="Account is deactivated. Contact your administrator.",
         )
 
-    token_claims = {"sub": user.id, "tenant_id": user.tenant_id, "role": user.role}
-    access_tok = create_access_token(token_claims)
-    refresh_tok = create_refresh_token(token_claims)
+    reset_failed_logins(throttle_key)
+
+    # 1. Issue access token
+    access_token = create_access_token(
+        data={"sub": user.id, "email": user.email, "role": user.role}
+    )
+
+    # 2. Issue refresh token and persist in token family for rotation
+    refresh_jwt, token_hash, family, expires_at = create_refresh_token(user.id)
+    token_rec = RefreshTokenRecord(
+        user_id=user.id,
+        token_hash=token_hash,
+        token_family=family,
+        is_revoked=False,
+        expires_at=expires_at,
+    )
+    db.add(token_rec)
+
+    # Audit log
+    audit = AuditLog(
+        user_id=user.id,
+        action="user_login",
+        target_type="user",
+        target_id=user.id,
+        details_json={"ip": client_ip, "role": user.role},
+        ip_address=client_ip,
+    )
+    db.add(audit)
+    await db.commit()
 
     return TokenResponse(
-        access_token=access_tok,
-        refresh_token=refresh_tok,
+        access_token=access_token,
+        refresh_token=refresh_jwt,
         expires_in_seconds=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_access_token(
-    req: RefreshTokenRequest,
+    payload: RefreshTokenRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
-    """Rotate expired access token using valid refresh token."""
-    payload = decode_token(req.refresh_token)
-    if payload is None or payload.get("type") != "refresh":
+    """Rotate refresh token and issue new access token.
+
+    Detects token reuse (theft detection) by invalidating the entire token family if a revoked
+    token is submitted.
+    """
+    decoded = decode_token(payload.refresh_token)
+    if decoded is None or decoded.get("type") != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token",
         )
 
-    user_id = payload.get("sub")
-    tenant_id = payload.get("tenant_id")
-    res = await db.execute(select(User).where(User.id == user_id, User.tenant_id == tenant_id))
-    user = res.scalar_one_or_none()
-    if not user or not user.is_active:
+    user_id = decoded.get("sub")
+    token_family = decoded.get("token_family")
+    provided_hash = hash_token(payload.refresh_token)
+
+    # Look up token record
+    res = await db.execute(
+        select(RefreshTokenRecord).where(RefreshTokenRecord.token_hash == provided_hash)
+    )
+    token_rec = res.scalar_one_or_none()
+
+    if token_rec is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account no longer active",
+            detail="Refresh token not recognized or already purged",
         )
 
-    token_claims = {"sub": user.id, "tenant_id": user.tenant_id, "role": user.role}
-    new_access = create_access_token(token_claims)
-    new_refresh = create_refresh_token(token_claims)
+    # TOKEN REUSE DETECTION: If token is already revoked, compromise detected!
+    if token_rec.is_revoked:
+        # Invalidate ALL tokens in this family immediately!
+        await db.execute(
+            update(RefreshTokenRecord)
+            .where(RefreshTokenRecord.token_family == token_family)
+            .values(is_revoked=True)
+        )
+        audit = AuditLog(
+            user_id=user_id,
+            action="token_reuse_detected",
+            target_type="refresh_token",
+            target_id=token_rec.id,
+            details_json={"token_family": token_family, "warning": "Family revoked due to reuse"},
+        )
+        db.add(audit)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Compromised refresh token detected: session terminated",
+        )
+
+    # Revoke used token
+    token_rec.is_revoked = True
+
+    # Resolve user
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    user = user_res.scalar_one_or_none()
+    if user is None or not user.is_active:
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User no longer active",
+        )
+
+    # Issue new token pair preserving the token family
+    new_access_token = create_access_token(
+        data={"sub": user.id, "email": user.email, "role": user.role}
+    )
+    new_refresh_jwt, new_hash, family, expires_at = create_refresh_token(
+        user.id, token_family=token_family
+    )
+    new_rec = RefreshTokenRecord(
+        user_id=user.id,
+        token_hash=new_hash,
+        token_family=family,
+        is_revoked=False,
+        expires_at=expires_at,
+    )
+    db.add(new_rec)
+    await db.commit()
 
     return TokenResponse(
-        access_token=new_access,
-        refresh_token=new_refresh,
+        access_token=new_access_token,
+        refresh_token=new_refresh_jwt,
         expires_in_seconds=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_my_profile(
+async def get_current_user_profile(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> UserResponse:
-    """Return profile of currently authenticated user."""
+    """Retrieve profile and token quota of currently authenticated recruiter."""
     return UserResponse.model_validate(current_user)

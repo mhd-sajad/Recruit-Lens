@@ -70,6 +70,26 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: Literal["minilm", "bge-small"] = "minilm"
     PRIMARY_RETRIEVAL_ENGINE: Literal["bm25", "hybrid", "dense"] = "bm25"
 
+    # Storage Abstraction
+    STORAGE_BACKEND: Literal["local", "supabase"] = "local"
+    SUPABASE_URL: str = Field(default="", description="Supabase project URL")
+    SUPABASE_KEY: str = Field(default="", description="Supabase anon/service-role API key")
+    SUPABASE_STORAGE_BUCKET: str = "resumes"
+    SUPABASE_DATABASE_URL: str = Field(
+        default="", description="Optional Supabase Postgres connection string"
+    )
+
+    # Demo & Admin Credentials (read strictly from env)
+    DEMO_RECRUITER_EMAIL: str = Field(default="recruiter@recruitlens.local")
+    DEMO_RECRUITER_PASSWORD: str = Field(default="RecruiterDemoPass123!")
+
+    # Security & Policies
+    LOGIN_MAX_FAILED_ATTEMPTS: int = 5
+    LOGIN_LOCKOUT_MINUTES: int = 15
+    EMAIL_DRY_RUN: bool = True
+    DAILY_EMAIL_CAP: int = Field(default=50, ge=1, le=1000)
+    DAILY_TOKEN_BUDGET: int = Field(default=50000, ge=1000, le=1000000)
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: object) -> object:

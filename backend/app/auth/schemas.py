@@ -1,41 +1,10 @@
-"""Pydantic schemas for authentication and tenant management."""
+"""Pydantic schemas for authentication and user management."""
 
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 EMAIL_PATTERN = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-
-
-class TenantCreateRequest(BaseModel):
-    """Organization tenant creation payload."""
-
-    name: str = Field(min_length=2, max_length=100)
-    slug: str = Field(min_length=2, max_length=50, pattern=r"^[a-z0-9-]+$")
-
-
-class TenantResponse(BaseModel):
-    """Tenant organization summary."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    name: str
-    slug: str
-    is_active: bool
-    created_at: datetime
-
-
-class UserRegisterRequest(BaseModel):
-    """User account self-registration payload."""
-
-    tenant_name: str = Field(min_length=2, max_length=100, default="Demo Organization")
-    tenant_slug: str = Field(
-        min_length=2, max_length=50, default="demo-org", pattern=r"^[a-z0-9-]+$"
-    )
-    email: str = Field(pattern=EMAIL_PATTERN)
-    password: str = Field(min_length=8, max_length=128)
-    full_name: str = Field(default="", max_length=100)
 
 
 class UserLoginRequest(BaseModel):
@@ -60,15 +29,24 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class UserCreateRequest(BaseModel):
+    """Admin CLI / script user creation payload."""
+
+    email: str = Field(pattern=EMAIL_PATTERN)
+    password: str = Field(min_length=8, max_length=128)
+    full_name: str = Field(default="", max_length=100)
+    role: str = Field(default="recruiter", pattern=r"^(admin|recruiter|reviewer)$")
+
+
 class UserResponse(BaseModel):
     """Authenticated user profile representation."""
 
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    tenant_id: str
     email: str
     full_name: str
     role: str
     is_active: bool
+    daily_token_usage: int
     created_at: datetime

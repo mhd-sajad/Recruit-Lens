@@ -1,4 +1,4 @@
-"""FastAPI dependency injection for user authentication and multi-tenant scoping."""
+"""FastAPI dependency injection for user authentication and authorization."""
 
 from collections.abc import Callable
 from typing import Annotated
@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.security import decode_token
-from app.db.models import Tenant, User
+from app.db.models import User
 from app.db.session import get_db
 
 security = HTTPBearer(auto_error=False)
@@ -28,47 +28,45 @@ async def get_current_user(
         )
 
     payload = decode_token(credentials.credentials)
-    if payload is None or payload.get("type") != "access":
+    if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired access token",
+            detail="Invalid, expired, or malformed authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token is not a valid access token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     user_id = payload.get("sub")
-    tenant_id = payload.get("tenant_id")
-    if not user_id or not tenant_id:
+    if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Malformed token claims",
+            detail="Token payload missing subject identifier",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    result = await db.execute(select(User).where(User.id == user_id, User.tenant_id == tenant_id))
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    if user is None or not user.is_active:
+
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account does not exist or has been disabled",
+            detail="User account associated with token no longer exists",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is deactivated or suspended",
         )
 
     return user
-
-
-async def get_current_tenant(
-    user: Annotated[User, Depends(get_current_user)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> Tenant:
-    """Resolve and verify active tenant belonging to current authenticated user."""
-    result = await db.execute(select(Tenant).where(Tenant.id == user.tenant_id))
-    tenant = result.scalar_one_or_none()
-    if tenant is None or not tenant.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tenant organization is suspended or inactive",
-        )
-    return tenant
 
 
 def require_role(allowed_roles: list[str]) -> Callable[[User], User]:

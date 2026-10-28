@@ -1,4 +1,4 @@
-"""Audit trail inquiry endpoints for enterprise compliance and decision history."""
+"""Audit log retrieval API for user-scoped compliance events."""
 
 from typing import Annotated
 
@@ -22,10 +22,10 @@ async def list_audit_logs(
     target_type: str | None = Query(None, description="Filter by target type"),
     action: str | None = Query(None, description="Filter by action name"),
 ) -> list[AuditLogResponse]:
-    """Retrieve immutable audit events for current tenant."""
+    """Retrieve immutable audit events for current user."""
     query = (
         select(AuditLog)
-        .where(AuditLog.tenant_id == current_user.tenant_id)
+        .where(AuditLog.user_id == current_user.id)
         .order_by(AuditLog.created_at.desc())
     )
 
@@ -36,6 +36,6 @@ async def list_audit_logs(
     if action:
         query = query.where(AuditLog.action == action)
 
-    res = await db.execute(query)
-    logs = res.scalars().all()
+    result = await db.execute(query)
+    logs = result.scalars().all()
     return [AuditLogResponse.model_validate(log) for log in logs]

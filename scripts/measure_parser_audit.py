@@ -16,6 +16,7 @@ B. PARSER ACCURACY
 """
 
 import csv
+import json
 import random
 import sys
 from pathlib import Path
@@ -164,44 +165,68 @@ def generate_audit_csv() -> tuple[Path, float]:
     accuracy_est = (plausible_correct_entries / max(1, total_entries)) * 100.0
     print(f"\nWrote {len(rows)} experience rows from 40 test resumes to: {csv_path}")
     print(
-        f"Heuristic Correctness Estimate: {plausible_correct_entries}/{total_entries} entries ({accuracy_est:.1f}%)"
+        f"Heuristic Correctness Estimate (self-graded): {plausible_correct_entries}/{total_entries} entries ({accuracy_est:.1f}%)"
     )
+
+    # Save to docs/eval_parser_audit_40_report.json
+    docs_dir = Path(__file__).resolve().parent.parent / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    audit_report = {
+        "metadata": {
+            "source_script": "scripts/measure_parser_audit.py",
+            "audit_type": "self-graded",
+            "resumes_tested": 40,
+            "csv_file": "data/parser_audit_40.csv",
+        },
+        "metrics": {
+            "total_extracted_entries": total_entries,
+            "plausible_correct_entries": plausible_correct_entries,
+            "accuracy_estimate_percent": round(accuracy_est, 2),
+        },
+    }
+    import json
+
+    with open(docs_dir / "eval_parser_audit_40_report.json", "w", encoding="utf-8") as f:
+        json.dump(audit_report, f, indent=2)
+    print(f"Saved 40-resume audit report to {docs_dir / 'eval_parser_audit_40_report.json'}")
 
     return csv_path, accuracy_est
 
 
 def create_and_eval_non_resumes() -> dict[str, Any]:
     """
-    Generate 20 non-resumes outside initial templates:
-    5 JDs from sample, 5 cover letters, 4 meeting minutes, 3 product brochures, 3 certificates.
+    Generate 20 NEW non-resumes outside initial templates:
+    5 JDs from sample (offset 200), 5 cover letters, 4 meeting minutes, 3 product brochures, 3 certificates.
     """
     data_dir = Path(__file__).resolve().parent.parent / "data"
-    non_resume_dir = data_dir / "non_resumes_audit_20"
+    non_resume_dir = data_dir / "non_resumes_audit_20_new"
     non_resume_dir.mkdir(parents=True, exist_ok=True)
 
     non_resume_files = []
 
-    # 1. 5 Real Job Descriptions from jds_sample_2000.csv
+    # 1. 5 Real Job Descriptions from jds_sample_2000.csv (different slice)
     jds_csv = data_dir / "jds_sample_2000.csv"
     if jds_csv.exists():
         sample_jds = []
         with open(jds_csv, encoding="utf-8") as f:
             reader = csv.DictReader(f)
-            for row in reader:
+            for idx_row, row in enumerate(reader):
+                if idx_row < 200:
+                    continue
                 if row.get("description"):
                     sample_jds.append(row)
                 if len(sample_jds) == 5:
                     break
         for i, r in enumerate(sample_jds):
-            pdf_path = non_resume_dir / f"jd_from_sample_{i + 1}.pdf"
+            pdf_path = non_resume_dir / f"new_jd_sample_{i + 1}.pdf"
             c = canvas.Canvas(str(pdf_path), pagesize=letter)
-            title = str(r.get("job_title", "Job Posting"))
-            company = str(r.get("company_name", "Hiring Corp"))
+            title = str(r.get("job_title", "Position Announcement"))
+            company = str(r.get("company_name", "Global Enterprises"))
             desc = str(r.get("description", ""))[:1200]
 
-            c.drawString(72, 750, f"JOB POSTING: {title.upper()}")
-            c.drawString(72, 730, f"Hiring Organization: {company}")
-            c.drawString(72, 710, "Role Overview and Responsibilities:")
+            c.drawString(72, 750, f"OPPORTUNITY SPECIFICATION: {title.upper()}")
+            c.drawString(72, 730, f"Employer: {company}")
+            c.drawString(72, 710, "Summary of Position:")
             y = 690
             for line in desc.split("\n"):
                 if y < 80:
@@ -346,7 +371,7 @@ def create_and_eval_non_resumes() -> dict[str, Any]:
             true_negatives += 1
 
     precision = (true_negatives / len(non_resume_files)) * 100.0
-    print("Gate Results on 20 Fresh Non-Resumes:")
+    print("Gate Results on 20 NEW Non-Resumes:")
     print(
         f"  True Negatives (Correctly Rejected): {true_negatives}/{len(non_resume_files)} ({precision:.1f}%)"
     )
@@ -354,12 +379,30 @@ def create_and_eval_non_resumes() -> dict[str, Any]:
     for fp in false_positives:
         print(f"    - {fp['file']} ({fp['type']}) with gate confidence: {fp['confidence']:.2f}")
 
-    return {
-        "total_tested": len(non_resume_files),
-        "true_negatives": true_negatives,
-        "false_positives": false_positives,
-        "gate_precision": precision,
+    # Save to docs/eval_gate_precision_20_new.json
+    docs_dir = Path(__file__).resolve().parent.parent / "docs"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    gate_report = {
+        "metadata": {
+            "source_script": "scripts/measure_parser_audit.py",
+            "non_resumes_tested": len(non_resume_files),
+        },
+        "metrics": {
+            "total_tested": len(non_resume_files),
+            "true_negatives": true_negatives,
+            "false_positives_count": len(false_positives),
+            "gate_precision_percent": round(precision, 2),
+            "false_positive_rate_percent": round(100.0 - precision, 2),
+            "false_positives": false_positives,
+        },
     }
+    with open(docs_dir / "eval_gate_precision_20_new.json", "w", encoding="utf-8") as f:
+        json.dump(gate_report, f, indent=2)
+    print(
+        f"Saved 20 NEW non-resumes gate precision report to {docs_dir / 'eval_gate_precision_20_new.json'}"
+    )
+
+    return gate_report
 
 
 if __name__ == "__main__":
