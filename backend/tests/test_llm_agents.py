@@ -333,9 +333,7 @@ async def test_live_llm_injection_resistance() -> None:
 
     for attack in injection_attacks:
         sanitized, detected = detect_and_neutralize_injections(attack)
-        assert (
-            detected is True
-        ), f"Prompt injection detector failed to flag attack: '{attack[:40]}...'"
-        assert (
-            "[NEUTRALIZED_UNTRUSTED_INSTRUCTION:" in sanitized
-        ), f"Attack not properly neutralized: '{attack[:40]}...'"
+        msg_detect = f"Prompt injection detector failed to flag attack: '{attack[:40]}...'"
+        assert detected is True, msg_detect
+        msg_neutral = f"Attack not properly neutralized: '{attack[:40]}...'"
+        assert "[NEUTRALIZED_UNTRUSTED_INSTRUCTION:" in sanitized, msg_neutral
