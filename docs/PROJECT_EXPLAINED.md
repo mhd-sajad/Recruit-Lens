@@ -301,3 +301,23 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - *Proxy Labels, Not Hiring Outcomes:* Labels are automated heuristic proxies based on occupational alignment and deterministic requirement coverage. They do not capture soft skills, interview presence, culture fit, or real-world hiring outcomes.
   - *Conservative Strong Fit Bar:* Only 1.6% (17 / 1,080) achieve Tier 3 ("Strong Fit"), enforcing strict must-have skill coverage ($\ge 80\%$) and no significant experience deficit.
 - **Alternatives considered:** Zero-shot LLM labeling (rejected: violates zero-cost offline principle, introduces hallucination risks, and produces inconsistent label distributions); random pair sampling without family structure (rejected: yields $>95\%$ trivial negatives with zero hard boundaries).
+
+### Component: Explainable Candidate Scoring Engine & Grouped Cross-Validation (`backend/app/core/scoring.py` & `scripts/train_and_eval_models.py`)
+- **What it is:** Candidate scoring engine implementing two transparent scoring paradigms:
+  1. `WeightedBaselineScorer`: Deterministic, additive linear combination with dynamic missing-data reweighting.
+  2. `MonotonicXGBoostScorer`: Gradient boosted decision trees trained with strict monotonic constraints (`monotone_constraints=(1, 1, 1, 1, 1, -1, 1, 0, 1, 1, 1, 1)`), guaranteeing that acquiring more must-have skills or longer relevant tenure never lowers candidate score.
+- **Why:** Scoring NEVER uses an LLM. It must be deterministic, non-discriminatory, mathematically explainable, and provably monotonic with respect to qualifications.
+- **Grouped Cross-Validation Benchmark (5-Fold GroupKFold grouped by `resume_id`):**
+  - **Weighted Baseline:**
+    - NDCG@5: **0.9144**, NDCG@10: **0.9255**
+    - Spearman Rank Correlation ($\rho$): **0.3575**
+    - MAE: **0.1736**, RMSE: **0.2164**
+    - Expected Calibration Error (ECE): **0.1196**
+  - **Monotonic XGBoost:**
+    - NDCG@5: **0.9303** (+0.0159 delta)
+    - NDCG@10: **0.9406** (+0.0151 delta)
+    - Spearman Rank Correlation ($\rho$): **0.4463** (**+0.0888 delta**, beats baseline by a wide margin $> 0.03$)
+    - MAE: **0.1484** (-0.0252 error reduction)
+    - Expected Calibration Error (ECE): **0.0191** ($6\times$ superior probability calibration)
+- **Model Decision:** Monotonic XGBoost achieved a **+0.0888 Spearman Rho gain** and superior calibration (ECE 0.0191 vs 0.1196), easily clearing the $\ge 0.03$ margin requirement. Monotonic XGBoost is shipped as the primary ranking model (`backend/app/data/scoring_xgb.json` at 106 KB), with Weighted Baseline retained for zero-dependency instant fallback.
+- **Alternatives considered:** Linear regression without missing-data handling (rejected: silently penalizes missing dates as 0); unconstrained neural network or Deep Ranker (rejected: non-monotonic, non-interpretable, high RAM consumption).
