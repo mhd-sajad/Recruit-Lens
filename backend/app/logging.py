@@ -68,3 +68,8 @@ def setup_logging(log_level: str = "INFO", log_format: str = "json") -> None:
         )
 
     root_logger.addHandler(handler)
+
+
+def get_logger(name: str) -> logging.Logger:
+    """Return a logger instance with the given name."""
+    return logging.getLogger(name)

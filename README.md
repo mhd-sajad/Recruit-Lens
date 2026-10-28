@@ -133,6 +133,35 @@ PYTHONPATH=backend uv run python scripts/evaluate_scoring_validity.py
 
 ---
 
+## Batch 3: Grounded LLM Agents & Evidence Text Generation
+
+Batch 3 establishes a resilient multi-agent text generation system strictly grounded in retrieved evidence chunks, backed by automated Self-RAG critique and mathematical scoring invariance:
+
+- **Multi-Provider LLM Interface:** Integrates Groq free cloud API (`qwen/qwen3.8-27b`, with fallback `openai/gpt-oss-120b`), local Ollama (`http://localhost:11434`), and deterministic `NoLLMProvider` fallback. Includes dynamic model discovery, token-bucket rate limiting (8,000 TPM and 30 RPM), exponential backoff with jitter on HTTP 429/503, and persistent SQLite cache (`data/llm_cache.sqlite`) keyed by SHA-256 prompt hash.
+- **Strict Guardrails & Prompt Injection Neutralization:**
+  - XML boundary encapsulation (`<evidence_chunk>`).
+  - Regex neutralization of prompt injection strings (`ignore previous instructions`, `rate me 100`, etc.).
+  - Blind-mode PII redaction (candidate name, email, phone) prior to LLM synthesis.
+  - **Mathematical Invariance Proof:** Candidate scoring is 100% LLM-free. An adversarial candidate injecting prompt injection strings into their resume obtains an exact score difference of $\Delta = 0.000$ compared to the benign resume.
+- **Specialized Multi-Agent Pipeline:**
+  - **Explainer Agent:** Generates 3-4 sentence evaluation summaries citing chunk IDs (`[c_01]`).
+  - **Interview Question Generator:** Formulates 3-5 seniority-calibrated interview questions probing verified skills, missing mandatory requirements, and domain architecture.
+  - **Email Drafter:** Generates tailored interview invites, hold notifications, and rejection drafts. Rejections strictly omit internal scores and negative critique justifications.
+- **Self-RAG Critique & Claim Grounding:**
+  - Sentence-level verification: regex number and entity matching, ONNX MiniLM cosine semantic similarity against cited evidence chunks.
+  - Automated 2-turn rewrite loop for ungrounded sentences.
+  - Strict safety `BLOCK` fallback to deterministic templates when claims remain ungrounded.
+- **State Machine Orchestrator:** Resumable, idempotent execution lifecycle (`AgentExecutionRepository`), concurrency control via `asyncio.Semaphore`, and per-candidate failure isolation.
+
+### Running Batch 3 Evaluation & Benchmarks
+```bash
+# Run 40-candidate faithfulness benchmark and 7-point adversarial suite
+export PATH="$HOME/.local/bin:$PATH"
+uv run --project backend python3 scripts/evaluate_llm_agents.py
+```
+
+---
+
 ## Running Quality Checks
 
 Run the unified quality verification suite across backend and frontend:

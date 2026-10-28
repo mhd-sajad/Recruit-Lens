@@ -30,7 +30,7 @@ class SkillTaxonomy:
         self._canonical_skills: dict[str, dict[str, Any]] = {}
         self._alias_map: dict[str, str] = {}
         self._inference_map: dict[str, list[dict[str, Any]]] = {}
-        self._patterns: list[tuple[re.Pattern[str], str]] = []
+        self._patterns: list[re.Pattern[str]] = []
 
         self._load_taxonomy()
         self._compile_matchers()
@@ -89,7 +89,7 @@ class SkillTaxonomy:
         special_aliases = [a for a in filtered_aliases if a in {"c++", "c#"}]
         standard_aliases = [a for a in filtered_aliases if a not in {"c++", "c#"}]
 
-        self._patterns: list[re.Pattern[str]] = []
+        self._patterns = []
         for sa in special_aliases:
             escaped = re.escape(sa)
             self._patterns.append(re.compile(rf"(?<!\w){escaped}(?!\w)", re.IGNORECASE))

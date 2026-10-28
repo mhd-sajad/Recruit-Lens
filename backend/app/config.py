@@ -39,8 +39,15 @@ class Settings(BaseSettings):
 
     # LLM Settings (Free Tier / Self-Hosted)
     GROQ_API_KEY: str = Field(default="", description="Optional Groq API key")
-    GROQ_MODEL: str = "llama-3.1-8b-instant"
+    GROQ_MODEL: str = "qwen/qwen3.8-27b"
+    GROQ_FALLBACK_MODEL: str = "openai/gpt-oss-120b"
     OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3.2:3b"
+    LLM_CACHE_ENABLED: bool = True
+    LLM_MAX_RPM: int = Field(default=30, ge=1, le=100)
+    LLM_MAX_TPM: int = Field(default=7000, ge=500, le=50000)
+    LLM_REQUEST_TIMEOUT_SECONDS: float = Field(default=20.0, ge=1.0, le=120.0)
+    LLM_MAX_RETRIES: int = Field(default=3, ge=0, le=5)
 
     # Logging
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

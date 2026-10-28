@@ -60,7 +60,7 @@ def _cls_pooling(token_embeddings: np.ndarray) -> np.ndarray:
 
     token_embeddings: shape (batch_size, seq_len, hidden_dim)
     """
-    return cast(np.ndarray, token_embeddings[:, 0, :])
+    return token_embeddings[:, 0, :]
 
 
 def _l2_normalize(embeddings: np.ndarray) -> np.ndarray:
