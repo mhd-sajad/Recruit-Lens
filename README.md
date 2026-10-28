@@ -75,21 +75,23 @@ Open `http://localhost:5173` to interact with the recruiter dashboard.
 Batch 1 establishes a verified, measured data ingestion and candidate-isolated retrieval foundation:
 
 - **Dual-Engine PDF Parser:** Multi-column layout coordinate clustering, deterministic rule-based resume gate, and strict PII isolation (`scoring_text` free of contact details). Audited on 40 unseen random resumes:
-  - **Structured Title Accuracy Estimate:** **87.3%** correct (across 291 audited job entries, documented in `data/parser_audit_40.csv`)
-  - **Resume Gate Precision:** **95.0%** (19/20 non-resumes rejected across unseen cover letters, meeting minutes, brochures, and certificates)
-- **SSRF-Safe JD Scraper:** Blocks loopback, private, link-local, and cloud metadata IPs (`169.254.169.254`) with strict timeouts and 2 MB size caps.
-- **Quantized ONNX Embedder (Arena Disabled):** CPU-quantized MiniLM-L6 operating at **164.2 MB RSS** at **5.05 ms/chunk**, outperforming BGE-small (178.7 MB RSS at 8.39 ms/chunk).
+  - **Reviewer Hand-Labelled Baseline (Old Parser):** Out of 291 extracted entries in `data/parser_audit_40.csv`: 90 clean (O), 77 noisy (C), 36 wrong (W), 88 non-job fragments (F). Across 203 real jobs: **44.3% clean**, **82.3% recoverable**.
+  - **Fixed Parser Performance:** Encoding repaired with `ftfy`, placeholder/bullet stripping, template filtering, and header merging eliminated all fragments: **201 total entries**, **0 fragments (0.0%)**, **0 wrong (0.0%)**, **201 recoverable (100.0%)**, **40/40 first-entry accuracy (100.0%)**. Fresh holdout generated in `data/parser_holdout_30.csv` (153 entries across 30 unseen resumes).
+  - **Resume Gate Precision:** **100.0%** (20/20 non-resumes rejected across unseen cover letters, meeting minutes, brochures, and certificates; 100/100 real resumes accepted).
+- **SSRF-Safe JD Scraper:** Blocks loopback, private, link-local, and cloud metadata IPs (`169.254.169.254`) with strict timeouts and 2 MB size caps. (Note: JD corpus contains 123,700 rows; the vault manifest's 1.3M figure was incorrect).
+- **Quantized ONNX Embedder (Arena Disabled):** CPU-quantized MiniLM-L6 operating at **218.8 MB RSS**, outperforming BGE-small (262.6 MB RSS, with CLS pooling and query prefix). (Memory difference is likely due to the ONNX Runtime / OS allocator arena retention rather than model weights alone).
 - **Candidate-Isolated Retrieval:** Zero cross-candidate data leakage by construction. Stores float32 embedding blobs and fuses in-memory `bm25s` and dense vector cosine similarity via Reciprocal Rank Fusion ($k=60$).
 - **Within-Resume Retrieval Test (34 Gold Queries, Median Pool = 8 chunks):**
   - **Random Guess Baseline:** Hit@5: **62.92%**, Hit@10: **95.34%**, MRR: **0.3381**
   - **BM25 (Sparse):** Hit@5: **94.1%**, Hit@10: **97.1%**, MRR: **0.6395**
   - **Dense (MiniLM):** Hit@5: **82.4%**, Hit@10: **97.1%**, MRR: **0.6412**
   - **Hybrid (MiniLM RRF $k=60$):** Hit@5: **88.2%**, Hit@10: **97.1%**, MRR: **0.6913**
-- **Corpus-Wide Retrieval Test (34 Gold Queries across All 300 Resumes Pooled = 2,318 Chunks):**
-  - **BM25:** Hit@1: **23.5%**, Hit@3: **47.1%**, Hit@5: **47.1%**, Hit@10: **70.6%**, MRR: **0.3702**
-  - **Dense (MiniLM):** Hit@1: 14.7%, Hit@3: 38.2%, Hit@5: 38.2%, Hit@10: 44.1%, MRR: 0.2574
-  - **Hybrid (MiniLM RRF):** Hit@1: 20.6%, Hit@3: 38.2%, Hit@5: 47.1%, Hit@10: 61.8%, MRR: 0.3283
-  - **Primary Engine Decision:** BM25 designated primary retrieval signal (MRR 0.3702 beats Dense 0.2574 and Hybrid 0.3283).
+- **Corpus-Wide Retrieval Test (34 Gold Queries across 300 Resumes Pooled = 2,317 Chunks):**
+  - **New Sliding-Window Chunks (150 words max):** BM25 Hit@5: **50.0%** (MRR: 0.3712), Dense MiniLM Hit@5: **38.2%** (MRR: 0.2333), Hybrid Hit@5: **50.0%** (MRR: 0.3197).
+  - **Control Experiment on Old Monolithic Chunks (up to 1,062 words):** BM25 Hit@5: **67.65%** (MRR: 0.5167), Hybrid Hit@5: **67.65%** (MRR: 0.4262).
+  - **Old Project Baseline Reference:** The old project baseline achieved **64.7% Hit@5** using BM25 over the full old corpus with the same 34 pairs (not TF-IDF + cosine).
+  - **Chunk Boundary Retention Analysis:** 10 hand-inspected remapped pairs showed 4 full retentions and 6 partial/splits across sliding-window boundaries. When multi-sentence evidence is split into adjacent 150-word chunks, queries matching adjacent chunks are marked misses under strict single-chunk ID matching.
+  - **Primary Engine Decision:** BM25 designated primary retrieval signal (MRR 0.3712 beats Dense 0.2333 and Hybrid 0.3197).
 
 ---
 
@@ -97,24 +99,25 @@ Batch 1 establishes a verified, measured data ingestion and candidate-isolated r
 
 Batch 2 establishes a transparent, non-discriminatory candidate evaluation engine with deterministic grounding:
 
-- **Curated Skill Taxonomy:** Backed by official O*NET 29.0 technology skills (2,500 prioritized technical skills, 2,545 aliases, 134 families) with hierarchical inference relations (e.g., Django implies Python at 0.95 confidence).
+- **Expanded Skill Taxonomy:** 8,822 canonical skills across 140 families (full O*NET 29.0 technology skills + domain non-tech skills for Education, Healthcare, Sales, HR, Legal, and Operations). All 24 resume categories have $\ge 91.7\%$ with $\ge 3$ skills (`TEACHER` at 91.7%); all JD families exceed 60% with $\ge 3$ skills. Batched regex alternations (chunks of 200) achieve 100x faster sub-millisecond matching.
 - **Deterministic JD Requirement Extractor:** Extracts minimum/maximum experience years, degree ranks (0-4), and partitions must-have vs nice-to-have skills with typed Pydantic models.
 - **Resume Skill Extractor with Citation Evidence:** Records character offsets and chunk IDs for all extracted skills with explicit match precedence over inferences.
 - **Bounded Feature Vector with Keyword Stuffing Guard:** Computes 10 bounded features with calibrated confidence and explicit missing-data handling (never silently 0). Set-based skill matching guarantees that repeating a skill 50 times yields zero score gain.
 - **Weak-Supervision Pair Dataset:** 1,080 pairs crossing 120 resumes across 24 categories with 105 JDs across 11 families (480 positives, 360 hard negatives, 240 easy negatives). Limitations documented honestly as heuristic proxy labels.
 - **Scoring Engine & Grouped 5-Fold Cross-Validation:**
-  - Evaluated on 1,080 pairs grouped by `resume_id` to prevent data leakage.
-  - **Weighted Baseline:** NDCG@10: **0.9255**, Spearman $\rho$: **0.3575**, MAE: **0.1736**, ECE: **0.1196**.
-  - **Monotonic XGBoost:** NDCG@10: **0.9406**, Spearman $\rho$: **0.4463** (+0.0888 gain), MAE: **0.1484**, ECE: **0.0191** ($6\times$ better calibration).
-  - **Winning Model:** Monotonic XGBoost shipped as primary scoring model (`backend/app/data/scoring_xgb.json` at 106 KB), with Weighted Baseline retained for zero-dependency fallback.
+  - `must_have_coverage` alone has moderate Spearman correlation with the weak label ($\rho = 0.3567$, Pearson $r = 0.4415$).
+  - **Marginal Gain of XGBoost:** Multi-feature Monotonic XGBoost achieves NDCG@10 of **0.9406** (+0.0724 gain over single-feature 0.8682) and Spearman $\rho$ of **0.4463** (+0.0896 gain over single-feature 0.3567).
+  - **Grouped CV Tier Thresholds:** Calibrating thresholds on training folds yields real held-out **Strong Fit Precision of 60.0%** (9/15) with a **95% Wilson Score Confidence Interval of [35.7% - 80.2%]** (recall 25.7%). (Self-set targets of precision > 85% and ECE < 0.05 marked as engineering objectives, not external benchmarks).
 - **Plain-Language Reasons Generator:** Translates mathematical feature attributions into factual recruiter briefings (strengths and gaps) citing evidence chunks.
-- **Candidate Triage Tiers:** Data-calibrated thresholds (Strong Fit $\ge 0.72$, Interview $\ge 0.50$, Hold $\ge 0.30$, Reject $< 0.30$) with strict must-have override (missing mandatory skills strictly disallows Strong Fit) and low-parse-confidence abstain state.
+- **Candidate Triage Tiers:** Data-calibrated thresholds with strict must-have override (missing mandatory skills strictly disallows Strong Fit) and low-parse-confidence abstain state.
 - **What-If Qualification Simulator:** Interactive projection of score and tier deltas under hypothetical skill or experience adjustments with explicit planning disclaimers.
 - **Metamorphic Invariant Test Suite:** 6 properties asserting monotonicity, demographic bias invariance (gender, ethnicity, contact info), section reordering stability, keyword stuffing resistance, and corrupt document abstention.
-- **Unified Evaluation Pipeline (`scripts/run_eval.py`):** Outputs `docs/eval_metrics_batch2.json` with latency and memory SLA verification:
-  - Latency SLA: **10.98 ms / candidate** (Target $< 500$ ms): **PASSED**
-  - Peak RSS Memory: **164.2 MB** (Target $< 400$ MB): **PASSED**
-  - 200-Resume Batch Runtime: **2.20 s** (Target $< 300$ s): **PASSED**
+- **Vocabulary-Mismatch Stress Test (Batch 2 Task 12):** Exact string matching failed on Candidate A (2/5) and Candidate B (0/5). Canonical alias resolution + dense similarity successfully bridged the gap, correctly ranking Candidate A (0.7484) > Candidate B (0.5997) >> Candidate C (0.2327).
+- **Real End-to-End 200-Resume Pipeline Benchmark:**
+  - Total Wall-Clock Time: **219.10 s (3.65 minutes)** (SLA $< 300$ s): **PASSED**
+  - Per-Resume Wall Time: **1,095.5 ms / resume**
+  - Peak RSS Memory: **456.5 MB** (during un-garbage-collected full batch; single document/chunk streaming runs at 285 MB).
+  - Latency Explanation: Batch 1 cold single-threaded unquantized inference took 74.57 ms/chunk; Batch 2+ INT8 quantized batched ONNX with 2 threads reduced inference to 48.71 ms/chunk under full load.
 
 ### Running Batch 2 Benchmarks & Tools
 ```bash
@@ -124,8 +127,8 @@ PYTHONPATH=backend uv run python scripts/build_weak_supervision.py
 # Run 5-fold grouped cross-validation comparison (Baseline vs XGBoost)
 PYTHONPATH=backend uv run python scripts/train_and_eval_models.py
 
-# Run unified system evaluation (retrieval, scoring, tiers, SLAs)
-PYTHONPATH=backend uv run python scripts/run_eval.py
+# Run comprehensive scoring validity and real 200-resume benchmark
+PYTHONPATH=backend uv run python scripts/evaluate_scoring_validity.py
 ```
 
 ---

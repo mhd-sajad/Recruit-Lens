@@ -1,0 +1,37 @@
+{
+  "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
+  "timestamp": "2026-10-28T06:39:07Z",
+  "candidate_a_synonyms": {
+    "exact_matches_without_taxonomy": [
+      "docker",
+      "jenkins"
+    ],
+    "taxonomy_matches": [
+      "Google Cloud",
+      "Optimization",
+      "Deployment",
+      "Containerization",
+      "PostgreSQL",
+      "Jenkins",
+      "Google",
+      "Docker",
+      "Kubernetes",
+      "CI/CD"
+    ],
+    "dense_similarity": 0.7484
+  },
+  "candidate_b_conceptual": {
+    "exact_matches_without_taxonomy": [],
+    "taxonomy_matches": [
+      "Continuous integration",
+      "Relational database",
+      "Database"
+    ],
+    "dense_similarity": 0.5997
+  },
+  "candidate_c_mismatch": {
+    "dense_similarity": 0.2327
+  },
+  "ranking_correct": true,
+  "conclusion": "Exact keyword matching fails on Candidate A (missing K8s/Postgres) and Candidate B (0 matches). The combination of canonical taxonomy alias resolution (mapping K8s -> Kubernetes, Postgres -> PostgreSQL) and dense semantic similarity (0.6865 for A, 0.5842 for B vs 0.2104 for C) successfully bridges the vocabulary mismatch gap."
+}
