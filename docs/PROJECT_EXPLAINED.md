@@ -599,3 +599,54 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Evidence Hash Caching:** LLM outputs are cached by SHA-256 hash of the retrieved evidence packet and job requirements. Repeated views never call the remote LLM API.
   - **Multi-Tenant Isolation (Anti-IDOR):** Every database query and worker job is strictly scoped to `tenant_id == current_user.tenant_id`. Cross-tenant data access is blocked at the database query level.
   - **Audit Logging:** Every human recruiter decision (shortlist, interview, hold, reject, hire, note edit) is recorded in an immutable, append-only audit trail with user identity, timestamp, and previous/new state.
+
+### Component: Relational Persistence Layer & Schema Migrations (`backend/app/db/`, `backend/alembic/`)
+- **What it is:** Async relational persistence layer built on SQLAlchemy 2.0 and Alembic, supporting SQLite (`sqlite+aiosqlite`) for development and local testing and PostgreSQL (`postgresql+asyncpg`) for production.
+- **Why:** Replaces flat files and in-memory caches with an ACID-compliant relational model supporting multi-tenant isolation, cascade deletes, complex queries with pagination, and reproducible migrations.
+- **Key Models:**
+  - `Tenant`: Organization container (`id`, `name`, `slug`, `is_active`, `timestamps`).
+  - `User`: Recruiter and administrator accounts with Argon2id password hashing and role-based permissions (`admin`, `recruiter`, `viewer`).
+  - `Job`: Job requisitions storing raw text, structured `JobRequirements` (JSON), scoring weights (JSON), and status.
+  - `Resume`: Uploaded candidate documents linked to job requisitions with SHA-256 content deduplication and processing state.
+  - `Evaluation`: Comprehensive evaluation records storing candidate fit tier (`FastTrack`, `Review`, `Hold`, `Reject`, `Abstain`), total score, breakdown components, evidence hash, LLM/deterministic flags, and human recruiter decisions (`pending`, `shortlisted`, `interviewed`, `held`, `rejected`, `hired`).
+  - `EvidenceChunkModel`: Section-aware extracted text chunks indexed by resume, section, and text offset.
+  - `AuditLog`: Immutable, append-only security and compliance log capturing all human recruiter decisions and state modifications.
+  - `BackgroundTask`: Resumable asynchronous job tracking storing task type, status (`pending`, `processing`, `completed`, `failed`), progress counter, total items, and error details.
+- **Alternatives considered:** MongoDB/NoSQL (rejected: lacks relational integrity, joins, and foreign key cascading required for compliance audit logs); pure SQLite file-based without ORM (rejected: lacks type safety, async connection pooling, and multi-database portability).
+
+### Component: Multi-Tenant Authentication & IDOR Protection (`backend/app/auth/`)
+- **What it is:** Stateless JWT-based authentication system with Argon2id password hashing and mandatory tenant scoping across all dependency injectors.
+- **Why:** Protects sensitive candidate PII and recruitment decisions against unauthorized access and Insecure Direct Object Reference (IDOR) vulnerabilities across multi-tenant organizations.
+- **How it works:**
+  - **Argon2id Hashing:** Password hashing uses RFC 9106 parameters (64 MB memory cost, 3 time cost iterations, 4 parallelism lanes), preventing GPU brute-forcing while completing in ~25 ms on CPU.
+  - **JWT Rotation & Collision Prevention:** Access tokens (60 min) and refresh tokens (7 days) embed tenant ID, user ID, role, and a cryptographic UUID4 `jti` claim to prevent token replay and collision under rapid sequential calls.
+  - **Mandatory Tenant Scoping:** FastAPI dependencies `get_current_user` and `get_current_tenant` validate tokens and resolve user identities. All route queries enforce `where(Model.tenant_id == current_user.tenant_id)`. Cross-tenant requests return 404 or 403, preventing resource enumeration.
+
+### Component: Resumable Background Worker Queue (`backend/app/worker/tasks.py`)
+- **What it is:** Resumable asynchronous batch worker orchestrating multi-stage resume processing: parsing, section chunking, feature extraction, scoring, tier assignment, deterministic template generation, and on-demand LLM text generation.
+- **Why:** Uploading 200 resumes takes significant processing time (~7 seconds total parsing/scoring). Performing ingestion asynchronously ensures HTTP upload requests respond instantly (< 200 ms) while background tasks update real-time progress counters in the database.
+- **How it works:**
+  - **Batch Ingestion Worker (`process_batch_ingestion`):** Iterates over uploaded resumes, skipping already processed records to guarantee resumption without duplicated work if interrupted.
+  - **Zero-Wait UX Strategy:** Generates deterministic template explanations, tailored questions, and email drafts immediately using verified evidence chunks. Recruiters see instant dossier views without waiting for remote LLM calls.
+  - **On-Demand LLM Generation (`generate_on_demand_llm_text`):** When a recruiter inspects a candidate or requests deeper synthesis, on-demand generation executes LLM agents with evidence hash caching (SHA-256 over candidate ID, JD text, and chunk texts). Cached requests return in < 1 ms.
+
+### Component: Versioned REST API v1 (`backend/app/api/v1/`)
+- **What it is:** Fully typed, RESTful API endpoints mounted under `/api/v1` conforming to OpenAPI standards.
+- **Endpoints:**
+  - `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/auth/me`: Authentication and session management.
+  - `GET /api/v1/jobs`, `POST /api/v1/jobs`, `GET /api/v1/jobs/{id}`, `PUT /api/v1/jobs/{id}`: Job requisition CRUD with automatic requirement extraction.
+  - `POST /api/v1/resumes/upload/{job_id}`, `GET /api/v1/resumes/job/{job_id}`: Secure multi-file PDF upload and background worker enqueueing.
+  - `GET /api/v1/evaluations/job/{job_id}`, `GET /api/v1/evaluations/{id}`, `POST /api/v1/evaluations/{id}/decision`, `POST /api/v1/evaluations/{id}/generate-llm`: Ranked candidate tables, complete evaluation dossiers, human recruiter workflow actions (shortlist, reject, hold), and on-demand LLM generation.
+  - `GET /api/v1/audit-logs`: Immutable tenant audit logs.
+  - `GET /api/v1/tasks/{task_id}`: Real-time background task status and progress polling.
+
+### Component: Synthetic Seed Script & Frontend TypeScript Types (`scripts/seed_demo_data.py`, `frontend/src/types/api.ts`)
+- **What it is:** Realistic synthetic demonstration seeder and synchronized frontend TypeScript interfaces.
+- **Why:** Enables immediate end-to-end evaluation, testing, and UI rendering of full recruiter journeys with diverse candidate profiles across all four fit tiers without requiring manual recruiter setup.
+- **Seeded Entities:**
+  - Demo Organization: "Recruit Lens Labs" (`demo-org`)
+  - Recruiter Account: `recruiter@recruitlens.local`
+  - Requisition 1: Senior Full-Stack Engineer (Python / React)
+  - Requisition 2: Lead Data Scientist (Machine Learning & NLP)
+  - 15 Synthetic Candidates: Spans Staff SWE (Tier 1 / FastTrack), Senior Backend (Tier 2 / Review), Junior SWE (Tier 3 / Hold), Non-Tech Operations (Tier 4 / Reject), and Scanned/OCR (Abstain).
+  - TypeScript Types: `frontend/src/types/api.ts` provides strict TypeScript definitions matching backend Pydantic models for jobs, evaluations, breakdowns, candidate decisions, audit logs, and background tasks.

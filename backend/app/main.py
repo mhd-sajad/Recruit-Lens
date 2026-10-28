@@ -11,7 +11,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app import __version__
+from app.api.v1 import api_v1_router
 from app.config import settings
+from app.db.session import init_db
 from app.logging import request_id_ctx, setup_logging
 from app.middleware import RequestIdMiddleware
 
@@ -26,6 +28,7 @@ class EchoPayload(BaseModel):
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan management."""
     setup_logging(log_level=settings.LOG_LEVEL, log_format=settings.LOG_FORMAT)
+    await init_db()
     yield
 
 
@@ -49,6 +52,9 @@ def create_app() -> FastAPI:
 
     # Request ID Middleware
     app.add_middleware(RequestIdMiddleware)
+
+    # Mount API v1 Routers
+    app.include_router(api_v1_router)
 
     # 4xx Error Handling (Never return 5xx on invalid client inputs)
     @app.exception_handler(RequestValidationError)

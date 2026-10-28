@@ -193,7 +193,7 @@ def create_and_eval_non_resumes() -> dict[str, Any]:
                 if len(sample_jds) == 5:
                     break
         for i, r in enumerate(sample_jds):
-            pdf_path = non_resume_dir / f"jd_from_sample_{i+1}.pdf"
+            pdf_path = non_resume_dir / f"jd_from_sample_{i + 1}.pdf"
             c = canvas.Canvas(str(pdf_path), pagesize=letter)
             title = str(r.get("job_title", "Job Posting"))
             company = str(r.get("company_name", "Hiring Corp"))

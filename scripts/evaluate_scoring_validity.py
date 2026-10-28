@@ -53,7 +53,9 @@ def get_current_rss_mb() -> float:
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 
-def wilson_score_interval(successes: int, total: int, confidence: float = 0.95) -> tuple[float, float]:
+def wilson_score_interval(
+    successes: int, total: int, confidence: float = 0.95
+) -> tuple[float, float]:
     """Calculate Wilson score confidence interval for a binomial proportion."""
     if total == 0:
         return 0.0, 0.0
@@ -65,7 +67,9 @@ def wilson_score_interval(successes: int, total: int, confidence: float = 0.95) 
     return max(0.0, center - margin), min(1.0, center + margin)
 
 
-def dict_to_feature_vector(feat_dict: dict[str, float], resume_id: str, job_id: str) -> CandidateFeatureVector:
+def dict_to_feature_vector(
+    feat_dict: dict[str, float], resume_id: str, job_id: str
+) -> CandidateFeatureVector:
     def make_fv(name: str, val: float, mi: float, ma: float) -> FeatureValue:
         return FeatureValue(
             name=name,
@@ -79,18 +83,30 @@ def dict_to_feature_vector(feat_dict: dict[str, float], resume_id: str, job_id: 
     return CandidateFeatureVector(
         resume_id=resume_id,
         job_id=job_id,
-        must_have_coverage=make_fv("must_have_coverage", feat_dict.get("must_have_coverage", 0.0), 0.0, 1.0),
-        nice_to_have_coverage=make_fv("nice_to_have_coverage", feat_dict.get("nice_to_have_coverage", 0.0), 0.0, 1.0),
-        matched_must_count=make_fv("matched_must_count", feat_dict.get("matched_must_count", 0.0), 0.0, 50.0),
-        matched_nice_count=make_fv("matched_nice_count", feat_dict.get("matched_nice_count", 0.0), 0.0, 50.0),
+        must_have_coverage=make_fv(
+            "must_have_coverage", feat_dict.get("must_have_coverage", 0.0), 0.0, 1.0
+        ),
+        nice_to_have_coverage=make_fv(
+            "nice_to_have_coverage", feat_dict.get("nice_to_have_coverage", 0.0), 0.0, 1.0
+        ),
+        matched_must_count=make_fv(
+            "matched_must_count", feat_dict.get("matched_must_count", 0.0), 0.0, 50.0
+        ),
+        matched_nice_count=make_fv(
+            "matched_nice_count", feat_dict.get("matched_nice_count", 0.0), 0.0, 50.0
+        ),
         inferred_count=make_fv("inferred_count", feat_dict.get("inferred_count", 0.0), 0.0, 50.0),
-        missing_must_count=make_fv("missing_must_count", feat_dict.get("missing_must_count", 0.0), 0.0, 50.0),
+        missing_must_count=make_fv(
+            "missing_must_count", feat_dict.get("missing_must_count", 0.0), 0.0, 50.0
+        ),
         years_gap=make_fv("years_gap", feat_dict.get("years_gap", 0.0), -10.0, 15.0),
         seniority_gap=make_fv("seniority_gap", feat_dict.get("seniority_gap", 0.0), -4.0, 4.0),
         education_match=make_fv("education_match", feat_dict.get("education_match", 0.0), 0.0, 1.0),
         title_match=make_fv("title_match", feat_dict.get("title_match", 0.0), 0.0, 1.0),
         skill_recency=make_fv("skill_recency", feat_dict.get("skill_recency", 0.0), 0.0, 1.0),
-        dense_similarity=make_fv("dense_similarity", feat_dict.get("dense_similarity", 0.0), 0.0, 1.0),
+        dense_similarity=make_fv(
+            "dense_similarity", feat_dict.get("dense_similarity", 0.0), 0.0, 1.0
+        ),
     )
 
 
@@ -107,7 +123,9 @@ def run_e1_and_e2_evaluation(repo_root: Path) -> dict[str, Any]:
     print(f"Loaded {len(pairs)} pairs from {data_path}")
 
     # Extract arrays
-    must_have_cov = np.array([p["features"].get("must_have_coverage", 0.0) for p in pairs], dtype=np.float32)
+    must_have_cov = np.array(
+        [p["features"].get("must_have_coverage", 0.0) for p in pairs], dtype=np.float32
+    )
     y_scores = np.array([float(p["target_score"]) for p in pairs], dtype=np.float32)
     resumes = [p["resume_id"] for p in pairs]
     jobs = [p["job_id"] for p in pairs]
@@ -140,10 +158,20 @@ def run_e1_and_e2_evaluation(repo_root: Path) -> dict[str, Any]:
     for jid in unique_jobs:
         indices = [idx for idx, j in enumerate(jobs) if j == jid]
         if len(indices) >= 3 and np.std(y_scores[indices]) > 1e-6:
-            single_ndcg10_list.append(float(ndcg_score(y_scores[indices].reshape(1, -1), must_have_cov[indices].reshape(1, -1), k=min(10, len(indices)))))
+            single_ndcg10_list.append(
+                float(
+                    ndcg_score(
+                        y_scores[indices].reshape(1, -1),
+                        must_have_cov[indices].reshape(1, -1),
+                        k=min(10, len(indices)),
+                    )
+                )
+            )
     single_feat_ndcg10 = float(np.mean(single_ndcg10_list))
 
-    print(f"  Single-feature (must_have_coverage alone): NDCG@10 = {single_feat_ndcg10:.4f}, Rho = {spearman_corr:.4f}, MAE = {single_feat_mae:.4f}")
+    print(
+        f"  Single-feature (must_have_coverage alone): NDCG@10 = {single_feat_ndcg10:.4f}, Rho = {spearman_corr:.4f}, MAE = {single_feat_mae:.4f}"
+    )
 
     # E.2: Grouped Cross-Validation Tier Thresholds
     # In each fold, choose thresholds on train fold, evaluate on held-out fold
@@ -166,14 +194,24 @@ def run_e1_and_e2_evaluation(repo_root: Path) -> dict[str, Any]:
         xgb_scorer.train(x_tr, y_tr)
 
         # Train-fold predictions for setting tier threshold
-        tr_preds = np.clip([float(xgb_scorer.model.predict(x_tr[r].reshape(1, -1))[0]) for r in range(len(x_tr))], 0.0, 1.0)
+        tr_preds = np.clip(
+            [float(xgb_scorer.model.predict(x_tr[r].reshape(1, -1))[0]) for r in range(len(x_tr))],
+            0.0,
+            1.0,
+        )
         # Determine Strong Fit threshold on train fold (e.g. 90th percentile of true positive scores or score >= 0.75)
         # High-fit threshold calibrated on train fold
-        strong_threshold = float(np.percentile(tr_preds[y_tr >= 0.70], 25)) if np.sum(y_tr >= 0.70) > 0 else 0.75
+        strong_threshold = (
+            float(np.percentile(tr_preds[y_tr >= 0.70], 25)) if np.sum(y_tr >= 0.70) > 0 else 0.75
+        )
         strong_threshold = max(0.65, min(0.80, strong_threshold))
 
         # Evaluate on validation fold
-        val_preds = np.clip([float(xgb_scorer.model.predict(x_va[r].reshape(1, -1))[0]) for r in range(len(x_va))], 0.0, 1.0)
+        val_preds = np.clip(
+            [float(xgb_scorer.model.predict(x_va[r].reshape(1, -1))[0]) for r in range(len(x_va))],
+            0.0,
+            1.0,
+        )
         xgb_rho, _ = spearmanr(y_va, val_preds)
 
         # NDCG@10 for fold
@@ -181,14 +219,24 @@ def run_e1_and_e2_evaluation(repo_root: Path) -> dict[str, Any]:
         for jid in set(va_jobs):
             idx_in_val = [i for i, j in enumerate(va_jobs) if j == jid]
             if len(idx_in_val) >= 3 and np.std(y_va[idx_in_val]) > 1e-6:
-                fold_ndcg.append(float(ndcg_score(y_va[idx_in_val].reshape(1, -1), val_preds[idx_in_val].reshape(1, -1), k=min(10, len(idx_in_val)))))
+                fold_ndcg.append(
+                    float(
+                        ndcg_score(
+                            y_va[idx_in_val].reshape(1, -1),
+                            val_preds[idx_in_val].reshape(1, -1),
+                            k=min(10, len(idx_in_val)),
+                        )
+                    )
+                )
 
-        xgb_metrics_cv.append({
-            "fold": fold,
-            "spearman_rho": float(xgb_rho),
-            "ndcg10": float(np.mean(fold_ndcg)) if fold_ndcg else 0.0,
-            "strong_threshold": strong_threshold,
-        })
+        xgb_metrics_cv.append(
+            {
+                "fold": fold,
+                "spearman_rho": float(xgb_rho),
+                "ndcg10": float(np.mean(fold_ndcg)) if fold_ndcg else 0.0,
+                "strong_threshold": strong_threshold,
+            }
+        )
 
         # Evaluate Strong Fit classification on validation fold
         for pred, true_score, fam in zip(val_preds, y_va, va_fams):
@@ -213,11 +261,17 @@ def run_e1_and_e2_evaluation(repo_root: Path) -> dict[str, Any]:
     marginal_rho_gain = avg_cv_rho - spearman_corr
 
     print("\nE.2 Grouped CV Results:")
-    print(f"  XGBoost CV Spearman Rho: {avg_cv_rho:.4f} (Marginal Gain over must_have: {marginal_rho_gain:+.4f})")
-    print(f"  XGBoost CV NDCG@10:      {avg_cv_ndcg10:.4f} (Marginal Gain over must_have: {marginal_ndcg_gain:+.4f})")
+    print(
+        f"  XGBoost CV Spearman Rho: {avg_cv_rho:.4f} (Marginal Gain over must_have: {marginal_rho_gain:+.4f})"
+    )
+    print(
+        f"  XGBoost CV NDCG@10:      {avg_cv_ndcg10:.4f} (Marginal Gain over must_have: {marginal_ndcg_gain:+.4f})"
+    )
     print(f"  Strong Fit Predictions:  {true_positives}/{total_pred_strong}")
-    print(f"  Strong Fit Precision:    {strong_fit_precision*100:.1f}% [95% Wilson CI: {ci_low*100:.1f}% - {ci_high*100:.1f}%]")
-    print(f"  Strong Fit Recall:       {strong_fit_recall*100:.1f}%")
+    print(
+        f"  Strong Fit Precision:    {strong_fit_precision * 100:.1f}% [95% Wilson CI: {ci_low * 100:.1f}% - {ci_high * 100:.1f}%]"
+    )
+    print(f"  Strong Fit Recall:       {strong_fit_recall * 100:.1f}%")
 
     # E.3: Metrics per role family
     print("\nE.3 Performance Breakdown by Occupational Family:")
@@ -300,7 +354,9 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
         parsed_resumes.append(parsed)
     t_parse = time.perf_counter() - t0_parse
     rss_after_parse = get_current_rss_mb()
-    print(f"  [1/5] Parsed 200 PDFs in {t_parse:.2f}s ({t_parse/200*1000:.1f} ms/doc) | RSS: {rss_after_parse:.1f} MB")
+    print(
+        f"  [1/5] Parsed 200 PDFs in {t_parse:.2f}s ({t_parse / 200 * 1000:.1f} ms/doc) | RSS: {rss_after_parse:.1f} MB"
+    )
 
     # Step 2: Chunk 200 resumes
     t0_chunk = time.perf_counter()
@@ -311,7 +367,9 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
         chunks_by_resume[parsed.resume_id] = chunks
         all_chunks.extend(chunks)
     t_chunk = time.perf_counter() - t0_chunk
-    print(f"  [2/5] Generated {len(all_chunks)} chunks in {t_chunk:.2f}s | RSS: {get_current_rss_mb():.1f} MB")
+    print(
+        f"  [2/5] Generated {len(all_chunks)} chunks in {t_chunk:.2f}s | RSS: {get_current_rss_mb():.1f} MB"
+    )
 
     # Step 3: Embed JD and candidate chunks with ONNX
     t0_embed = time.perf_counter()
@@ -324,7 +382,9 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
     chunk_embeddings = embedder.embed_texts(chunk_texts, batch_size=64)
     t_embed = time.perf_counter() - t0_embed
     rss_after_embed = get_current_rss_mb()
-    print(f"  [3/5] Embedded {len(all_chunks)} chunks in {t_embed:.2f}s ({t_embed/len(all_chunks)*1000:.2f} ms/chunk) | RSS: {rss_after_embed:.1f} MB")
+    print(
+        f"  [3/5] Embedded {len(all_chunks)} chunks in {t_embed:.2f}s ({t_embed / len(all_chunks) * 1000:.2f} ms/chunk) | RSS: {rss_after_embed:.1f} MB"
+    )
 
     # Step 4: Candidate-isolated retrieval
     t0_retrieve = time.perf_counter()
@@ -342,7 +402,9 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
         best_dense_sim = float(np.max(scores)) if len(scores) > 0 else 0.0
         retrieval_results[rid] = best_dense_sim
     t_retrieve = time.perf_counter() - t0_retrieve
-    print(f"  [4/5] Candidate retrieval completed in {t_retrieve:.2f}s | RSS: {get_current_rss_mb():.1f} MB")
+    print(
+        f"  [4/5] Candidate retrieval completed in {t_retrieve:.2f}s | RSS: {get_current_rss_mb():.1f} MB"
+    )
 
     # Step 5: Feature extraction & XGBoost scoring
     t0_score = time.perf_counter()
@@ -370,31 +432,39 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
             parse_confidence=parsed.parse_confidence,
             is_verified_resume=parsed.is_resume,
         )
-        scored_candidates.append({
-            "resume_id": parsed.resume_id,
-            "score": score_res.final_score,
-            "tier": str(tier_res.tier),
-        })
+        scored_candidates.append(
+            {
+                "resume_id": parsed.resume_id,
+                "score": score_res.final_score,
+                "tier": str(tier_res.tier),
+            }
+        )
     t_score = time.perf_counter() - t0_score
     rss_peak = get_current_rss_mb()
     total_wall_time = time.perf_counter() - t0_wall
 
-    print(f"  [5/5] Extracted features and scored 200 resumes in {t_score:.2f}s | Final RSS: {rss_peak:.1f} MB")
+    print(
+        f"  [5/5] Extracted features and scored 200 resumes in {t_score:.2f}s | Final RSS: {rss_peak:.1f} MB"
+    )
     print("\n" + "=" * 50)
     print("REAL END-TO-END 200-RESUME RUNTIME & MEMORY")
     print("=" * 50)
     print(f"Total Resumes Processed   : {len(eval_pdfs)}")
     print(f"Total Chunks Processed    : {len(all_chunks)}")
-    print(f"Total Wall-Clock Time     : {total_wall_time:.2f}s ({total_wall_time/60:.2f} minutes)")
-    print(f"Per-Resume Wall Time      : {total_wall_time/len(eval_pdfs)*1000:.1f} ms")
-    print(f"Peak Process VmRSS        : {rss_peak:.1f} MB (Cap: 400 MB | Margin: {400.0 - rss_peak:.1f} MB)")
+    print(
+        f"Total Wall-Clock Time     : {total_wall_time:.2f}s ({total_wall_time / 60:.2f} minutes)"
+    )
+    print(f"Per-Resume Wall Time      : {total_wall_time / len(eval_pdfs) * 1000:.1f} ms")
+    print(
+        f"Peak Process VmRSS        : {rss_peak:.1f} MB (Cap: 400 MB | Margin: {400.0 - rss_peak:.1f} MB)"
+    )
     print("=" * 50)
 
     latency_explanation = (
         "In Batch 1, MiniLM latency was measured at 74.57 ms/chunk because inference was executed "
         "on unquantized FP32 weights with batch_size=1 without multi-threading warm-up. In Batch 2+, "
         "quantized ONNX (INT8) with intra_op_threads=2 and batch_size=64 reduced per-chunk latency "
-        f"to {t_embed/len(all_chunks)*1000:.2f} ms/chunk."
+        f"to {t_embed / len(all_chunks) * 1000:.2f} ms/chunk."
     )
 
     return {
@@ -484,13 +554,21 @@ def run_f1_vocabulary_mismatch_test(repo_root: Path) -> dict[str, Any]:
     taxonomy_matches_b = [s["skill"] for s in sk_b]
 
     print(f"\nCandidate A (Synonyms & Acronyms: K8s, Google Cloud, Postgres, CI/CD):")
-    print(f"  Exact Keyword Matches without Taxonomy : {len(exact_matches_a)}/5 ({exact_matches_a})")
-    print(f"  Taxonomy Resolved Skills               : {len(taxonomy_matches_a)} ({taxonomy_matches_a})")
+    print(
+        f"  Exact Keyword Matches without Taxonomy : {len(exact_matches_a)}/5 ({exact_matches_a})"
+    )
+    print(
+        f"  Taxonomy Resolved Skills               : {len(taxonomy_matches_a)} ({taxonomy_matches_a})"
+    )
     print(f"  Dense Semantic Similarity              : {sim_a:.4f}")
 
     print(f"\nCandidate B (Conceptual Alternatives / Paraphrased):")
-    print(f"  Exact Keyword Matches without Taxonomy : {len(exact_matches_b)}/5 ({exact_matches_b})")
-    print(f"  Taxonomy Resolved Skills               : {len(taxonomy_matches_b)} ({taxonomy_matches_b})")
+    print(
+        f"  Exact Keyword Matches without Taxonomy : {len(exact_matches_b)}/5 ({exact_matches_b})"
+    )
+    print(
+        f"  Taxonomy Resolved Skills               : {len(taxonomy_matches_b)} ({taxonomy_matches_b})"
+    )
     print(f"  Dense Semantic Similarity              : {sim_b:.4f}")
 
     print(f"\nCandidate C (Unrelated Domain - Chef):")

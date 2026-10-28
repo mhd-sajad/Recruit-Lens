@@ -23,6 +23,7 @@ import numpy as np
 
 # Add backend to path
 import sys
+
 backend_dir = Path(__file__).resolve().parent.parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
@@ -157,6 +158,7 @@ async def main():
     print("=" * 70)
 
     from app.llm.provider import GroqProvider
+
     groq_p = GroqProvider(model="openai/gpt-oss-120b")
     provider = FallbackLLMProvider(providers=[groq_p, NoLLMProvider()])
 
@@ -213,7 +215,9 @@ async def main():
         critique_checks = check_explanation_sentences(exp, packet)
         verdict = "PASS" if all(c.is_supported for c in critique_checks) else "REWRITE"
 
-        print(f"  [{idx:02d}/20] {packet.candidate_id:<10} | Tier: {tier_name:<10} | Verdict: {verdict:<7} | Lat: {lat1:6.1f}ms")
+        print(
+            f"  [{idx:02d}/20] {packet.candidate_id:<10} | Tier: {tier_name:<10} | Verdict: {verdict:<7} | Lat: {lat1:6.1f}ms"
+        )
 
         # Format audit row
         q_formatted = " | ".join(f"[{q.difficulty}] {q.question}" for q in questions.questions)
@@ -222,35 +226,35 @@ async def main():
         citations_flat = "; ".join(",".join(c) for c in exp.citations)
         all_cited_chunks = sorted(list({cid_c for c_list in exp.citations for cid_c in c_list}))
 
-        audit_rows.append({
-            "candidate_id": packet.candidate_id,
-            "tier": tier_name,
-            "reasons": reasons_formatted,
-            "interview_questions": q_formatted,
-            "email_drafts": email_formatted,
-            "citations": citations_flat,
-            "cited_chunk_ids": ";".join(all_cited_chunks),
-        })
+        audit_rows.append(
+            {
+                "candidate_id": packet.candidate_id,
+                "tier": tier_name,
+                "reasons": reasons_formatted,
+                "interview_questions": q_formatted,
+                "email_drafts": email_formatted,
+                "citations": citations_flat,
+                "cited_chunk_ids": ";".join(all_cited_chunks),
+            }
+        )
 
         # Format verdicts rows
         for s_idx, sentence in enumerate(exp.sentences):
             c_ids = exp.citations[s_idx] if s_idx < len(exp.citations) else []
-            s_critique = (
-                critique_checks[s_idx]
-                if s_idx < len(critique_checks)
-                else None
-            )
+            s_critique = critique_checks[s_idx] if s_idx < len(critique_checks) else None
 
             if not c_ids:
-                verdicts_rows.append({
-                    "sentence_id": f"s_{sentence_counter:03d}",
-                    "sentence_text": sentence,
-                    "cited_chunk_id": "NONE",
-                    "cited_chunk_text": "NONE",
-                    "critic_supported": False,
-                    "critic_similarity": 0.0,
-                    "reviewer_verdict": "",
-                })
+                verdicts_rows.append(
+                    {
+                        "sentence_id": f"s_{sentence_counter:03d}",
+                        "sentence_text": sentence,
+                        "cited_chunk_id": "NONE",
+                        "cited_chunk_text": "NONE",
+                        "critic_supported": False,
+                        "critic_similarity": 0.0,
+                        "reviewer_verdict": "",
+                    }
+                )
                 sentence_counter += 1
             else:
                 for chunk_id in c_ids:
@@ -258,15 +262,18 @@ async def main():
                     sim = s_critique.similarity_score if s_critique else 0.0
                     supp = s_critique.is_supported if s_critique else False
 
-                    verdicts_rows.append({
-                        "sentence_id": f"s_{sentence_counter:03d}",
-                        "sentence_text": sentence,
-                        "cited_chunk_id": chunk_id,
-                        "cited_chunk_text": chunk_text[:200] + ("..." if len(chunk_text) > 200 else ""),
-                        "critic_supported": supp,
-                        "critic_similarity": round(sim, 4),
-                        "reviewer_verdict": "",
-                    })
+                    verdicts_rows.append(
+                        {
+                            "sentence_id": f"s_{sentence_counter:03d}",
+                            "sentence_text": sentence,
+                            "cited_chunk_id": chunk_id,
+                            "cited_chunk_text": chunk_text[:200]
+                            + ("..." if len(chunk_text) > 200 else ""),
+                            "critic_supported": supp,
+                            "critic_similarity": round(sim, 4),
+                            "reviewer_verdict": "",
+                        }
+                    )
                     sentence_counter += 1
 
         await asyncio.sleep(1.5)
@@ -327,7 +334,9 @@ async def main():
             sentence = f"The candidate demonstrated {line[:90].strip('., ')}."
             supported_pairs.append({"sentence": sentence, "chunk_text": t})
         else:
-            supported_pairs.append({"sentence": f"Candidate experience: {t[:90]}.", "chunk_text": t})
+            supported_pairs.append(
+                {"sentence": f"Candidate experience: {t[:90]}.", "chunk_text": t}
+            )
 
     # 2. 30 Unsupported sentences: Hallucinations, inverted facts, unrelated domains
     counterfactual_claims = [
@@ -373,14 +382,16 @@ async def main():
         fr_count = sum(1 for s in supported_sims if s < th)
         frr = fr_count / len(supported_sims)
 
-        calibration_curve.append({
-            "threshold": th,
-            "false_accept_count": fa_count,
-            "false_accept_rate": round(far, 4),
-            "false_reject_count": fr_count,
-            "false_reject_rate": round(frr, 4),
-            "total_error_rate": round((fa_count + fr_count) / 60.0, 4),
-        })
+        calibration_curve.append(
+            {
+                "threshold": th,
+                "false_accept_count": fa_count,
+                "false_accept_rate": round(far, 4),
+                "false_reject_count": fr_count,
+                "false_reject_rate": round(frr, 4),
+                "total_error_rate": round((fa_count + fr_count) / 60.0, 4),
+            }
+        )
 
     supp_arr = np.array(supported_sims)
     unsupp_arr = np.array(unsupported_sims)

@@ -37,6 +37,15 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///data/recruit_lens.db"
 
+    # Authentication & JWT
+    JWT_SECRET_KEY: str = Field(
+        default="recruitlens-dev-secret-key-change-in-production-123456789",
+        description="Secret key for JWT signature",
+    )
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, ge=5, le=1440)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, ge=1, le=30)
+
     # LLM Settings (Free Tier / Self-Hosted)
     GROQ_API_KEY: str = Field(default="", description="Optional Groq API key")
     GROQ_MODEL: str = "qwen/qwen3.8-27b"

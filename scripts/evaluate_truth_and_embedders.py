@@ -242,7 +242,7 @@ def compute_pool_statistics(
         f"Candidate chunks per resume: Min={stats['min_pool']:.0f}, Median={stats['median_pool']:.0f}, Max={stats['max_pool']:.0f}, Mean={stats['mean_pool']:.1f}"
     )
     print(
-        f"Random Guess Baseline: Hit@5={stats['random_hit5']*100:.2f}%, Hit@10={stats['random_hit10']*100:.2f}%, MRR={stats['random_mrr']:.4f}"
+        f"Random Guess Baseline: Hit@5={stats['random_hit5'] * 100:.2f}%, Hit@10={stats['random_hit10'] * 100:.2f}%, MRR={stats['random_mrr']:.4f}"
     )
 
     return stats
@@ -459,7 +459,7 @@ if __name__ == "__main__":
     for m in ["bm25", "dense", "hybrid"]:
         res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_minilm, mode=m)
         print(
-            f"Within-Resume [{m.upper()}]: Hit@1={res_within['hit1']*100:.1f}%, Hit@3={res_within['hit3']*100:.1f}%, Hit@5={res_within['hit5']*100:.1f}%, Hit@10={res_within['hit10']*100:.1f}%, MRR={res_within['mrr']:.4f}"
+            f"Within-Resume [{m.upper()}]: Hit@1={res_within['hit1'] * 100:.1f}%, Hit@3={res_within['hit3'] * 100:.1f}%, Hit@5={res_within['hit5'] * 100:.1f}%, Hit@10={res_within['hit10'] * 100:.1f}%, MRR={res_within['mrr']:.4f}"
         )
 
     # Flatten all chunks
@@ -472,7 +472,7 @@ if __name__ == "__main__":
     for m in ["bm25", "dense", "hybrid"]:
         res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_minilm, mode=m)
         print(
-            f"Corpus-Wide [{m.upper()} MiniLM]: Hit@1={res_corpus['hit1']*100:.1f}%, Hit@3={res_corpus['hit3']*100:.1f}%, Hit@5={res_corpus['hit5']*100:.1f}%, Hit@10={res_corpus['hit10']*100:.1f}%, MRR={res_corpus['mrr']:.4f}"
+            f"Corpus-Wide [{m.upper()} MiniLM]: Hit@1={res_corpus['hit1'] * 100:.1f}%, Hit@3={res_corpus['hit3'] * 100:.1f}%, Hit@5={res_corpus['hit5'] * 100:.1f}%, Hit@10={res_corpus['hit10'] * 100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )
 
     print("\n--- EVALUATING BGE-SMALL (WITHIN-RESUME & CORPUS-WIDE) ---")
@@ -481,12 +481,12 @@ if __name__ == "__main__":
     for m in ["dense", "hybrid"]:
         res_within = run_within_resume_eval(remapped_gold, all_chunks, embedder_bge, mode=m)
         print(
-            f"Within-Resume [{m.upper()} BGE]: Hit@1={res_within['hit1']*100:.1f}%, Hit@3={res_within['hit3']*100:.1f}%, Hit@5={res_within['hit5']*100:.1f}%, Hit@10={res_within['hit10']*100:.1f}%, MRR={res_within['mrr']:.4f}"
+            f"Within-Resume [{m.upper()} BGE]: Hit@1={res_within['hit1'] * 100:.1f}%, Hit@3={res_within['hit3'] * 100:.1f}%, Hit@5={res_within['hit5'] * 100:.1f}%, Hit@10={res_within['hit10'] * 100:.1f}%, MRR={res_within['mrr']:.4f}"
         )
 
     global_index_bge = CorpusWideGlobalIndex(pooled_chunks, embedder_bge)
     for m in ["dense", "hybrid"]:
         res_corpus = run_corpus_wide_eval_with_index(remapped_gold, global_index_bge, mode=m)
         print(
-            f"Corpus-Wide [{m.upper()} BGE]: Hit@1={res_corpus['hit1']*100:.1f}%, Hit@3={res_corpus['hit3']*100:.1f}%, Hit@5={res_corpus['hit5']*100:.1f}%, Hit@10={res_corpus['hit10']*100:.1f}%, MRR={res_corpus['mrr']:.4f}"
+            f"Corpus-Wide [{m.upper()} BGE]: Hit@1={res_corpus['hit1'] * 100:.1f}%, Hit@3={res_corpus['hit3'] * 100:.1f}%, Hit@5={res_corpus['hit5'] * 100:.1f}%, Hit@10={res_corpus['hit10'] * 100:.1f}%, MRR={res_corpus['mrr']:.4f}"
         )

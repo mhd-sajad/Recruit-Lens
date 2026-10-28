@@ -59,7 +59,7 @@ def main():
     print("=" * 70)
     print(f"Total Canonical O*NET Skills in file: {total_canonical}")
     print(f"Retained in current taxonomy: {len(current_skills)}")
-    print(f"Dropped count: {len(dropped)} ({len(dropped)/total_canonical*100:.1f}%)")
+    print(f"Dropped count: {len(dropped)} ({len(dropped) / total_canonical * 100:.1f}%)")
     print("\nTop 10 Families of Dropped Skills:")
     for fam, cnt in top_dropped_families:
         print(f"  - {fam}: {cnt} dropped")
@@ -118,17 +118,73 @@ def main():
     jd_family_skills = defaultdict(list)
 
     if jds_csv.exists():
+
         def classify_title(t: str) -> str:
             tl = t.lower()
-            if any(k in tl for k in ["engineer", "developer", "software", "tech", "data", "cloud", "security", "architect", "sysadmin"]):
+            if any(
+                k in tl
+                for k in [
+                    "engineer",
+                    "developer",
+                    "software",
+                    "tech",
+                    "data",
+                    "cloud",
+                    "security",
+                    "architect",
+                    "sysadmin",
+                ]
+            ):
                 return "Software & Tech"
-            if any(k in tl for k in ["nurse", "medical", "health", "clinical", "physician", "dental", "pharmacy"]):
+            if any(
+                k in tl
+                for k in [
+                    "nurse",
+                    "medical",
+                    "health",
+                    "clinical",
+                    "physician",
+                    "dental",
+                    "pharmacy",
+                ]
+            ):
                 return "Healthcare & Medical"
-            if any(k in tl for k in ["finance", "accountant", "accounting", "audit", "tax", "banking", "treasury"]):
+            if any(
+                k in tl
+                for k in [
+                    "finance",
+                    "accountant",
+                    "accounting",
+                    "audit",
+                    "tax",
+                    "banking",
+                    "treasury",
+                ]
+            ):
                 return "Finance & Accounting"
-            if any(k in tl for k in ["sales", "marketing", "business development", "account exec", "advertising"]):
+            if any(
+                k in tl
+                for k in [
+                    "sales",
+                    "marketing",
+                    "business development",
+                    "account exec",
+                    "advertising",
+                ]
+            ):
                 return "Sales & Marketing"
-            if any(k in tl for k in ["hr", "human resources", "recruiter", "talent", "operations", "logistics", "supply chain"]):
+            if any(
+                k in tl
+                for k in [
+                    "hr",
+                    "human resources",
+                    "recruiter",
+                    "talent",
+                    "operations",
+                    "logistics",
+                    "supply chain",
+                ]
+            ):
                 return "HR & Operations"
             if any(k in tl for k in ["design", "ux", "ui", "graphic", "creative", "art"]):
                 return "Design & Creative"
@@ -141,7 +197,11 @@ def main():
             for row in reader:
                 title = row.get("title", "")
                 fam = classify_title(title)
-                desc = row.get("description", "") or row.get("job_description", "") or row.get("text", "")
+                desc = (
+                    row.get("description", "")
+                    or row.get("job_description", "")
+                    or row.get("text", "")
+                )
                 if desc:
                     sk = taxonomy.extract_skills_from_text(desc[:2000])
                     jd_family_skills[fam].append(len(sk))

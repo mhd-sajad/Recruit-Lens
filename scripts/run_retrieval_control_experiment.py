@@ -185,7 +185,9 @@ def main():
             all_old_chunks.append(chunk)
         old_chunks_by_resume[rid] = chunks
 
-    print(f"Old Chunker: {len(all_old_chunks)} total chunks across {len(old_chunks_by_resume)} resumes.")
+    print(
+        f"Old Chunker: {len(all_old_chunks)} total chunks across {len(old_chunks_by_resume)} resumes."
+    )
     print(
         f"Old Chunker Word Counts: Min={np.min(old_word_counts)}, Mean={np.mean(old_word_counts):.1f}, "
         f"Median={np.median(old_word_counts):.1f}, Max={np.max(old_word_counts)}"
@@ -228,7 +230,9 @@ def main():
             all_new_chunks.append(c)
         new_chunks_by_resume[rid] = chunks
 
-    print(f"New Chunker: {len(all_new_chunks)} total chunks across {len(new_chunks_by_resume)} resumes.")
+    print(
+        f"New Chunker: {len(all_new_chunks)} total chunks across {len(new_chunks_by_resume)} resumes."
+    )
     print(
         f"New Chunker Word Counts: Min={np.min(new_word_counts)}, Mean={np.mean(new_word_counts):.1f}, "
         f"Median={np.median(new_word_counts):.1f}, Max={np.max(new_word_counts)}"
@@ -244,7 +248,9 @@ def main():
         old_cid = pair["relevant_chunk_id"]
         rid = old_cid.split("_")[0]
         # find old chunk text
-        old_chunk = next((c for c in old_chunks_by_resume.get(rid, []) if c.chunk_id == old_cid), None)
+        old_chunk = next(
+            (c for c in old_chunks_by_resume.get(rid, []) if c.chunk_id == old_cid), None
+        )
         old_text = old_chunk.text if old_chunk else ""
 
         new_chunks = new_chunks_by_resume.get(rid, [])
@@ -259,15 +265,17 @@ def main():
                 best_new_cid = nc.chunk_id
                 best_new_text = nc.text
 
-        remapped_pairs.append({
-            "domain": pair.get("domain", "General"),
-            "query": pair["query"],
-            "old_chunk_id": old_cid,
-            "old_text": old_text,
-            "new_chunk_id": best_new_cid,
-            "new_text": best_new_text,
-            "jaccard_overlap": round(best_overlap, 4),
-        })
+        remapped_pairs.append(
+            {
+                "domain": pair.get("domain", "General"),
+                "query": pair["query"],
+                "old_chunk_id": old_cid,
+                "old_text": old_text,
+                "new_chunk_id": best_new_cid,
+                "new_text": best_new_text,
+                "jaccard_overlap": round(best_overlap, 4),
+            }
+        )
 
     # 4. Hand-inspection of 10 remapped pairs
     print("\n" + "=" * 70)
@@ -284,7 +292,12 @@ def main():
 
         # Check evidence retention
         # Check if key tokens in query exist in both
-        query_kw = [w.lower() for w in re.findall(r"\b[A-Za-z]{3,}\b", query) if w.lower() not in {"and", "the", "for", "with", "like", "requires", "strong", "proficiency"}]
+        query_kw = [
+            w.lower()
+            for w in re.findall(r"\b[A-Za-z]{3,}\b", query)
+            if w.lower()
+            not in {"and", "the", "for", "with", "like", "requires", "strong", "proficiency"}
+        ]
         retained_old = [w for w in query_kw if w in old_t.lower()]
         retained_new = [w for w in query_kw if w in new_t.lower()]
         is_retained = len(retained_new) >= len(retained_old)
@@ -303,7 +316,7 @@ def main():
         }
         inspection_results.append(res_info)
 
-        print(f"\n[Pair {idx+1}] Query: {query}")
+        print(f"\n[Pair {idx + 1}] Query: {query}")
         print(f"  Old Chunk ({p['old_chunk_id']}, {len(old_t.split())} words): {old_t[:120]}...")
         print(f"  New Chunk ({p['new_chunk_id']}, {len(new_t.split())} words): {new_t[:120]}...")
         print(f"  Overlap: {p['jaccard_overlap']:.4f} | Evidence Status: {status}")
@@ -346,8 +359,12 @@ def main():
     old_metrics_minilm = evaluate_queries(idx_old_minilm, remapped_pairs, target_key="old_chunk_id")
     old_metrics_bge = evaluate_queries(idx_old_bge, remapped_pairs, target_key="old_chunk_id")
 
-    print(f"OLD Chunks (MiniLM) -> BM25: {old_metrics_minilm['bm25']}, Dense: {old_metrics_minilm['dense']}, Hybrid: {old_metrics_minilm['hybrid']}")
-    print(f"OLD Chunks (BGE-small) -> Dense: {old_metrics_bge['dense']}, Hybrid: {old_metrics_bge['hybrid']}")
+    print(
+        f"OLD Chunks (MiniLM) -> BM25: {old_metrics_minilm['bm25']}, Dense: {old_metrics_minilm['dense']}, Hybrid: {old_metrics_minilm['hybrid']}"
+    )
+    print(
+        f"OLD Chunks (BGE-small) -> Dense: {old_metrics_bge['dense']}, Hybrid: {old_metrics_bge['hybrid']}"
+    )
 
     # Build Global Index on New Chunks
     print(f"\n--- Indexing NEW Chunks (Pool: {len(all_new_chunks)} chunks) ---")
@@ -357,8 +374,12 @@ def main():
     new_metrics_minilm = evaluate_queries(idx_new_minilm, remapped_pairs, target_key="new_chunk_id")
     new_metrics_bge = evaluate_queries(idx_new_bge, remapped_pairs, target_key="new_chunk_id")
 
-    print(f"NEW Chunks (MiniLM) -> BM25: {new_metrics_minilm['bm25']}, Dense: {new_metrics_minilm['dense']}, Hybrid: {new_metrics_minilm['hybrid']}")
-    print(f"NEW Chunks (BGE-small) -> Dense: {new_metrics_bge['dense']}, Hybrid: {new_metrics_bge['hybrid']}")
+    print(
+        f"NEW Chunks (MiniLM) -> BM25: {new_metrics_minilm['bm25']}, Dense: {new_metrics_minilm['dense']}, Hybrid: {new_metrics_minilm['hybrid']}"
+    )
+    print(
+        f"NEW Chunks (BGE-small) -> Dense: {new_metrics_bge['dense']}, Hybrid: {new_metrics_bge['hybrid']}"
+    )
 
     # 7. Compile Report & Root Cause Analysis
     report = {
