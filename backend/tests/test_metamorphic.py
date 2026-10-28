@@ -99,9 +99,7 @@ def test_property_adding_must_have_never_lowers_score() -> None:
     enhanced_cand.skills.append("Docker")
 
     enhanced_score = compute_cand_score(enhanced_cand, job, taxonomy, scorer)
-    assert (
-        enhanced_score >= base_score
-    ), f"Adding must-have lowered score: {base_score} -> {enhanced_score}"
+    assert enhanced_score >= base_score, f"Lowered: {base_score} -> {enhanced_score}"
 
 
 def test_property_removing_must_have_never_raises_score() -> None:
@@ -128,9 +126,7 @@ def test_property_removing_must_have_never_raises_score() -> None:
     stripped_cand.skills = ["PostgreSQL", "Git"]
 
     stripped_score = compute_cand_score(stripped_cand, job, taxonomy, scorer)
-    assert (
-        stripped_score <= base_score
-    ), f"Removing must-have raised score: {base_score} -> {stripped_score}"
+    assert stripped_score <= base_score, f"Raised: {base_score} -> {stripped_score}"
 
 
 def test_property_demographic_and_blind_invariance() -> None:
@@ -170,9 +166,7 @@ def test_property_demographic_and_blind_invariance() -> None:
         cand_var.scoring_text = intro + "\n" + cand_var.scoring_text
 
         var_score = compute_cand_score(cand_var, job, taxonomy, scorer)
-        assert (
-            abs(var_score - base_score) < 1e-5
-        ), f"Demographic bias detected for {name}: {base_score} vs {var_score}"
+        assert abs(var_score - base_score) < 1e-5, f"Demographic bias detected: {name}"
 
 
 def test_property_section_reordering_stability() -> None:
@@ -199,9 +193,7 @@ def test_property_section_reordering_stability() -> None:
     }
 
     reordered_score = compute_cand_score(reordered_cand, job, taxonomy, scorer)
-    assert (
-        abs(reordered_score - base_score) < 1e-4
-    ), f"Section reordering instability: {base_score} vs {reordered_score}"
+    assert abs(reordered_score - base_score) < 1e-4, "Section reordering instability"
 
 
 def test_property_keyword_stuffing_gives_zero_gain() -> None:
@@ -225,9 +217,7 @@ def test_property_keyword_stuffing_gives_zero_gain() -> None:
     stuffed_cand.scoring_text += f"\n{stuffed_text}"
 
     stuffed_score = compute_cand_score(stuffed_cand, job, taxonomy, scorer)
-    assert (
-        abs(stuffed_score - base_score) < 1e-4
-    ), f"Keyword stuffing exploit succeeded: {base_score} vs {stuffed_score}"
+    assert abs(stuffed_score - base_score) < 1e-4, "Keyword stuffing exploit succeeded"
 
 
 def test_property_garbage_and_empty_document_abstains() -> None:

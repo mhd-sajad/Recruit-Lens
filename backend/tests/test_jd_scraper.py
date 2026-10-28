@@ -1,6 +1,7 @@
 """Tests for SSRF-safe JD scraper."""
 
 import pytest
+
 from app.core.jd_scraper import SSRFProtectionError, extract_jd_from_html, validate_safe_url
 
 

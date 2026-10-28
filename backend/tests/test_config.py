@@ -3,8 +3,9 @@
 from pathlib import Path
 
 import pytest
-from app.config import Settings
 from pydantic import ValidationError
+
+from app.config import Settings
 
 
 def test_default_settings() -> None:

@@ -4,6 +4,7 @@ from typing import cast
 
 import numpy as np
 import pytest
+
 from app.core.embeddings import BaseEmbedder
 from app.core.models import ResumeChunk
 from app.core.retrieval import (

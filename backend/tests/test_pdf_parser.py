@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from app.core.pdf_parser import (
     calculate_parse_confidence,
     evaluate_resume_gate,
