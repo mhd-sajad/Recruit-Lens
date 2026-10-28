@@ -35,7 +35,8 @@ The following operating principles must be followed strictly:
 - Do as much of this batch as you can in one run with no compromise on quality. If you must split, split at a natural boundary, keep going without asking permission, and report where you stopped.
 - Commit and push after every working piece (feature branch per task group, merge to main when tests pass, conventional commit messages). Tag a release at the end of each batch (v0.1.0 for this batch, then v0.2.0 and so on).
 - Tests with every piece. No TODOs or dead code left behind.
-- HARD STOPS (only these): a secret appears in any file or history; you need my credentials or a manual action; something would modify anything outside this repo. Anything else: decide, record, continue.
+- HARD STOPS (only these): a secret appears in any file or history; you need my credentials or a manual action; something would modify anything outside this repo; force-moving or deleting a pushed tag, or rewriting pushed history (if a tag is wrong, create a new one like v0.3.1; tag only after CI is green on that commit). Anything else: decide, record, continue.
+
 - End every batch with the report format:
   1. Built (bullets).
   2. Tests: counts and pass rate.
