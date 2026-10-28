@@ -129,3 +129,71 @@ async def test_no_llm_provider_raises() -> None:
     provider = NoLLMProvider()
     with pytest.raises(RuntimeError, match="No-LLM mode active"):
         await provider.complete("Test prompt")
+
+
+@pytest.mark.asyncio
+async def test_groq_cloud_provider_mocked_success(tmp_path: Path) -> None:
+    """Verify GroqProvider completes successfully, parses usage, and caches."""
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from app.llm.provider import GroqProvider
+
+    cache = LLMCache(tmp_path / "groq_cache.sqlite")
+    provider = GroqProvider(api_key="gsk_mock_test_key_12345", cache=cache)
+    provider._active_models = ["qwen/qwen3.8-27b"]
+
+    fake_resp = MagicMock()
+    fake_resp.status_code = 200
+    fake_resp.json.return_value = {
+        "choices": [{"message": {"content": '{"analysis": "strong fit"}'}}],
+        "usage": {"prompt_tokens": 120, "completion_tokens": 45, "total_tokens": 165},
+    }
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = fake_resp
+        resp = await provider.complete("Evaluate candidate", system_prompt="System prompt")
+        assert resp.content == '{"analysis": "strong fit"}'
+        assert resp.prompt_tokens == 120
+        assert resp.completion_tokens == 45
+        assert resp.cached is False
+
+        # Cached hit on identical prompt
+        cached_resp = await provider.complete("Evaluate candidate", system_prompt="System prompt")
+        assert cached_resp.content == '{"analysis": "strong fit"}'
+        assert cached_resp.cached is True
+        assert mock_post.call_count == 1  # No second HTTP call
+
+
+@pytest.mark.asyncio
+async def test_groq_cloud_provider_error_handling() -> None:
+    """Verify GroqProvider raises on empty key and handles 429 retries."""
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from app.llm.provider import GroqProvider
+
+    # Empty key raises ValueError
+    empty_provider = GroqProvider(api_key="")
+    with pytest.raises(ValueError, match="not configured"):
+        await empty_provider.complete("Hello")
+
+    # 429 with short retry
+    provider = GroqProvider(api_key="gsk_test")
+    provider.cache = None
+    provider._active_models = ["qwen/qwen3.8-27b"]
+
+    resp_429 = MagicMock()
+    resp_429.status_code = 429
+    resp_429.headers = {"retry-after": "0.01"}
+
+    resp_200 = MagicMock()
+    resp_200.status_code = 200
+    resp_200.json.return_value = {
+        "choices": [{"message": {"content": '{"ok": true}'}}],
+        "usage": {"total_tokens": 20, "prompt_tokens": 10, "completion_tokens": 10},
+    }
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.side_effect = [resp_429, resp_200]
+        resp = await provider.complete("Retry prompt")
+        assert resp.content == '{"ok": true}'
+        assert mock_post.call_count == 2
