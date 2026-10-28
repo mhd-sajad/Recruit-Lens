@@ -55,7 +55,7 @@ def generate_report():
     p100_m = p100.get("metrics", {})
     pa40_m = pa40.get("metrics", {})
     gp20_m = gp20.get("metrics", {})
-    ret_pool = retrieval.get("candidate_pool_stats", {})
+    ret_pool = retrieval.get("metadata", {}).get("pool_statistics", {})
     ret_within = retrieval.get("within_resume", {})
     ret_corpus = retrieval.get("corpus_wide", {})
     ret_decision = retrieval.get("decision", {})
@@ -118,22 +118,22 @@ def generate_report():
 
     print("\nA.2. CANDIDATE POOL & BASELINES (WITHIN-RESUME):")
     print(
-        f"  Min Chunks Per Resume: {ret_pool.get('min_pool', 'not measured')} (docs/eval_corpus_retrieval_report.json:candidate_pool_stats.min_pool)"
+        f"  Min Chunks Per Resume: {ret_pool.get('min_pool', 'not measured')} (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.min_pool)"
     )
     print(
-        f"  Median Chunks Per Resume: {ret_pool.get('median_pool', 'not measured')} (docs/eval_corpus_retrieval_report.json:candidate_pool_stats.median_pool)"
+        f"  Median Chunks Per Resume: {ret_pool.get('median_pool', 'not measured')} (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.median_pool)"
     )
     print(
-        f"  Max Chunks Per Resume: {ret_pool.get('max_pool', 'not measured')} (docs/eval_corpus_retrieval_report.json:candidate_pool_stats.max_pool)"
+        f"  Max Chunks Per Resume: {ret_pool.get('max_pool', 'not measured')} (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.max_pool)"
     )
     print(
-        f"  Random Guess Hit@5: {round(ret_pool.get('random_hit5', 0) * 100, 2)}% (docs/eval_corpus_retrieval_report.json:candidate_pool_stats.random_hit5)"
+        f"  Random Guess Hit@5: {round(ret_pool.get('random_hit5', 0) * 100, 2)}% (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.random_hit5)"
     )
     print(
-        f"  Random Guess Hit@10: {round(ret_pool.get('random_hit10', 0) * 100, 2)}% (docs/eval_corpus_retrieval_report.json:candidate_pool_stats.random_hit10)"
+        f"  Random Guess Hit@10: {round(ret_pool.get('random_hit10', 0) * 100, 2)}% (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.random_hit10)"
     )
     print(
-        f"  Random Guess MRR: {round(ret_pool.get('random_mrr', 0), 4)} (docs/eval_corpus_retrieval_report.json:candidate_pool_stats.random_mrr)"
+        f"  Random Guess MRR: {round(ret_pool.get('random_mrr', 0), 4)} (docs/eval_corpus_retrieval_report.json:metadata.pool_statistics.random_mrr)"
     )
 
     print("\nA.3. PARSER RE-RUN BENCHMARKS:")
