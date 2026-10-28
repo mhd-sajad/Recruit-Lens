@@ -333,3 +333,20 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - Synthesizes an executive summary headline grounded in mathematical score tiers.
 - **How it helps here:** Equips recruiters with instant, factual interview briefing cards eliminating black-box bias.
 - **Alternatives considered:** Free-form LLM reason generation for all candidates (rejected: violates zero-cost and strict grounding rules; susceptible to sycophancy or hallucinating skills not present in resume text).
+
+### Component: Candidate Tier Assignment Engine with Must-Have Override (`backend/app/core/tiers.py`)
+- **What it is:** Decision engine mapping continuous candidate scores to discrete recruitment tiers (`Strong Fit`, `Interview`, `Hold`, `Reject`, `Abstain`) using data-calibrated thresholds.
+- **Why:** Recruiters need immediate triage categories while enforcing strict deterministic guardrails that prevent unqualified candidates from slipping through on superficial signals.
+- **How it works:**
+  - **Calibrated Thresholds:** Strong Fit $\ge 0.72$, Interview $\ge 0.50$, Hold $\ge 0.30$, Reject $< 0.30$.
+  - **Must-Have Skill Override:** Missing any mandatory requirement strictly disqualifies a candidate from `Strong Fit` (downgrades to `Interview`). Must-have coverage $< 50\%$ disallows `Interview` (downgrades to `Hold`).
+  - **Abstain State:** Triggered when PDF text extraction confidence is low ($< 0.50$) or when document gate signals indicate non-resume content. Refuses automated triage and flags for manual human review.
+- **How it helps here:** Guarantees that no candidate reaches top consideration without verified mandatory qualifications.
+- **Alternatives considered:** Unconstrained argmax tiering without override rules (rejected: allows candidates with high keyword density or years of unrelated experience to reach Strong Fit despite lacking essential technical skills).
+
+### Component: What-If Qualification Simulator (`backend/app/core/simulator.py`)
+- **What it is:** Interactive simulation engine projecting score and tier deltas when hypothetical qualifications (e.g., added certifications, missing skills, additional tenure) are introduced.
+- **Why:** Enables recruiters to ask "What if this candidate acquires Docker and Kubernetes?" or "What if this candidate has 2 more years of experience?", supporting strategic career development and pipeline planning.
+- **How it works:** Ingests candidate parsed records, overlays hypothetical skills or tenure into structured sections, re-computes the 10-feature vector, and runs scoring and tier engines to report exact score deltas ($\Delta \text{score}$) and tier transitions.
+- **How it helps here:** Delivers instant, transparent simulation while enforcing strict disclaimers that outputs are hypothetical estimates rather than empirical credentials.
+- **Alternatives considered:** Re-asking an LLM to guess what the new score would be (rejected: slow, nondeterministic, and introduces scoring inconsistencies).
