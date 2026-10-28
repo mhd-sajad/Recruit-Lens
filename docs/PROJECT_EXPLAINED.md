@@ -350,3 +350,14 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Ingests candidate parsed records, overlays hypothetical skills or tenure into structured sections, re-computes the 10-feature vector, and runs scoring and tier engines to report exact score deltas ($\Delta \text{score}$) and tier transitions.
 - **How it helps here:** Delivers instant, transparent simulation while enforcing strict disclaimers that outputs are hypothetical estimates rather than empirical credentials.
 - **Alternatives considered:** Re-asking an LLM to guess what the new score would be (rejected: slow, nondeterministic, and introduces scoring inconsistencies).
+
+### Component: Metamorphic Robustness & Non-Discrimination Suite (`backend/tests/test_metamorphic.py`)
+- **What it is:** Verification suite asserting six mathematical invariants across the scoring and tier engines:
+  1. *Must-Have Monotonicity:* Adding a required skill never lowers candidate score ($\Delta \ge 0$).
+  2. *Deficit Monotonicity:* Removing a required skill never raises candidate score ($\Delta \le 0$).
+  3. *Demographic & Blind Mode Invariance:* Mutating names (e.g. David Miller -> Jane Doe -> Amina Al-Mansoor -> Wei Zhang -> Carlos Rodriguez), gender pronouns, titles, or emails leaves the score 100% mathematically invariant ($|\Delta| < 10^{-5}$).
+  4. *Section Order Invariance:* Reordering sections (Education before Experience vs Experience before Education) produces stable scores ($|\Delta| < 10^{-4}$).
+  5. *Keyword Stuffing Guard:* Repetitive mentions of a matched skill (up to 50 times) produce exactly 0 score gain ($|\Delta| == 0.0$).
+  6. *Abstention on Invalid Documents:* Empty documents, non-resumes, or corrupted text with parse confidence $< 0.50$ strictly enter the `Abstain` state.
+- **Why:** Audits algorithmic fairness, robustness against adversarial resume optimization, and deterministic safety before deployment.
+- **Alternatives considered:** Unit tests on arbitrary single outputs only (rejected: cannot prove global monotonicity, anti-bias invariance, or resistance to prompt injection / keyword stuffing).
