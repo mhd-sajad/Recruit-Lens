@@ -122,6 +122,7 @@ class ONNXEmbedder(BaseEmbedder):
 
         # 2. Initialize ONNX InferenceSession (CPU Execution Provider)
         sess_options = ort.SessionOptions()
+        sess_options.enable_cpu_mem_arena = False
         sess_options.intra_op_num_threads = intra_op_threads
         sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
         self._session = ort.InferenceSession(

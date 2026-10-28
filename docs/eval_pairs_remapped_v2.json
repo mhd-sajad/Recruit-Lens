@@ -1,0 +1,342 @@
+[
+  {
+    "domain": "Software Engineering",
+    "query": "Requires strong proficiency in Python and RESTful API development.",
+    "relevant_chunk_id": "62994611_001",
+    "relevance_score": 2,
+    "old_chunk_id": "62994611_001",
+    "jaccard_overlap": 0.4408,
+    "old_text_preview": "Enthusiastic computer engineer eager to contribute to team success through hard work, attention to detail and excellent ",
+    "new_text_preview": "SOFTWARE DEVELOPER Enthusiastic computer engineer eager to contribute to team success through Technical professional wit"
+  },
+  {
+    "domain": "Software Engineering",
+    "query": "Experience with containerization tools like Docker and Kubernetes.",
+    "relevant_chunk_id": "21297521_010",
+    "relevance_score": 2,
+    "old_chunk_id": "21297521_009",
+    "jaccard_overlap": 0.3789,
+    "old_text_preview": "Manager at IndyMac for automated underwriting and pricing systems. As a member of a team, built the first such web ecomm",
+    "new_text_preview": "Shows on Nook's highly customized Android platform. security model to authenticate and authorize issuing of DRM keys for"
+  },
+  {
+    "domain": "Software Engineering",
+    "query": "Familiarity with CI/CD pipelines and tools like Jenkins.",
+    "relevant_chunk_id": "83816738_001",
+    "relevance_score": 2,
+    "old_chunk_id": "83816738_001",
+    "jaccard_overlap": 0.5091,
+    "old_text_preview": "Over 3 years\u00c2 of experience serving as a key contributor across all software development life cycle\u00c2 phases including\u00c2 a",
+    "new_text_preview": "INFORMATION TECHNOLOGY INTERN (TEST AUTOMATION Over 3 years\u00c2 of experience serving as a key contributor across all archi"
+  },
+  {
+    "domain": "Software Engineering",
+    "query": "Strong frontend development skills using React.js.",
+    "relevant_chunk_id": "83816738_007",
+    "relevance_score": 2,
+    "old_chunk_id": "83816738_006",
+    "jaccard_overlap": 0.3323,
+    "old_text_preview": "PUA-310V-0/M2U2/Y4 to work on Linux environment. Did extensive research on smart card technology (NFC, Mifare, DESFire, ",
+    "new_text_preview": "to to write automation scripts for dynamic pages of \u00e2\u20ac\u02dcWebTix' written on objects following Page Object Model i.e create"
+  },
+  {
+    "domain": "Software Engineering",
+    "query": "Understanding of Agile/Scrum methodologies.",
+    "relevant_chunk_id": "83816738_009",
+    "relevance_score": 2,
+    "old_chunk_id": "83816738_008",
+    "jaccard_overlap": 0.6007,
+    "old_text_preview": "Company Name City , State Designed and developed applications using Scrum, an iterative and incremental Agile Software D",
+    "new_text_preview": "Name City , State Designed and developed applications using Scrum, an iterative and Performed back-end development using"
+  },
+  {
+    "domain": "Data Science",
+    "query": "Familiarity with machine learning frameworks like TensorFlow or PyTorch.",
+    "relevant_chunk_id": "50328713_002",
+    "relevance_score": 2,
+    "old_chunk_id": "50328713_001",
+    "jaccard_overlap": 0.3948,
+    "old_text_preview": "C++, Python, MATLAB, Git, Bash, R, SQL (basic). Experienced in Linux/Unix and using high performance computing clusters.",
+    "new_text_preview": "C++, Python, MATLAB, Git, Bash, R, SQL (basic). Experienced in Machine Learning Tools and Libraries: Scikit-learn, Panda"
+  },
+  {
+    "domain": "Data Science",
+    "query": "Data visualization skills using Tableau or PowerBI.",
+    "relevant_chunk_id": "18448085_001",
+    "relevance_score": 2,
+    "old_chunk_id": "18448085_001",
+    "jaccard_overlap": 0.474,
+    "old_text_preview": "Industrial and Systems Engineering graduate, certified Base SAS Programmer and a Lean Six Sigma Green Belt with strong b",
+    "new_text_preview": "DATA ANALYST Industrial and Systems Engineering graduate, certified Base SAS Programmer statistics, mathematics and logi"
+  },
+  {
+    "domain": "Data Science",
+    "query": "Proficient in SQL for complex data extraction.",
+    "relevant_chunk_id": "30863060_005",
+    "relevance_score": 2,
+    "old_chunk_id": "30863060_003",
+    "jaccard_overlap": 0.5393,
+    "old_text_preview": "Consultant 07/2016 to Current Company Name City , State Top 4 Financial Institution) Create SQL queries, stored procedur",
+    "new_text_preview": "Consultant 07/2016 to Current Company Name City , State Top 4 Financial Institution) Create SQL queries, stored procedur"
+  },
+  {
+    "domain": "Data Science",
+    "query": "Deep understanding of deep learning algorithms and neural networks.",
+    "relevant_chunk_id": "34953092_002",
+    "relevance_score": 2,
+    "old_chunk_id": "34953092_002",
+    "jaccard_overlap": 0.7148,
+    "old_text_preview": "Programming Language: C/C++, Python, MATLAB, SQL, R, LUA, VBA Machine Learning: Supervised Learning, Unsupervised Learni",
+    "new_text_preview": "Programming Language: C/C++, Python, MATLAB, SQL, R, LUA, Machine Learning: Supervised Learning, Unsupervised Learning, "
+  },
+  {
+    "domain": "Product Management",
+    "query": "Experience leading product roadmap from conception to launch.",
+    "relevant_chunk_id": "24574164_005",
+    "relevance_score": 2,
+    "old_chunk_id": "24574164_004",
+    "jaccard_overlap": 0.5011,
+    "old_text_preview": "value to customers is intertwined with the ability for other technologies to build on top of it. Working with various in",
+    "new_text_preview": "with senior sales to develop winning pitches and Consulted with customers to evaluate current practices and advise on De"
+  },
+  {
+    "domain": "Product Management",
+    "query": "Experience in B2B SaaS product environments.",
+    "relevant_chunk_id": "12085736_001",
+    "relevance_score": 2,
+    "old_chunk_id": "12085736_006",
+    "jaccard_overlap": 0.3469,
+    "old_text_preview": "State Provided pre-sales technical assistance and on-line product education of SaaS ad serving management software AdJug",
+    "new_text_preview": "DIGITAL ADVERTISING CONSULTANT 7+ years of experience in strategic planning, programmatic advertising, direct buys and h"
+  },
+  {
+    "domain": "Product Management",
+    "query": "Go-to-market (GTM) strategy execution.",
+    "relevant_chunk_id": "20330739_007",
+    "relevance_score": 2,
+    "old_chunk_id": "20330739_003",
+    "jaccard_overlap": 0.5289,
+    "old_text_preview": "Exec Director of Sales, Consultant, Strategist Current Company Name \u00ef\u00bc\u200b City , State Work with clients and agencies to b",
+    "new_text_preview": "Exec Director of Sales, Consultant, Strategist Current Company Name \u00ef\u00bc\u200b City , State Work with clients and agencies to b"
+  },
+  {
+    "domain": "Finance",
+    "query": "Financial modeling and valuation experience (DCF, LBO).",
+    "relevant_chunk_id": "34185495_007",
+    "relevance_score": 2,
+    "old_chunk_id": "34185495_005",
+    "jaccard_overlap": 0.3906,
+    "old_text_preview": "Banking) UBS Financial Services Incorporated of Puerto Rico Investment Banking - Corporate and Public Finance Group / Sa",
+    "new_text_preview": "May 2014 to Current Company Name \u00ef\u00bc\u200b City , State Organized and structured the Platinum Banking team of FirstBank group "
+  },
+  {
+    "domain": "Finance",
+    "query": "Proficiency in Advanced Excel (VBA, Macros).",
+    "relevant_chunk_id": "14181049_006",
+    "relevance_score": 2,
+    "old_chunk_id": "14181049_004",
+    "jaccard_overlap": 0.3863,
+    "old_text_preview": "to planned implementation of SalesForce, I am working closely with sales leadership to develop KPI reporting dashboard a",
+    "new_text_preview": "close. I created robust modeling and reporting tool utilizing advanced MS Excel level that previously had not existed po"
+  },
+  {
+    "domain": "Finance",
+    "query": "Experience in portfolio management and risk assessment.",
+    "relevant_chunk_id": "29406313_001",
+    "relevance_score": 2,
+    "old_chunk_id": "29406313_011",
+    "jaccard_overlap": 0.6348,
+    "old_text_preview": "PRINCIPAL CONSULTANT Executive Profile A dynamic strategic leader that translates operations and business strategies int",
+    "new_text_preview": "PRINCIPAL CONSULTANT Executive Profile A dynamic strategic leader that translates operations and business strategies sha"
+  },
+  {
+    "domain": "Finance",
+    "query": "Background in corporate FP&A (Financial Planning & Analysis).",
+    "relevant_chunk_id": "24530382_001",
+    "relevance_score": 2,
+    "old_chunk_id": "24530382_008",
+    "jaccard_overlap": 0.5325,
+    "old_text_preview": "DIRECTOR, FINANCE Executive Profile Visionary leader able to drive a culture of excellence throughout the organization, ",
+    "new_text_preview": "DIRECTOR, FINANCE Executive Profile Visionary leader able to drive a culture of excellence throughout the innovation, co"
+  },
+  {
+    "domain": "Healthcare",
+    "query": "Familiarity with HIPAA compliance and patient data privacy.",
+    "relevant_chunk_id": "25749150_005",
+    "relevance_score": 2,
+    "old_chunk_id": "25749150_006",
+    "jaccard_overlap": 0.5008,
+    "old_text_preview": "compliance with regulations. Company Name January 2010 to January 2012 Hospital Access Representative City , State Compl",
+    "new_text_preview": "Security Regulations by appropriately handling patient information. other medical personnel to assess the probability of"
+  },
+  {
+    "domain": "Healthcare",
+    "query": "Clinical trial management and FDA submission experience.",
+    "relevant_chunk_id": "17555081_006",
+    "relevance_score": 2,
+    "old_chunk_id": "17555081_006",
+    "jaccard_overlap": 0.4453,
+    "old_text_preview": "organizations to assess skill and training requirements to fulfill community needs. Coordinated the planning and prepara",
+    "new_text_preview": "as needed. Company Name City , State Marrow Donor Program Coordinator 01/2005 Performed all duties of the Marrow Donor P"
+  },
+  {
+    "domain": "Healthcare",
+    "query": "Experience with Electronic Health Record (EHR) systems like Epic.",
+    "relevant_chunk_id": "32081266_011",
+    "relevance_score": 2,
+    "old_chunk_id": "32081266_009",
+    "jaccard_overlap": 0.3433,
+    "old_text_preview": "Epic Summer 2009 from Epic Spring 2007. Performed organizational business and systems analysis to properly document work",
+    "new_text_preview": "needs from internal business units; and access options); and tested functional specifications for Epic. Worked in partne"
+  },
+  {
+    "domain": "Healthcare",
+    "query": "Background in molecular biology or PCR techniques.",
+    "relevant_chunk_id": "24349611_002",
+    "relevance_score": 2,
+    "old_chunk_id": "24349611_004",
+    "jaccard_overlap": 0.1888,
+    "old_text_preview": "Time and Territory Management\u00c2 DNA/RNA Sequencing Molecular Biology Techniques\u00c2 PCR Assay Design/Development Cell Biolog",
+    "new_text_preview": "Time and Territory Management\u00c2 DNA/RNA Sequencing Molecular Biology Techniques\u00c2 PCR Assay Design/Development Cell Biolog"
+  },
+  {
+    "domain": "Healthcare",
+    "query": "Knowledge of medical billing and coding (ICD-10).",
+    "relevant_chunk_id": "23918545_002",
+    "relevance_score": 2,
+    "old_chunk_id": "23918545_002",
+    "jaccard_overlap": 0.4906,
+    "old_text_preview": "Medical terminology expert ICD-10 (International Classification of Disease Systems) Billing and collection procedures ex",
+    "new_text_preview": "Medical terminology expert ICD-10 (International Classification of Disease Systems) Billing and collection procedures ex"
+  },
+  {
+    "domain": "Marketing",
+    "query": "Experience managing paid social campaigns (Facebook, LinkedIn).",
+    "relevant_chunk_id": "13837784_004",
+    "relevance_score": 2,
+    "old_chunk_id": "13837784_005",
+    "jaccard_overlap": 0.5614,
+    "old_text_preview": "Company Name City , State Digital Media Buyer 03/2016 to Current Oversees and co-manages PPC campaigns across multiple s",
+    "new_text_preview": "Company Name City , State Digital Media Buyer 03/2016 to Current Oversees and co-manages PPC campaigns across multiple s"
+  },
+  {
+    "domain": "Marketing",
+    "query": "SEO/SEM strategy and execution.",
+    "relevant_chunk_id": "30504149_001",
+    "relevance_score": 2,
+    "old_chunk_id": "30504149_001",
+    "jaccard_overlap": 0.4679,
+    "old_text_preview": "I am a highly motivated and versatile digital strategist, storyteller and creative enabler.\u00c2 I've built and led teams wi",
+    "new_text_preview": "CHIEF DIGITAL OFFICER I am a highly motivated and versatile digital strategist, storyteller and creative marketing agenc"
+  },
+  {
+    "domain": "Marketing",
+    "query": "Proficiency with email marketing platforms like Mailchimp or Hubspot.",
+    "relevant_chunk_id": "15423153_007",
+    "relevance_score": 2,
+    "old_chunk_id": "15423153_004",
+    "jaccard_overlap": 0.3087,
+    "old_text_preview": "throughout various industries. Designed responsive, user-friendly websites for clients in various B2B and B2C industries",
+    "new_text_preview": "per day. of 10-15 quality leads per day. CRM, Halo. stay current on technology and SaaS. Nashville and within 3 months t"
+  },
+  {
+    "domain": "Marketing",
+    "query": "Experience with Google Analytics and conversion tracking.",
+    "relevant_chunk_id": "14128006_004",
+    "relevance_score": 2,
+    "old_chunk_id": "14128006_003",
+    "jaccard_overlap": 0.5009,
+    "old_text_preview": "12/2015 to Current Digital Marketing and Social Media Manager Company Name \u00ef\u00bc\u200b City , State Executing social and digital",
+    "new_text_preview": "12/2015 to Current Digital Marketing and Social Media Manager Company Name \u00ef\u00bc\u200b City , State Executing social and digital"
+  },
+  {
+    "domain": "Operations",
+    "query": "Supply chain optimization and inventory management.",
+    "relevant_chunk_id": "11890896_005",
+    "relevance_score": 2,
+    "old_chunk_id": "11890896_003",
+    "jaccard_overlap": 0.3474,
+    "old_text_preview": "Master of Business Administration : Decision Sciences 2007 San Francisco State University City , State Courses: Operatio",
+    "new_text_preview": "State University City , State Business Forecasting, Supply Chain Management University City , Turkey of Mathematical Log"
+  },
+  {
+    "domain": "Operations",
+    "query": "Lean Six Sigma or continuous improvement methodologies.",
+    "relevant_chunk_id": "12904972_005",
+    "relevance_score": 2,
+    "old_chunk_id": "12904972_003",
+    "jaccard_overlap": 0.3993,
+    "old_text_preview": "Manager, Continuous Improvement November 2014 to Current Company Name \u00ef\u00bc\u200b City , State Hours worked per week: 40hrs Resp",
+    "new_text_preview": "Manager, Continuous Improvement November 2014 to Current Company Name \u00ef\u00bc\u200b City , State Hours worked Lean to improve proc"
+  },
+  {
+    "domain": "Operations",
+    "query": "Vendor negotiation and procurement experience.",
+    "relevant_chunk_id": "26341987_015",
+    "relevance_score": 2,
+    "old_chunk_id": "26341987_001",
+    "jaccard_overlap": 0.3513,
+    "old_text_preview": "I was involved in procuring and providing Personal Digital Assistants (PDs) and Blackberries cell phones to Disney execu",
+    "new_text_preview": "schedule. all executives and productions computers function properly, and personally solutions to ensure that Disney/ABC"
+  },
+  {
+    "domain": "Operations",
+    "query": "Experience managing warehouse staff and safety protocols.",
+    "relevant_chunk_id": "20176584_002",
+    "relevance_score": 2,
+    "old_chunk_id": "20176584_001",
+    "jaccard_overlap": 0.2776,
+    "old_text_preview": "HACCP Certified Lean Manufacturing Certified Six Sigma Certified Champion Better Process Control Certified Core Accompli",
+    "new_text_preview": "HACCP Certified Lean Manufacturing Certified Six Sigma Certified Champion Better Process Control Certified Core Accompli"
+  },
+  {
+    "domain": "Sales",
+    "query": "Proven track record of exceeding B2B sales quotas.",
+    "relevant_chunk_id": "65708020_001",
+    "relevance_score": 2,
+    "old_chunk_id": "65708020_003",
+    "jaccard_overlap": 0.5607,
+    "old_text_preview": "Relationship Building Business Development\u00c2 Networking Account Management Sales/Market Analysis Analytical Problem Solve",
+    "new_text_preview": "BUSINESS DEVELOPMENT Results-driven and highly skilled (business development)account manager and and executing customize"
+  },
+  {
+    "domain": "Sales",
+    "query": "Experience using Salesforce CRM to manage pipelines.",
+    "relevant_chunk_id": "29825044_006",
+    "relevance_score": 2,
+    "old_chunk_id": "29825044_007",
+    "jaccard_overlap": 0.4353,
+    "old_text_preview": "Company Name Director of Business Development 07/2007 to 09/2015 Previous - Director Sales & Marketing Privacy Data Syst",
+    "new_text_preview": "Company Name Director of Business Development 07/2007 to 09/2015 Previous - Director Sales & Marketing Privacy Data Syst"
+  },
+  {
+    "domain": "Sales",
+    "query": "Cold calling and outbound prospecting skills.",
+    "relevant_chunk_id": "91467795_005",
+    "relevance_score": 2,
+    "old_chunk_id": "91467795_003",
+    "jaccard_overlap": 0.5111,
+    "old_text_preview": "Business Development Consultant Mar 2018 to Current Company Name \u00ef\u00bc\u200b City , State SGW Pharma Marketing is a B2B life sci",
+    "new_text_preview": "Business Development Consultant Mar 2018 to Current Company Name \u00ef\u00bc\u200b City , State SGW Pharma Marketing is a B2B life sci"
+  },
+  {
+    "domain": "Sales",
+    "query": "Proven ability to sell SaaS products to Enterprise clients.",
+    "relevant_chunk_id": "21283365_005",
+    "relevance_score": 2,
+    "old_chunk_id": "21283365_003",
+    "jaccard_overlap": 0.4706,
+    "old_text_preview": "Director of Information technology Sep 2005 to Current Company Name \u00ef\u00bc\u200b City , State At Adsystech I am one of three empl",
+    "new_text_preview": "Director of Information technology Sep 2005 to Current Company Name \u00ef\u00bc\u200b City , State At Adsystech I am one of three empl"
+  },
+  {
+    "domain": "Sales",
+    "query": "Contract negotiation and closing complex enterprise deals.",
+    "relevant_chunk_id": "35673335_007",
+    "relevance_score": 2,
+    "old_chunk_id": "35673335_005",
+    "jaccard_overlap": 0.4013,
+    "old_text_preview": "programs and online marketing campaigns with 20%+ response rates This position was eliminated after General Motors faile",
+    "new_text_preview": "sell the PLUGLESS charger for as a reseller Implemented sales systems for inbound lead generation, and online marketing "
+  }
+]

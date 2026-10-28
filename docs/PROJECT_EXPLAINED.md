@@ -185,7 +185,7 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 ### Component: Stratified Dataset Sampling & Gold Pairs Baseline (`docs/eval_pairs_locked.json`)
 - **What it is:** A locked benchmark set of 34 verified query-chunk pairs, alongside a stratified sample of 300 real resumes across 24 professional domains and 2,000 sampled LinkedIn job postings.
 - **Why:** Establishes a concrete, repeatable baseline for measuring retrieval performance (Hit@1/3/5/10 and MRR) and parser quality without committing bulky datasets to version control.
-- **How it works:** Preserves exact ground truth query targets while isolating binary PDFs and CSVs in local gitignored storage (`data/`).
+- **How it works:** Preserves exact ground truth query targets while isolating binary PDFs and CSVs in local gitignored storage (`data/`). Measured the LinkedIn job posting dataset (`linkedin_jobs_clean.csv`), confirming the true row count is **123,700 rows across 31 columns** (the legacy vault manifest's claim of 1.3 million rows was an unmeasured estimate).
 - **How it helps here:** Enables rigorous truth testing and benchmark evaluations across sparse (BM25), dense (MiniLM/BGE), and hybrid retrieval architectures.
 - **Alternatives considered:** Generating synthetic test resumes (rejected: fails to replicate multi-column layouts, OCR artifacts, and unstructured phrasing found in real resumes).
 
@@ -203,11 +203,13 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it helps here:** Feeds downstream retrieval and scoring agents with verified job title progressions, total experience metrics, and education ordinal ranks with zero LLM hallucination risk.
 - **Alternatives considered:** Zero-shot LLM parsing for every resume (rejected: slow, expensive, non-deterministic, and prone to hallucinations on dates and titles).
 
-### Component: Multi-Column Resume PDF Parser & Deterministic Gate (`backend/app/core/pdf_parser.py` & `scripts/measure_parser.py`)
+### Component: Multi-Column Resume PDF Parser & Deterministic Gate (`backend/app/core/pdf_parser.py` & `scripts/measure_parser.py`, `scripts/measure_parser_audit.py`)
 - **What it is:** Production PDF extraction engine with horizontal coordinate clustering for multi-column resumes, deterministic gate verification, confidence estimation, and PII isolation.
 - **Why:** Multi-column PDFs scramble text reading order in standard parsers; ATS systems frequently fail on non-resume uploads or leak PII into scoring text.
 - **How it works:** Uses `pdfplumber` character geometry to cluster columns with fallback to `pypdf`. Applies a deterministic rule-based gate scoring 8 resume markers vs negative document markers (invoices, papers, contracts). Isolates candidate contact details into a distinct `ContactPII` container and produces scrubbed `scoring_text`.
-- **How it helps here:** Measured on 100 real resumes and 20 non-resumes: achieved **98.0% clean title extraction** (jumping from old 33.3% baseline), **100% gate recall**, **100% gate precision**, and **0.0% parse failures**.
+- **Parser Accuracy & Gate Audit Results:**
+  - **Unseen Resumes Audit (40 random resumes outside first 100 tuning set):** Generated [`data/parser_audit_40.csv`](file:///home/sajad/PROJECTS/RECRUIT-LENS/data/parser_audit_40.csv) containing 291 extracted experience rows. Automated heuristic audit showed **254/291 entries (87.3%)** are valid, clean job titles and companies with plausible date ranges (replacing the previous non-empty 98% proxy).
+  - **Gate Precision Audit (20 fresh non-resumes):** Evaluated against 5 real job descriptions from `jds_sample_2000.csv`, 5 cover letters, 4 meeting minutes, 3 product brochures, and 3 certificates. Achieved **95.0% gate precision** (19/20 correctly rejected); observed 1 false positive (`cover_letter_1.pdf` at gate confidence 0.60 due to strong employment phrasing). 0.0% parse failures across all documents.
 - **Alternatives considered:** OCR-based layout analysis (rejected: excessive memory footprint exceeding the 400 MB RAM budget); unseparated PII in scoring text (rejected: violates privacy rules and biases scoring).
 
 ### Component: Section-Aware Resume & JD Sliding-Window Chunkers (`backend/app/core/resume_chunker.py` & `jd_chunker.py`)
@@ -217,29 +219,33 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it helps here:** Produces high-signal text chunks that enable sub-second BM25 and semantic matching while providing exact citation targets for generated candidate reviews.
 - **Alternatives considered:** Fixed-length character chunking (rejected: splits words and bullet points arbitrarily across sentences).
 
-### Component: Quantized ONNX Dense Embedder & Model Benchmark (`backend/app/core/embeddings.py` & `scripts/benchmark_retrieval_and_truth_test.py`)
+### Component: Quantized ONNX Dense Embedder & Model Benchmark (`backend/app/core/embeddings.py` & `scripts/evaluate_truth_and_embedders.py`)
 - **What it is:** Pure-ONNX Runtime embedding singleton behind an abstract `BaseEmbedder` interface, with offline model weight caching in `data/hf_cache/`.
-- **Why:** PyTorch dependencies consume 750-980 MB of RAM, instantly breaching the 400 MB backend RSS budget. Quantized ONNX keeps inference lightweight and deterministic.
-- **How it works:** Tokenizes with fast Rust-based `tokenizers`, executes 8-bit quantized ONNX models on CPU with 2 execution threads, performs weighted mean pooling with attention masks, and outputs unit-length L2-normalized float32 vectors (dim=384).
-- **Benchmark & Model Selection Result:**
-  - **MiniLM-L6 (quantized ONNX):** 132.3 MB RSS (+51.7 MB delta), 74.57 ms/chunk latency, Dense Hit@5: 94.1%, Dense MRR: 0.6768, Hybrid MRR: 0.7966.
-  - **BGE-small (quantized ONNX):** 750.5 MB RSS (+669.9 MB delta), 135.00 ms/chunk latency, Dense Hit@5: 82.4%, Dense MRR: 0.5854, Hybrid MRR: 0.7054.
-  - **Decision:** MiniLM-L6 selected. BGE-small violated the 350 MB RSS limit (750.5 MB) and exhibited slower latency and lower MRR.
+- **Why:** PyTorch dependencies consume 750-980 MB of RAM, instantly breaching the 400 MB backend RSS budget. Quantized ONNX with CPU memory arena disabled keeps inference lightweight, deterministic, and within budget.
+- **How it works:** Tokenizes with fast Rust-based `tokenizers`, executes 8-bit quantized ONNX models on CPU with 2 execution threads and `enable_cpu_mem_arena = False`, performs weighted mean pooling with attention masks, and outputs unit-length L2-normalized float32 vectors (dim=384).
+- **Benchmark & Model Selection Result (Fresh Isolated Processes, Arena Disabled, MaxLen=256, Batch=16):**
+  - **MiniLM-L6 (quantized ONNX):** 101.3 MB initial RSS, 152.1 MB loaded RSS, **164.2 MB peak RSS**, **5.05 ms/chunk** latency. Within-Resume Hit@5: 82.4%, MRR: 0.6412. Corpus-Wide Hit@5: **38.2%**, MRR: **0.2574**.
+  - **BGE-small (quantized ONNX):** 101.3 MB initial RSS, 170.2 MB loaded RSS, **178.7 MB peak RSS**, **8.39 ms/chunk** latency. Within-Resume Hit@5: 82.4%, MRR: 0.4794. Corpus-Wide Hit@5: **14.7%**, MRR: **0.1312**.
+  - **Decision:** **MiniLM-L6 is retained.** While BGE-small now fits comfortably under the 350 MB cap (178.7 MB) with the memory arena disabled, MiniLM soundly outperforms BGE on both Hit@5 (38.2% vs 14.7%) and MRR (0.2574 vs 0.1312) in corpus-wide retrieval, while running 1.66x faster.
 - **Alternatives considered:** SentenceTransformers / PyTorch (rejected: 750-980 MB RSS); raw unquantized FP32 ONNX (rejected: larger disk footprint and slower CPU throughput).
 
-### Component: Candidate-Isolated Hybrid Retrieval Engine & Truth Test (`backend/app/core/retrieval.py` & `scripts/benchmark_retrieval_and_truth_test.py`)
+### Component: Candidate-Isolated Hybrid Retrieval Engine & Truth Test (`backend/app/core/retrieval.py` & `scripts/evaluate_truth_and_embedders.py`)
 - **What it is:** Candidate-isolated hybrid search engine combining in-memory BM25 lexical search (`bm25s`) and in-memory cosine dot-product dense retrieval via Reciprocal Rank Fusion (RRF $k=60$).
 - **Why:** Eliminates the overhead and concurrency locking of ChromaDB for per-candidate searches while strictly guaranteeing zero cross-candidate data leakage.
-- **How it works:** Stores embedding vectors as contiguous float32 binary blobs. Binds each `CandidateIsolatedIndex` to a single candidate ID. Reconstructs dense matrices and BM25 indices on demand in memory.
-- **Truth Test Results (34 Locked Gold Pairs, N=34):**
-  - **BM25 (Sparse):** Hit@1: 73.5%, Hit@3: 97.1%, Hit@5: 100.0% (95% CI: [100.0%, 100.0%]), Hit@10: 100.0%, MRR: **0.8456** (95% CI: [0.7573, 0.9289]).
-  - **Dense (MiniLM):** Hit@1: 50.0%, Hit@3: 79.4%, Hit@5: 94.1% (95% CI: [85.3%, 100.0%]), Hit@10: 100.0%, MRR: 0.6768 (95% CI: [0.5589, 0.7885]).
-  - **Hybrid (RRF $k=60$):** Hit@1: 67.6%, Hit@3: 88.2%, Hit@5: 97.1% (95% CI: [91.2%, 100.0%]), Hit@10: 100.0%, MRR: 0.7966 (95% CI: [0.6936, 0.8971]).
-  - **Cheap Improvements Evaluated (at most 3):**
-    1. RRF $k=20$: Hit@5=97.1%, MRR=0.7966 (Kept: False).
-    2. Section boosts: Hit@5=94.1%, MRR=0.5167 (Kept: False).
-    3. Dense weight 1.5: Hit@5=97.1%, MRR=0.7500 (Kept: False).
-  - **Architectural Decision:** Because BM25 MRR (0.8456) outperformed Hybrid (0.7966) on exact technical keywords in the locked set, **BM25 is designated as the primary retrieval signal**, with dense semantic retrieval acting as secondary verification.
+- **Candidate Pool Analysis & Random Guess Baseline:**
+  - Evaluated on 34 gold evaluation queries mapped to chunks from the newly built `resume_chunker`.
+  - Candidate pool size per query: **Min = 4, Median = 8, Max = 16, Mean = 8.7 chunks per resume**.
+  - Random Guess Baseline for this candidate pool: **Hit@5 = 62.92%**, **Hit@10 = 95.34%**, **MRR = 0.3381**. (Explains why within-resume retrieval achieves elevated hit rates: a median pool of 8 chunks naturally inflates Top-5 selection chances under random sampling).
+- **Within-Resume Retrieval Test (34 Remapped Gold Queries across Single-Candidate Chunks):**
+  - **BM25:** Hit@1: 44.1%, Hit@3: 88.2%, Hit@5: 94.1%, Hit@10: 97.1%, MRR: **0.6395**.
+  - **Dense (MiniLM):** Hit@1: 50.0%, Hit@3: 76.5%, Hit@5: 82.4%, Hit@10: 97.1%, MRR: **0.6412**.
+  - **Hybrid (MiniLM RRF $k=60$):** Hit@1: 55.9%, Hit@3: 85.3%, Hit@5: 88.2%, Hit@10: 97.1%, MRR: **0.6913**.
+- **Corpus-Wide Retrieval Test (34 Gold Queries across All 300 Resumes Pooled = 2,318 Chunks):**
+  - **BM25:** Hit@1: 23.5%, Hit@3: 47.1%, Hit@5: **47.1%**, Hit@10: **70.6%**, MRR: **0.3702**.
+  - **Dense (MiniLM):** Hit@1: 14.7%, Hit@3: 38.2%, Hit@5: 38.2%, Hit@10: 44.1%, MRR: 0.2574.
+  - **Hybrid (MiniLM RRF $k=60$):** Hit@1: 20.6%, Hit@3: 38.2%, Hit@5: 47.1%, Hit@10: 61.8%, MRR: 0.3283.
+  - **Comparison with Old Project (64.7% Hit@5):** The old project tested 100 queries across a different corpus and chunk size. In our 2,318-chunk corpus across 34 queries, BM25 achieves 47.1% Hit@5 and 70.6% Hit@10; MiniLM dense achieves 38.2% Hit@5.
+  - **Architectural Decision:** In the corpus-wide test, BM25 achieves 47.1% Hit@5 and 0.3702 MRR, outperforming Dense MiniLM (38.2% Hit@5, 0.2574 MRR) and beating Hybrid on MRR (0.3702 vs 0.3283) and Hit@10 (70.6% vs 61.8%). Per rule criteria, **BM25 remains the primary retrieval signal**, with dense semantic search providing secondary recall support.
 - **Alternatives considered:** Ephemeral ChromaDB collections per candidate (rejected: high memory allocation churn and SQLite metadata contention in batch loops).
 
 ### Component: Interactive Pair Annotation CLI (`scripts/label_pairs.py`)
