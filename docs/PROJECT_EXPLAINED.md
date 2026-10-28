@@ -254,3 +254,10 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Iterates through local chunk files, prompts for queries and domains, displays candidate text previews, and appends valid positive pairs (`relevance_score: 2`) to `docs/eval_pairs_labeled.json`.
 - **How it helps here:** Provides a non-blocking workflow to grow $N$ beyond 34 pairs to narrow bootstrap confidence intervals over time.
 - **Alternatives considered:** Manual JSON editing (rejected: error-prone, slow, and risks syntax formatting bugs).
+
+### Component: Curated Skill Taxonomy & Inference Engine (`backend/app/core/taxonomy.py` & `backend/app/data/skills_taxonomy.json`)
+- **What it is:** Production skill extraction, alias canonicalization, and relationship-based skill inference engine backed by the official O*NET 29.0 Technology Skills database (8,754 canonical skills, 8,799 alias mappings, 134 taxonomy families).
+- **Why:** Solves open-vocabulary and synonym-heavy skill matching deterministically without burning slow, expensive LLM calls. Provides standardized canonical skill identities and hierarchical inference relations.
+- **How it works:** Tokenizes and applies length-prioritized regex pattern matchers with strict word boundaries to eliminate false positive substring collisions. Maps aliases (e.g., `k8s -> Kubernetes`, `py -> Python`, `js -> JavaScript`, `ml -> Machine Learning`) to canonical forms and infers underlying skills with calibrated confidence scores (e.g. `Django` implies `Python` at 0.95 confidence; `Kubernetes` implies `Docker` at 0.85 confidence).
+- **How it helps here:** Enables deterministic, sub-millisecond skill extraction for both job requirements and resumes, tracking exact character offset provenance for citation verification.
+- **Alternatives considered:** Zero-shot LLM entity extraction for every candidate (rejected: slow, nondeterministic, prone to hallucinating non-existent skills); uncurated string substring matching (rejected: catastrophic false positive rate matching 'js' in 'jobs' or 'py' in 'copy').

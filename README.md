@@ -118,3 +118,9 @@ This runs:
 - **[docs/SPEC.md](docs/SPEC.md):** The frozen product specification defining data entities, pipeline steps, agent roles, and the 17-screen recruiter journey.
 - **[docs/PROJECT_EXPLAINED.md](docs/PROJECT_EXPLAINED.md):** Living documentation covering the big picture, technology rationale, architectural plan, and incremental build log.
 - **[.agents/AGENTS.md](.agents/AGENTS.md):** Engineering operating principles, working contract, and global quality bars.
+
+---
+
+## Dataset & Taxonomy License Attribution
+
+- **O*NET Technology Skills:** This product includes technology skills data from the **O*NET 29.0 Database** by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA), used under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). O*NET® is a trademark of USDOL/ETA.
