@@ -245,8 +245,7 @@ def generate_candidate_reasons(
                 feature_name="title_match",
                 headline="Direct past job title alignment",
                 detail=(
-                    f"Candidate past roles closely match target title "
-                    f"(similarity {title_sim:.0%})."
+                    f"Candidate past roles closely match target title (similarity {title_sim:.0%})."
                 ),
                 impact_score=title_impact,
                 percentage_impact=title_pct,
