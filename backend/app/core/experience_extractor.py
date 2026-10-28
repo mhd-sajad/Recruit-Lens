@@ -89,21 +89,258 @@ COMMON_TITLE_MARKERS = {
     "partner",
     "founder",
     "head",
+    "collector",
+    "liaison",
+    "trainer",
+    "fellow",
+    "researcher",
+    "planner",
+    "buyer",
+    "underwriter",
+    "agent",
+    "practitioner",
+    "server",
+    "producer",
+    "editor",
+    "writer",
+    "author",
+    "advisor",
+    "expert",
+    "professional",
+    "attorney",
+    "counselor",
+    "curator",
+    "dean",
+    "provost",
+    "paramedic",
+    "pharmacist",
+    "physician",
+    "surgeon",
+    "veterinarian",
+    "optometrist",
+    "hygienist",
+    "drafter",
+    "surveyor",
+    "inspector",
+    "installer",
+    "repairer",
+    "electrician",
+    "carpenter",
+    "plumber",
+    "welder",
+    "guard",
+    "baker",
+    "butcher",
+    "bartender",
+    "host",
+    "hostess",
+    "housekeeper",
+    "aide",
+    "generalist",
+    "sergeant",
+    "technologist",
+    "receptionist",
+    "merchandiser",
+    "stylist",
+    "trainee",
+    "tech",
+    "rep",
+    "banker",
 }
+
+VALID_SINGLE_WORD_TITLES = {
+    "chef",
+    "nurse",
+    "teacher",
+    "recruiter",
+    "accountant",
+    "intern",
+    "developer",
+    "consultant",
+    "engineer",
+    "manager",
+    "mechanic",
+    "machinist",
+    "cook",
+    "cashier",
+    "teller",
+    "supervisor",
+    "technician",
+    "driver",
+    "pilot",
+    "auditor",
+    "chemist",
+    "scientist",
+    "programmer",
+    "analyst",
+    "specialist",
+    "counsel",
+    "attendant",
+    "officer",
+    "director",
+    "administrator",
+    "coordinator",
+    "assistant",
+    "laborer",
+    "worker",
+    "estimator",
+    "controller",
+    "cfo",
+    "vp",
+    "president",
+    "partner",
+    "founder",
+    "server",
+    "bartender",
+    "baker",
+    "electrician",
+    "plumber",
+    "carpenter",
+    "welder",
+    "paralegal",
+    "attorney",
+    "lawyer",
+    "physician",
+    "therapist",
+    "pharmacist",
+    "instructor",
+    "clerk",
+    "curator",
+    "buyer",
+    "underwriter",
+    "agent",
+    "generalist",
+}
+
+# Blacklist of exact strings that are headings, credentials, or placeholders
+BLACKLIST_EXACT = {
+    "name",
+    "state",
+    "city",
+    "company",
+    "company name",
+    "organization",
+    "location",
+    "job title",
+    "title",
+    "position",
+    "e6",
+    "training",
+    "leadership roles",
+    "activities",
+    "activities:",
+    "ongoing community service initiatives",
+    "operator programs",
+    "desktop publishing",
+    "education",
+    "experience",
+    "work experience",
+    "skills",
+    "summary",
+    "profile",
+    "professional summary",
+    "references",
+    "honors",
+    "awards",
+    "certifications",
+    "affiliations",
+    "publications",
+    "interests",
+    "hobbies",
+    "operating system",
+    "technical skills",
+    "core competencies",
+    "competencies",
+    "high school diploma",
+    "high school",
+    "diploma",
+    "duquesne university",
+    "cox executive education.",
+    "cox executive education",
+    "operating system office (word",
+    "activities: director of sports",
+    "california food handlers card & servsafe food safety manager",
+    "tucson medical center & va)",
+    "director & vp level professionals",
+    "securities",
+    "planning",
+    "thinking",
+    "guide",
+    "employment",
+    "advanced",
+    "regulatory",
+    "rights",
+    "investigations",
+    "investment",
+    "development",
+    "mitigation",
+    "compliance",
+    "business development",
+    "project management",
+    "proper compliance and accurate executive level reporting.e",
+    "development, engineering, maintenance, operations administration",
+    "project management, research and development, engineering",
+    "research and development, engineering, strategic planning",
+}
+
+BLACKLIST_SUBSTRINGS = [
+    r"\b(?:university|college|diploma|degree|academy|institute|executive education)\b",
+    r"\b(?:card & servsafe|food handlers card|driver'?s license|cpr certified)\b",
+    r"\b(?:operating system|microsoft word|excel|powerpoint|wordperfect|keynote)\b",
+    r"\b(?:community service|leadership roles|professional affiliations)\b",
+    r"\b(?:medical center & va|hospital & clinic)\b",
+    r"\b(?:co-authored|authored|published|publication)\b",
+    r"^activities:\s+",
+    r"^\(?co-authored",
+    r"^director & vp level professionals",
+    r"\breporting\.e$",
+    r"^proper compliance\b",
+]
+
+TITLE_START_BLACKLIST = re.compile(
+    r"^(?:with|using|as|by|at|in|on|for|to|from|and|or|attended?|attending|upgraded?|upgrading|"
+    r"use[ds]?|applying?|applied|installed?|installing|configured?|configuring|"
+    r"lead(?:ing)?\s+(?:team\s+to|product|strategy|projects?|initiatives?)|managers?\s+and|"
+    r"proper|ongoing|my|so\s+i['’]?m)\b",
+    re.IGNORECASE,
+)
+
+TITLE_END_BLACKLIST = re.compile(
+    r"\b(?:that|the|and|to|as|or|in|on|at|for|with|by|from|of|now|which|while|so|"
+    r"covering\s+the|closing|remarkable|financial|reporting\.e)$",
+    re.IGNORECASE,
+)
+
+SENTENCE_INDICATORS = re.compile(
+    r"\b(?:i\s+have|i\s+was|i\s+am|my\s+|we\s+|for\s+which|so\s+i['’]?m|"
+    r"magazine|journal|published|article|vol\.|issue|perform\s+opening|"
+    r"stellar\s+sales|involving\s+patient)\b",
+    re.IGNORECASE,
+)
 
 # Common action verbs starting bullet points / sentences (not job entries)
 ACTION_VERBS = re.compile(
-    r"^(?:completed|managed|supervised|provided|prepared|assisted|led|developed|designed|"
-    r"implemented|created|responsible for|handled|conducted|coordinated|resolved|reviewed|"
-    r"oversaw|monitored|maintained|built|formulated|executed|organized|generated|facilitated|"
-    r"analyzed|operated|scheduled|achieved|promoted|collaborated|administered|performed|"
-    r"consistently|billed|instructed|trained|enforced|negotiated|inspected|strengthened|"
-    r"relayed|assessed|logged|introduced|aided|fulfilled|properly|accumulated|emptied|"
-    r"moved|lifted|stood|walked|supported|worked|partnered|located|spearheaded|conceptualized|"
+    r"^(?:completed|managed|supervised|provided|provide|provides|providing|prepared|"
+    r"assisted|assist|assists|assisting|led|leads|leading|developed|designed|"
+    r"implemented|created|responsible for|handled|conducted|coordinated|coordinate|"
+    r"coordinates|coordinating|reviewed|oversaw|monitored|monitor|monitors|monitoring|"
+    r"maintained|maintain|maintains|maintaining|built|formulated|executed|organized|"
+    r"generated|facilitated|analyzed|operated|scheduled|achieved|promoted|collaborated|"
+    r"administered|performed|consistently|billed|instructed|trained|enforced|negotiated|"
+    r"inspected|strengthened|worked|works|working|partnered|located|spearheaded|conceptualized|"
     r"revitalized|encouraged|defined|upheld|represented|set|acted as|reported|ensured|"
     r"served|established|helped|delivered|directed|participated|identified|verified|"
-    r"forwarded|underwrote|drafted|collaborates|spearheads|leads|supervises|manages|"
-    r"as\s+[a-z\s]+,\s*(?:i\b|my\b|responsibilities\b|was\b))\b",
+    r"forwarded|underwrote|drafted|collaborates|spearheads|supervises|recruited|targeted|"
+    r"member of|training and development|statement of work|attend|attends|attended|attending|"
+    r"upgrade|upgrades|upgraded|upgrading|using|use|uses|used|apply|applies|applied|applying|"
+    r"install|installs|installed|installing|configure|configures|configured|configuring)\b",
+    re.IGNORECASE,
+)
+
+BULLET_CUES = re.compile(
+    r"\b(?:responsible for|responsibilities include|duties include|dedicated to|assigned to|"
+    r"worked closely with|worked with|trained \d+|recruited by|targeted c-level|"
+    r"reporting to|identifying any|how many|co-authored with)\b",
     re.IGNORECASE,
 )
 
@@ -142,11 +379,21 @@ SECTION_NOISE_TOKENS = {
     "skills",
 }
 
+DATE_ONLY_REGEX = re.compile(
+    r"^\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?:\d{1,2}[/-])?(?:19[7-9]\d|20[0-2]\d)(?:\s*(?:to|-|–|—)\s*(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?:\d{1,2}[/-])?(?:19[7-9]\d|20[0-2]\d)|current|present)?\s*$",
+    re.IGNORECASE,
+)
+
 # Date interval regex covering "01/2015 to Current", "Jan 2018 - Dec 2021", "2016 – 2020"
 DATE_RANGE_REGEX = re.compile(
     r"(?P<start>(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?:\d{1,2}[/-])?(?:19[7-9]\d|20[0-2]\d))\s*"
     r"(?:to|-|–|—)\s*"
     r"(?P<end>(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?:\d{1,2}[/-])?(?:19[7-9]\d|20[0-2]\d)|current|present)",
+    re.IGNORECASE,
+)
+
+TRAILING_DATE_REGEX = re.compile(
+    r"\s+(?:(?P<s_mon>(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?P<s_date>\d{1,2}[/-])?(?P<s_yr>19[7-9]\d|20[0-2]\d))\s*(?:to|-|–|—)?\s*$",
     re.IGNORECASE,
 )
 
@@ -237,12 +484,30 @@ def extract_seniority_level(title_text: str, years: float | None = None) -> int:
     return 0
 
 
+def clean_placeholders(text: str) -> str:
+    """Strip repetitive template placeholders like Company Name, City, State."""
+    t = re.sub(
+        r"^(?:(?:company\s*name|city\s*,\s*state|state\s*,\s*city|state|city|organization)\s*[,–-—|]?\s*)+",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    ).strip()
+    t = re.sub(
+        r"(?:[,–-—|]?\s*(?:company\s*name|city\s*,\s*state|state\s*,\s*city|state|city|company|organization)\s*)+$",
+        "",
+        t,
+        flags=re.IGNORECASE,
+    ).strip()
+    return t
+
+
 def clean_header_text(text: str) -> str:
     """Clean broken encoding, placeholders, and noisy prefixes from text."""
     t = ftfy.fix_text(text)
-    t = t.replace("\u200b", "").replace("ï¼", " - ")
+    t = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", t).strip()
+    t = t.replace("ï¼", " - ")
     t = PLACEHOLDER_REGEX.sub("", t)
-    t = re.sub(r"^(?:city\s*,\s*)?state\s+", "", t.strip(" ,–-—|"), flags=re.IGNORECASE)
+    t = clean_placeholders(t)
     t = re.sub(r"\s+", " ", t).strip(" ,–-—|")
     return t
 
@@ -253,9 +518,11 @@ def is_bullet_or_description(line: str) -> bool:
     line_clean = re.sub(strip_pattern, "", line)
     if not line_clean:
         return True
-    if line_clean[0] in "•*-–—·\u2022\u25cf\u25cb\u25aa":
+    if line_clean[0] in "•*\u2022\u25cf\u25cb\u25aa":
         return True
     if ACTION_VERBS.match(line_clean):
+        return True
+    if BULLET_CUES.search(line_clean):
         return True
     if SPANISH_TEMPLATE_REGEX.search(line_clean):
         return True
@@ -267,46 +534,146 @@ def is_bullet_or_description(line: str) -> bool:
         len(line_clean) > 35 or line_clean.endswith(".")
     ):
         return True
-    if line_clean.endswith((".", "!", ";")) and len(line_clean) > 30:
+    if line_clean.endswith((".", "!", ";")) and len(line_clean) > 25:
         return True
     if line_clean[0].islower() and not line_clean.startswith(("to ", "and ")):
+        return True
+    has_marker = any(re.search(r"\b" + m + r"\b", line_clean.lower()) for m in COMMON_TITLE_MARKERS)
+    if not has_marker and len(line_clean.split()) > 7:
         return True
     return False
 
 
-def extract_date_range_safely(line: str) -> tuple[str | None, str | None, bool]:
-    """Extract job tenure date interval safely, avoiding software version or description dates."""
-    if re.search(r"\b(?:server|windows|sql|version|python|stat suite)\s+\d{4}", line, re.I):
-        return None, None, False
-    m = DATE_RANGE_REGEX.search(line)
-    if not m:
-        return None, None, False
-    start_date = m.group("start").strip()
-    end_date = m.group("end").strip()
-    is_current = bool(re.search(r"current|present", end_date, re.I))
-    return start_date, end_date, is_current
+def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool]:
+    """Clean trailing noise, dates, placeholders, and punctuation from title string."""
+    t = ftfy.fix_text(raw_title)
+    t = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", t).strip()
+    t = re.sub(r"^[ •*·–—\-\t\d.]+", "", t).strip()
+    t = re.sub(r"^[A-Za-z]+[-–—]\s*", "", t).strip()
+    t = clean_placeholders(t)
+
+    start_d, end_d, is_cur = None, None, False
+
+    if re.search(r"\s+\b(?:current|present)\b$", t, re.IGNORECASE):
+        t = re.sub(r"\s+\b(?:current|present)\b$", "", t, flags=re.IGNORECASE).strip()
+        end_d = "Current"
+        is_cur = True
+
+    m_range = DATE_RANGE_REGEX.search(t)
+    if m_range:
+        start_d = m_range.group("start").strip()
+        end_d = m_range.group("end").strip()
+        is_cur = bool(re.search(r"current|present", end_d, re.IGNORECASE))
+        t = t[: m_range.start()] + " " + t[m_range.end() :]
+        t = t.strip()
+
+    m_trail = TRAILING_DATE_REGEX.search(t)
+    if m_trail:
+        start_d = m_trail.group(0).strip(" to-–—")
+        t = t[: m_trail.start()].strip()
+
+    t = clean_placeholders(t)
+    t = re.sub(
+        r"\s+\b(?:managed and maintained|managed|maintained|created|developed|operated|assisted|supervised)\s*$",
+        "",
+        t,
+        flags=re.IGNORECASE,
+    ).strip()
+    t = re.sub(r"[:,\-–—/&|\s]+$", "", t).strip()
+    return t, start_d, end_d, is_cur
 
 
 def is_valid_title(title: str | None) -> bool:
     """Validate that candidate string is a plausible job title rather than a sentence or noise."""
-    if not title:
+    if not title or len(title) < 3 or len(title) > 65:
         return False
-    t = title.strip(" ,–-—|.")
-    t_lower = t.lower()
-    if t_lower in SECTION_NOISE_TOKENS or len(t) < 3 or len(t) > 60:
+    t_clean = title.strip(" ,–-—|.")
+    t_lower = t_clean.lower()
+    if t_lower in BLACKLIST_EXACT or t_lower in SECTION_NOISE_TOKENS:
         return False
-    if t.endswith((".", "!", ";")):
+    if DATE_ONLY_REGEX.match(t_lower):
         return False
-    if ACTION_VERBS.match(t):
+    for pat in BLACKLIST_SUBSTRINGS:
+        if re.search(pat, t_lower):
+            return False
+    if TITLE_START_BLACKLIST.search(t_clean):
         return False
-    if re.search(r"\b(?:salary|hours per week|supervisor)\b", t, re.I):
+    if TITLE_END_BLACKLIST.search(t_clean):
         return False
-    if DATE_RANGE_REGEX.search(t):
+    if SENTENCE_INDICATORS.search(t_clean):
         return False
-    words = t.split()
-    has_marker = any(re.search(r"\b" + m + r"\b", t_lower) for m in COMMON_TITLE_MARKERS)
-    all_capitalized = len(words) <= 5 and all(w[0].isupper() for w in words if w and w[0].isalpha())
-    return has_marker or all_capitalized
+    if t_lower.endswith((".", "!", ";", ")", ".e")) and not re.search(r"\([A-Z/]+\)$", t_clean):
+        return False
+    if t_clean.startswith("("):
+        return False
+    if ACTION_VERBS.match(t_clean):
+        return False
+
+    words = t_clean.split()
+    if len(words) == 1:
+        clean_w = re.sub(r"[^a-zA-Z]", "", words[0]).lower()
+        return clean_w in VALID_SINGLE_WORD_TITLES
+
+    has_marker = any(re.search(r"\b" + re.escape(m) + r"\b", t_lower) for m in COMMON_TITLE_MARKERS)
+    if has_marker:
+        return True
+
+    if re.match(r"^(?:senior|junior|lead|principal|chief|head|associate|staff|entry)\b", t_lower):
+        return True
+
+    return False
+
+
+def is_valid_company(company: str | None, title: str | None) -> bool:
+    """Validate that company string is legitimate and not a placeholder, title echo, or verb."""
+    if not company:
+        return False
+    c = ftfy.fix_text(company)
+    c = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", c).strip(" ,–-—|.")
+    c = clean_placeholders(c)
+    c_lower = c.lower()
+    if len(c) < 2 or len(c) > 60:
+        return False
+    if title and c_lower == title.lower().strip(" ,–-—|."):
+        return False
+    if re.search(
+        r"\b(?:19[7-9]\d|20[0-2]\d)\b|/\d{2,4}|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\bto\b|\bcurrent\b|\bpresent\b",
+        c_lower,
+    ):
+        return False
+    if not re.search(r"[a-zA-Z]{2,}", c):
+        return False
+    if c_lower in {
+        "organization",
+        "company",
+        "city",
+        "state",
+        "name",
+        "none",
+        "e6",
+        "training",
+        "cost schedule analyst",
+        "conduct seminars on healthcare reform",
+        "every company for which i have served",
+        "students union, university of technology",
+        "customer service/ sales rep city",
+        "human resources, benefits, law",
+    }:
+        return False
+    if ACTION_VERBS.match(c):
+        return False
+    has_marker = any(re.search(r"\b" + re.escape(m) + r"\b", c_lower) for m in COMMON_TITLE_MARKERS)
+    has_comp_suffix = bool(
+        re.search(
+            r"\b(?:inc|llc|corp|corporation|ltd|limited|co|company|group|services|bank|solutions|"
+            r"systems|technologies|hospital|clinic|center|firm|agency|studio|university|college|"
+            r"school|partners|labs|store|restaurant|hotel|organization)\b",
+            c_lower,
+        )
+    )
+    if has_marker and not has_comp_suffix:
+        return False
+    return True
 
 
 def extract_structured_experiences(experience_text: str) -> list[WorkExperienceEntry]:
@@ -318,10 +685,15 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
         return []
 
     raw_lines = [line.strip() for line in experience_text.split("\n") if line.strip()]
-    lines = [clean_header_text(line) for line in raw_lines]
-    lines = [line for line in lines if line]
+    lines = []
+    for rl in raw_lines:
+        t = ftfy.fix_text(rl)
+        t = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", t).strip()
+        if t:
+            lines.append(t)
 
     entries: list[WorkExperienceEntry] = []
+    pending_date = None
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -332,111 +704,123 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
             i += 1
             continue
 
-        start_date, end_date, is_cur = extract_date_range_safely(line)
-        has_title_marker = any(
-            re.search(r"\b" + m + r"\b", line.lower()) for m in COMMON_TITLE_MARKERS
-        )
-        is_short_title = len(line) < 50 and line[0].isupper() and not line.endswith(".")
+        if DATE_ONLY_REGEX.match(line):
+            m = DATE_RANGE_REGEX.search(line)
+            if m:
+                s_d = m.group("start").strip()
+                e_d = m.group("end").strip()
+                is_c = bool(re.search(r"current|present", e_d, re.I))
+                pending_date = (s_d, e_d, is_c)
+            else:
+                pending_date = (line.strip(), None, False)
+            i += 1
+            continue
 
-        if start_date or has_title_marker or is_short_title:
-            header_lines = [line]
-            curr_title = None
-            curr_company = None
-            c_start, c_end, c_cur = start_date, end_date, is_cur
+        # Delimiter split for Title - Company (attempt on raw line first to preserve delimiter)
+        delims = [" at ", " @ ", " - ", " – ", " — ", " | ", " , "]
+        found_parts = False
+        curr_title = None
+        curr_company = None
+        start_d, end_d, is_cur = None, None, False
 
-            j = i + 1
-            while j < min(len(lines), i + 4):
-                next_line = lines[j]
-                if is_bullet_or_description(next_line):
-                    break
-                n_start, n_end, n_cur = extract_date_range_safely(next_line)
-                if n_start and not c_start:
-                    c_start, c_end, c_cur = n_start, n_end, n_cur
-                    header_lines.append(next_line)
-                    j += 1
-                elif not n_start and len(next_line) < 45 and not next_line.endswith("."):
-                    header_lines.append(next_line)
-                    j += 1
-                else:
-                    break
+        for d in delims:
+            if d in line:
+                parts = [p.strip() for p in line.split(d) if p.strip()]
+                if len(parts) >= 2:
+                    p1, s1, e1, c1 = clean_title_noise(parts[0])
+                    p2, s2, e2, c2 = clean_title_noise(parts[1])
+                    p1_valid = is_valid_title(p1)
+                    p2_valid = is_valid_title(p2)
+                    if p1_valid and not p2_valid:
+                        curr_title = p1
+                        curr_company = p2 if is_valid_company(p2, p1) else None
+                        start_d, end_d, is_cur = s1 or s2, e1 or e2, c1 or c2
+                        found_parts = True
+                        break
+                    elif p2_valid and not p1_valid:
+                        curr_title = p2
+                        curr_company = p1 if is_valid_company(p1, p2) else None
+                        start_d, end_d, is_cur = s2 or s1, e2 or e1, c2 or c1
+                        found_parts = True
+                        break
 
-            for h in header_lines:
-                h_no_date = DATE_RANGE_REGEX.sub("", h)
-                h_no_date = clean_header_text(h_no_date)
-                if not h_no_date:
-                    continue
-
-                delims = [" at ", " @ ", " - ", " – ", " — ", " | ", " , "]
-                found = False
-                for d in delims:
-                    if d in h_no_date:
-                        parts = [
-                            clean_header_text(p) for p in h_no_date.split(d) if clean_header_text(p)
-                        ]
-                        if len(parts) >= 2:
-                            p1, p2 = parts[0], parts[1]
-                            p1_is_title = any(
-                                re.search(r"\b" + m + r"\b", p1.lower())
-                                for m in COMMON_TITLE_MARKERS
-                            )
-                            p2_is_title = any(
-                                re.search(r"\b" + m + r"\b", p2.lower())
-                                for m in COMMON_TITLE_MARKERS
-                            )
-                            if p1_is_title and not p2_is_title:
-                                curr_title = curr_title or p1
-                                curr_company = curr_company or p2
-                            elif p2_is_title and not p1_is_title:
-                                curr_title = curr_title or p2
-                                curr_company = curr_company or p1
-                            elif curr_title:
-                                curr_company = curr_company or p1
-                            else:
-                                curr_title = p1
-                                curr_company = p2
-
-                            found = True
+        if not found_parts:
+            h_clean, s_trail, e_trail, cur_trail = clean_title_noise(line)
+            start_d, end_d, is_cur = s_trail, e_trail, cur_trail
+            for d in delims:
+                if d in h_clean:
+                    parts = [p.strip() for p in h_clean.split(d) if p.strip()]
+                    if len(parts) >= 2:
+                        p1, s1, e1, c1 = clean_title_noise(parts[0])
+                        p2, s2, e2, c2 = clean_title_noise(parts[1])
+                        p1_valid = is_valid_title(p1)
+                        p2_valid = is_valid_title(p2)
+                        if p1_valid and not p2_valid:
+                            curr_title = p1
+                            curr_company = p2 if is_valid_company(p2, p1) else None
+                            start_d, end_d, is_cur = s1 or s2, e1 or e2, c1 or c2
+                            found_parts = True
                             break
-                if not found:
-                    h_is_title = any(
-                        re.search(r"\b" + m + r"\b", h_no_date.lower())
-                        for m in COMMON_TITLE_MARKERS
-                    )
-                    if h_is_title and not curr_title:
-                        curr_title = h_no_date
-                    elif not curr_company:
-                        curr_company = h_no_date
+                        elif p2_valid and not p1_valid:
+                            curr_title = p2
+                            curr_company = p1 if is_valid_company(p1, p2) else None
+                            start_d, end_d, is_cur = s2 or s1, e2 or e1, c2 or c1
+                            found_parts = True
+                            break
 
-            if curr_title:
-                curr_title = clean_header_text(curr_title)
-            if curr_company:
-                curr_company = clean_header_text(curr_company)
+            if not found_parts and is_valid_title(h_clean):
+                curr_title = h_clean
+                curr_company = None
 
-            if curr_title and DATE_RANGE_REGEX.search(curr_title):
-                curr_title = None
+        if curr_title and is_valid_title(curr_title):
+            final_company = curr_company if is_valid_company(curr_company, curr_title) else None
 
-            if not is_valid_title(curr_title):
-                first_clean = DATE_RANGE_REGEX.sub("", header_lines[0]).strip(" ,–-—|")
-                first_clean = clean_header_text(first_clean)
-                if is_valid_title(first_clean):
-                    curr_title = first_clean
-                else:
-                    if entries:
-                        entries[-1].bullets.extend(header_lines)
+            # Attach pending date if available and current entry has no dates
+            if pending_date and not start_d and not end_d:
+                start_d, end_d, is_cur = pending_date
+                pending_date = None
+
+            # Look ahead for company or date if missing
+            j = i + 1
+            while j < min(len(lines), i + 3):
+                next_l = lines[j]
+                if is_bullet_or_description(next_l):
+                    break
+                m_next = DATE_RANGE_REGEX.search(next_l)
+                if m_next and not start_d:
+                    start_d = m_next.group("start").strip()
+                    end_d = m_next.group("end").strip()
+                    is_cur = bool(re.search(r"current|present", end_d, re.I))
                     i = j
-                    continue
+                    break
+                elif DATE_ONLY_REGEX.match(next_l) and not start_d:
+                    start_d = next_l.strip()
+                    i = j
+                    break
+                if not final_company:
+                    c_cand, _, _, _ = clean_title_noise(next_l)
+                    for cd in [" – ", " - ", " — ", " | ", " , "]:
+                        if cd in c_cand:
+                            c_cand = c_cand.split(cd)[0].strip()
+                            break
+                    if is_valid_company(c_cand, curr_title):
+                        final_company = c_cand
+                        i = j
+                        break
+                j += 1
 
-            entry = WorkExperienceEntry(
-                title=curr_title,
-                company=curr_company or "Organization",
-                start_date=c_start,
-                end_date=c_end,
-                is_current=c_cur,
-                bullets=[],
-                raw_text="\n".join(header_lines),
+            entries.append(
+                WorkExperienceEntry(
+                    title=curr_title,
+                    company=final_company,
+                    start_date=start_d,
+                    end_date=end_d,
+                    is_current=is_cur,
+                    bullets=[],
+                    raw_text=line,
+                )
             )
-            entries.append(entry)
-            i = j
+            i += 1
             continue
 
         if entries:

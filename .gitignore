@@ -6,6 +6,11 @@
 # Data directory
 /data/
 
+# Holdouts & CSV audits containing resume text
+docs/parser_holdout_*.csv
+docs/*.csv
+data/
+
 # Databases
 *.db
 *.sqlite

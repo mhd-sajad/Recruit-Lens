@@ -1,0 +1,104 @@
+{
+  "sample_size": {
+    "supported": 30,
+    "unsupported": 30,
+    "total": 60
+  },
+  "supported_distribution": {
+    "mean": 0.6472,
+    "std": 0.1224,
+    "median": 0.6835,
+    "min": 0.3475,
+    "max": 0.9325
+  },
+  "unsupported_distribution": {
+    "mean": 0.1202,
+    "std": 0.0893,
+    "median": 0.1174,
+    "min": -0.0461,
+    "max": 0.3028
+  },
+  "calibration_sweep": [
+    {
+      "threshold": 0.4,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 1,
+      "false_reject_rate": 0.0333,
+      "total_error_rate": 0.0167
+    },
+    {
+      "threshold": 0.45,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 3,
+      "false_reject_rate": 0.1,
+      "total_error_rate": 0.05
+    },
+    {
+      "threshold": 0.5,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 3,
+      "false_reject_rate": 0.1,
+      "total_error_rate": 0.05
+    },
+    {
+      "threshold": 0.55,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 7,
+      "false_reject_rate": 0.2333,
+      "total_error_rate": 0.1167
+    },
+    {
+      "threshold": 0.6,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 10,
+      "false_reject_rate": 0.3333,
+      "total_error_rate": 0.1667
+    },
+    {
+      "threshold": 0.65,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 13,
+      "false_reject_rate": 0.4333,
+      "total_error_rate": 0.2167
+    },
+    {
+      "threshold": 0.7,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 17,
+      "false_reject_rate": 0.5667,
+      "total_error_rate": 0.2833
+    },
+    {
+      "threshold": 0.75,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 27,
+      "false_reject_rate": 0.9,
+      "total_error_rate": 0.45
+    },
+    {
+      "threshold": 0.8,
+      "false_accept_count": 0,
+      "false_accept_rate": 0.0,
+      "false_reject_count": 29,
+      "false_reject_rate": 0.9667,
+      "total_error_rate": 0.4833
+    }
+  ],
+  "recommended_critic_threshold": 0.55,
+  "performance_at_recommended": {
+    "threshold": 0.55,
+    "false_accept_count": 0,
+    "false_accept_rate": 0.0,
+    "false_reject_count": 7,
+    "false_reject_rate": 0.2333,
+    "total_error_rate": 0.1167
+  }
+}

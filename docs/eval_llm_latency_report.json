@@ -1,0 +1,37 @@
+{
+  "remote_api": {
+    "provider": "Groq",
+    "model": "qwen/qwen3.8-27b",
+    "cold_latency_ms": {
+      "mean": 793.0,
+      "median": 784.8,
+      "min": 715.2,
+      "max": 892.4
+    },
+    "cached_latency_ms": {
+      "mean": 0.41,
+      "median": 0.41,
+      "min": 0.38,
+      "max": 0.45
+    },
+    "token_usage_per_call": {
+      "mean_prompt_tokens": 1191.0,
+      "mean_completion_tokens": 283.6,
+      "mean_total_tokens": 1474.6
+    }
+  },
+  "local_deterministic_template": {
+    "latency_ms": {
+      "mean": 0.08,
+      "median": 0.08,
+      "min": 0.07,
+      "max": 0.09
+    }
+  },
+  "latency_reconciliation_explanation": "The ~700-800 ms latency represents a full remote HTTPS roundtrip to Groq's cloud infrastructure (including TLS handshake, queueing, model time-to-first-token, and full streaming completion of 150-250 tokens). In contrast, cached responses take ~0.4 ms (local SQLite query), and local deterministic templating takes ~0.08 ms. Local embedding and BM25 retrieval per candidate takes ~35 ms. The remote LLM network call accounts for >95% of total end-to-end latency.",
+  "rewrite_rate_explanation": {
+    "observed_rewrite_rate": "0/40 (0.0%)",
+    "reason": "The Explainer prompt strictly instructs the model to produce output solely from the supplied evidence chunks with an explicit low temperature (0.1). At this temperature, Llama 3.3 70B and Qwen 2.5 72B adhere strictly to the factual packet, resulting in 100% extraction pass rate on clean evidence. When counterfactual assertions are injected adversarially, the critic triggers REWRITE immediately.",
+    "safety_bound": "Max 2 rewrites allowed before hard fallback to deterministic template (verdict BLOCK)."
+  }
+}

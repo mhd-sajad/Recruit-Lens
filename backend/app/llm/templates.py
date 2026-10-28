@@ -23,9 +23,9 @@ def generate_deterministic_explanation(packet: EvidencePacket) -> CandidateExpla
 
     s1 = (
         f"Candidate is evaluated as {packet.assigned_tier} with {packet.years_experience:.1f} years of relevant "
-        f"experience compared to {packet.required_years:.1f} years required."
+        f"experience compared to {packet.required_years:.1f} years required [{c1}]."
     )
-    cite1: list[str] = []
+    cite1 = [c1]
 
     matched_str = (
         ", ".join(packet.matched_must_skills[:4])
@@ -37,8 +37,8 @@ def generate_deterministic_explanation(packet: EvidencePacket) -> CandidateExpla
 
     if packet.missing_must_skills:
         missing_str = ", ".join(packet.missing_must_skills[:3])
-        s3 = f"Identified qualification gaps in mandatory requirements: {missing_str}."
-        cite3: list[str] = []
+        s3 = f"Identified qualification gaps in mandatory requirements: {missing_str} [{c1}]."
+        cite3 = [c1]
     else:
         s3 = f"Successfully satisfies all verified mandatory skill requirements for this position [{c1}]."
         cite3 = [c1]

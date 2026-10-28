@@ -15,20 +15,23 @@ from app.core.models import ContactPII
 # Patterns indicative of prompt injection, role hijacking, or instruction override
 INJECTION_PATTERNS = [
     re.compile(
-        r"(?i)\b(ignore|disregard|forget|override)\s+(all\s+)?(previous|prior|above|former)\s+(instructions|prompts|rules|commands|context)\b"
+        r"(?i)\b(ignore|disregard|forget|override)\s+(all\s+)?(previous|prior|above|former|everything|rules)\s*(instructions|prompts|rules|commands|context)?\b"
     ),
     re.compile(
-        r"(?i)\b(system\s+prompt|developer\s+mode|dan\s+mode|jailbreak|unrestricted\s+mode)\b"
+        r"(?i)\b(system\s+(?:prompt|override|message|command|instruction)|developer\s+mode|dan\s+mode|jailbreak|unrestricted\s+mode)\b"
     ),
     re.compile(
-        r"(?i)\b(you\s+must|you\s+are\s+now|act\s+as\s+an?\s+unrestricted|pretend\s+you\s+are)\b"
+        r"(?i)\b(you\s+must|you\s+are\s+now|act\s+as\s+an?\s+(?:unrestricted|unfiltered)|pretend\s+you\s+are|unfiltered\s+recruitment\s+assistant|always\s+shortlists?)\b"
     ),
     re.compile(
-        r"(?i)\b(rate\s+me\s+(100|10|perfect|top)|give\s+me\s+(a\s+)?100%?|shortlist\s+this\s+candidate|hire\s+immediately)\b"
+        r"(?i)\b(rate\s+(?:me|this|candidate)\s+(?:100|10|perfect|top)|give\s+(?:me|this|candidate)\s+(?:a\s+)?100%?|shortlist\s+this\s+candidate|hire\s+(?:immediately|candidate)|candidate\s+is\s+hired|verdict\s+pass\s+and\s+100%|output\s+json\s+with\s+verdict)\b"
     ),
     re.compile(r"(?i)\b(do\s+not\s+cite|bypass\s+critique|bypass\s+grounding|ignore\s+evidence)\b"),
     re.compile(
         r"(?i)<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>|javascript:|eval\(",
+    ),
+    re.compile(
+        r"(?i)\b(human:\s+forget|assistant:\s+yes|assistant:\s+candidate|translate\s+(?:everything|all|this)\s+(?:above\s+)?to|base64\s+(?:override|instruction|encoded))\b"
     ),
 ]
 
