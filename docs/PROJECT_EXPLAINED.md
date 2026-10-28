@@ -275,3 +275,14 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
 - **How it works:** Scans section chunks with word-boundary regex matchers from `SkillTaxonomy`. Tracks character spans and surrounding sentence context snippets for each occurrence. Applies taxonomy inference relations with explicit match precedence (explicit matches always take 1.0 confidence). Protects against keyword stuffing by tracking occurrence counts while deduplicating canonical skill identities.
 - **How it helps here:** Supplies downstream feature extractors with verified `CandidateSkillsResult` structures separating explicit from inferred skills with citation evidence.
 - **Alternatives considered:** Naive string matching without chunk offsets (rejected: violates the core non-negotiable rule that every claim must link to cited evidence).
+
+### Component: Bounded Candidate Feature Extractor with Keyword Stuffing Guard (`backend/app/core/features.py`)
+- **What it is:** Candidate-to-job feature engineering pipeline computing 10 explainable, bounded comparison features (`must_have_coverage`, `nice_to_have_coverage`, `matched_must_count`, `matched_nice_count`, `inferred_count`, `missing_must_count`, `years_gap`, `seniority_gap`, `education_match`, `title_match`, `skill_recency`, `dense_similarity`).
+- **Why:** Machine learning and scoring models require strictly bounded numerical inputs with calibrated confidence and explicit missing-data provenance so missing inputs never silently act as zero.
+- **How it works:**
+  - Every feature is wrapped in a `FeatureValue` object with strict `[min_bound, max_bound]`, calibrated confidence (0.0 to 1.0), and boolean `is_missing` flags with human-readable explanations when data is absent.
+  - **Keyword Stuffing Guard:** Evaluates skill coverage as a set-level match per canonical taxonomy skill. A candidate mentioning 'Python' 50 times receives the exact same coverage and matched count as a candidate mentioning it once.
+  - **Missing Data Handling:** If a candidate's resume lacks dates, `years_gap` is explicitly marked `is_missing=True` with `missing_reason="Candidate experience dates could not be parsed"` rather than silently penalizing the candidate with 0.
+  - Computes title similarity via token overlap and seniority level gap via ordinal distance (-4 to +4).
+- **How it helps here:** Serves as the immutable feature foundation for both baseline linear scoring and monotonic XGBoost ranking models.
+- **Alternatives considered:** Raw unnormalized feature dictionaries (rejected: lack bounds checking, hide missing-data errors, and vulnerable to keyword manipulation).

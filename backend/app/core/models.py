@@ -22,6 +22,7 @@ class WorkExperienceEntry(BaseModel):
     company: str | None = None
     start_date: str | None = None
     end_date: str | None = None
+    duration_months: int | None = None
     is_current: bool = False
     bullets: list[str] = Field(default_factory=list)
     raw_text: str = ""
