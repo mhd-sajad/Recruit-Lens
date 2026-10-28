@@ -54,6 +54,15 @@ def _mean_pooling(token_embeddings: np.ndarray, attention_mask: np.ndarray) -> n
     return cast(np.ndarray, sum_embeddings / sum_mask)
 
 
+def _cls_pooling(token_embeddings: np.ndarray) -> np.ndarray:
+    """
+    CLS token pooling: select the first token embedding (position 0).
+
+    token_embeddings: shape (batch_size, seq_len, hidden_dim)
+    """
+    return cast(np.ndarray, token_embeddings[:, 0, :])
+
+
 def _l2_normalize(embeddings: np.ndarray) -> np.ndarray:
     """L2 normalization along axis 1."""
     norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
@@ -170,7 +179,10 @@ class ONNXEmbedder(BaseEmbedder):
             outputs = self._session.run(None, input_feed)
             last_hidden_state = outputs[0]  # shape: (batch_size, seq_len, hidden_dim)
 
-            pooled = _mean_pooling(last_hidden_state, attention_mask)
+            if self._model_type == "bge-small":
+                pooled = _cls_pooling(last_hidden_state)
+            else:
+                pooled = _mean_pooling(last_hidden_state, attention_mask)
             normalized = _l2_normalize(pooled)
             all_embeddings.append(normalized.astype(np.float32))
 

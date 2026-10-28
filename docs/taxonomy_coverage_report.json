@@ -1,0 +1,246 @@
+{
+  "dropped_analysis": {
+    "total_canonical": 8746,
+    "retained": 8822,
+    "dropped": 1659,
+    "top_dropped_families": [
+      [
+        "Analytical or scientific software",
+        332
+      ],
+      [
+        "Data base user interface and query software",
+        125
+      ],
+      [
+        "Medical software",
+        110
+      ],
+      [
+        "Financial analysis software",
+        66
+      ],
+      [
+        "Industrial control software",
+        61
+      ],
+      [
+        "Computer aided design CAD software",
+        56
+      ],
+      [
+        "Accounting software",
+        37
+      ],
+      [
+        "Graphics or photo imaging software",
+        37
+      ],
+      [
+        "Program testing software",
+        31
+      ],
+      [
+        "Human resources software",
+        28
+      ]
+    ]
+  },
+  "category_stats": {
+    "ACCOUNTANT": {
+      "total_resumes": 13,
+      "median_skills": 19.0,
+      "mean_skills": 19.1,
+      "pct_ge_3": 100.0
+    },
+    "ADVOCATE": {
+      "total_resumes": 13,
+      "median_skills": 12.0,
+      "mean_skills": 14.2,
+      "pct_ge_3": 100.0
+    },
+    "AGRICULTURE": {
+      "total_resumes": 13,
+      "median_skills": 13.0,
+      "mean_skills": 13.4,
+      "pct_ge_3": 92.3
+    },
+    "APPAREL": {
+      "total_resumes": 13,
+      "median_skills": 11.0,
+      "mean_skills": 11.8,
+      "pct_ge_3": 92.3
+    },
+    "ARTS": {
+      "total_resumes": 13,
+      "median_skills": 10.0,
+      "mean_skills": 13.3,
+      "pct_ge_3": 100.0
+    },
+    "AUTOMOBILE": {
+      "total_resumes": 13,
+      "median_skills": 11.0,
+      "mean_skills": 14.2,
+      "pct_ge_3": 100.0
+    },
+    "AVIATION": {
+      "total_resumes": 13,
+      "median_skills": 14.0,
+      "mean_skills": 15.7,
+      "pct_ge_3": 100.0
+    },
+    "BANKING": {
+      "total_resumes": 13,
+      "median_skills": 15.0,
+      "mean_skills": 16.9,
+      "pct_ge_3": 100.0
+    },
+    "BPO": {
+      "total_resumes": 13,
+      "median_skills": 18.0,
+      "mean_skills": 18.3,
+      "pct_ge_3": 100.0
+    },
+    "BUSINESS-DEVELOPMENT": {
+      "total_resumes": 13,
+      "median_skills": 14.0,
+      "mean_skills": 17.0,
+      "pct_ge_3": 100.0
+    },
+    "CHEF": {
+      "total_resumes": 13,
+      "median_skills": 10.0,
+      "mean_skills": 9.9,
+      "pct_ge_3": 100.0
+    },
+    "CONSTRUCTION": {
+      "total_resumes": 13,
+      "median_skills": 9.0,
+      "mean_skills": 10.3,
+      "pct_ge_3": 92.3
+    },
+    "CONSULTANT": {
+      "total_resumes": 12,
+      "median_skills": 16.0,
+      "mean_skills": 18.2,
+      "pct_ge_3": 100.0
+    },
+    "DESIGNER": {
+      "total_resumes": 12,
+      "median_skills": 10.0,
+      "mean_skills": 12.2,
+      "pct_ge_3": 91.7
+    },
+    "DIGITAL-MEDIA": {
+      "total_resumes": 12,
+      "median_skills": 13.0,
+      "mean_skills": 14.4,
+      "pct_ge_3": 100.0
+    },
+    "ENGINEERING": {
+      "total_resumes": 12,
+      "median_skills": 19.0,
+      "mean_skills": 18.8,
+      "pct_ge_3": 100.0
+    },
+    "FINANCE": {
+      "total_resumes": 12,
+      "median_skills": 21.0,
+      "mean_skills": 20.7,
+      "pct_ge_3": 100.0
+    },
+    "FITNESS": {
+      "total_resumes": 12,
+      "median_skills": 13.5,
+      "mean_skills": 11.9,
+      "pct_ge_3": 91.7
+    },
+    "HEALTHCARE": {
+      "total_resumes": 12,
+      "median_skills": 13.0,
+      "mean_skills": 15.4,
+      "pct_ge_3": 100.0
+    },
+    "HR": {
+      "total_resumes": 12,
+      "median_skills": 16.0,
+      "mean_skills": 16.1,
+      "pct_ge_3": 100.0
+    },
+    "INFORMATION-TECHNOLOGY": {
+      "total_resumes": 12,
+      "median_skills": 27.0,
+      "mean_skills": 26.6,
+      "pct_ge_3": 100.0
+    },
+    "PUBLIC-RELATIONS": {
+      "total_resumes": 12,
+      "median_skills": 15.5,
+      "mean_skills": 14.6,
+      "pct_ge_3": 100.0
+    },
+    "SALES": {
+      "total_resumes": 12,
+      "median_skills": 10.5,
+      "mean_skills": 13.4,
+      "pct_ge_3": 100.0
+    },
+    "TEACHER": {
+      "total_resumes": 12,
+      "median_skills": 7.5,
+      "mean_skills": 8.8,
+      "pct_ge_3": 91.7
+    }
+  },
+  "weak_categories": [],
+  "jd_stats": {
+    "Design & Creative": {
+      "count": 94,
+      "median_skills": 3.0,
+      "mean_skills": 3.4,
+      "pct_ge_3": 62.8
+    },
+    "Finance & Accounting": {
+      "count": 63,
+      "median_skills": 6.0,
+      "mean_skills": 6.1,
+      "pct_ge_3": 88.9
+    },
+    "HR & Operations": {
+      "count": 66,
+      "median_skills": 4.0,
+      "mean_skills": 4.9,
+      "pct_ge_3": 80.3
+    },
+    "Healthcare & Medical": {
+      "count": 161,
+      "median_skills": 4.0,
+      "mean_skills": 4.0,
+      "pct_ge_3": 73.3
+    },
+    "Legal & Compliance": {
+      "count": 31,
+      "median_skills": 4.0,
+      "mean_skills": 3.5,
+      "pct_ge_3": 74.2
+    },
+    "Other / General": {
+      "count": 941,
+      "median_skills": 3.0,
+      "mean_skills": 3.9,
+      "pct_ge_3": 66.2
+    },
+    "Sales & Marketing": {
+      "count": 180,
+      "median_skills": 4.0,
+      "mean_skills": 3.9,
+      "pct_ge_3": 74.4
+    },
+    "Software & Tech": {
+      "count": 464,
+      "median_skills": 4.0,
+      "mean_skills": 4.7,
+      "pct_ge_3": 76.7
+    }
+  }
+}

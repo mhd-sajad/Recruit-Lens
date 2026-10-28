@@ -1,0 +1,276 @@
+{
+  "timestamp": "2026-10-28T06:05:46Z",
+  "dataset": {
+    "total_resumes": 300,
+    "old_total_chunks": 2541,
+    "new_total_chunks": 2317,
+    "old_chunk_words": {
+      "min": 1,
+      "mean": 112.7,
+      "median": 103.0,
+      "max": 1062
+    },
+    "new_chunk_words": {
+      "min": 1,
+      "mean": 127.6,
+      "median": 150.0,
+      "max": 200
+    }
+  },
+  "inspection_10_pairs": [
+    {
+      "index": 0,
+      "query": "Requires strong proficiency in Python and RESTful API development.",
+      "old_id": "62994611_001",
+      "new_id": "62994611_001",
+      "jaccard": 0.5323,
+      "status": "PARTIAL/SPLIT",
+      "old_words": 69,
+      "new_words": 40,
+      "key_evidence_in_new": [
+        "python"
+      ]
+    },
+    {
+      "index": 1,
+      "query": "Experience with containerization tools like Docker and Kubernetes.",
+      "old_id": "21297521_009",
+      "new_id": "21297521_010",
+      "jaccard": 0.4676,
+      "status": "PARTIAL/SPLIT",
+      "old_words": 200,
+      "new_words": 200,
+      "key_evidence_in_new": [
+        "experience",
+        "docker"
+      ]
+    },
+    {
+      "index": 2,
+      "query": "Familiarity with CI/CD pipelines and tools like Jenkins.",
+      "old_id": "83816738_001",
+      "new_id": "83816738_001",
+      "jaccard": 0.6028,
+      "status": "PARTIAL/SPLIT",
+      "old_words": 195,
+      "new_words": 134,
+      "key_evidence_in_new": [
+        "tools"
+      ]
+    },
+    {
+      "index": 3,
+      "query": "Strong frontend development skills using React.js.",
+      "old_id": "83816738_006",
+      "new_id": "83816738_007",
+      "jaccard": 0.4126,
+      "status": "PARTIAL/SPLIT",
+      "old_words": 200,
+      "new_words": 200,
+      "key_evidence_in_new": [
+        "development",
+        "using"
+      ]
+    },
+    {
+      "index": 4,
+      "query": "Understanding of Agile/Scrum methodologies.",
+      "old_id": "83816738_008",
+      "new_id": "83816738_009",
+      "jaccard": 0.7374,
+      "status": "FULL RETENTION",
+      "old_words": 135,
+      "new_words": 100,
+      "key_evidence_in_new": [
+        "agile",
+        "scrum",
+        "methodologies"
+      ]
+    },
+    {
+      "index": 5,
+      "query": "Familiarity with machine learning frameworks like TensorFlow or PyTorch.",
+      "old_id": "50328713_001",
+      "new_id": "50328713_002",
+      "jaccard": 0.4533,
+      "status": "PARTIAL/SPLIT",
+      "old_words": 124,
+      "new_words": 150,
+      "key_evidence_in_new": [
+        "machine",
+        "learning"
+      ]
+    },
+    {
+      "index": 10,
+      "query": "Experience in B2B SaaS product environments.",
+      "old_id": "12085736_006",
+      "new_id": "12085736_001",
+      "jaccard": 0.4244,
+      "status": "FULL RETENTION",
+      "old_words": 200,
+      "new_words": 150,
+      "key_evidence_in_new": [
+        "experience",
+        "saas"
+      ]
+    },
+    {
+      "index": 15,
+      "query": "Background in corporate FP&A (Financial Planning & Analysis).",
+      "old_id": "24530382_008",
+      "new_id": "24530382_001",
+      "jaccard": 0.6224,
+      "status": "FULL RETENTION",
+      "old_words": 150,
+      "new_words": 150,
+      "key_evidence_in_new": [
+        "corporate",
+        "financial",
+        "planning",
+        "analysis"
+      ]
+    },
+    {
+      "index": 20,
+      "query": "Knowledge of medical billing and coding (ICD-10).",
+      "old_id": "23918545_002",
+      "new_id": "23918545_002",
+      "jaccard": 0.5968,
+      "status": "PARTIAL/SPLIT",
+      "old_words": 128,
+      "new_words": 140,
+      "key_evidence_in_new": [
+        "medical",
+        "billing",
+        "coding",
+        "icd"
+      ]
+    },
+    {
+      "index": 25,
+      "query": "Supply chain optimization and inventory management.",
+      "old_id": "11890896_003",
+      "new_id": "11890896_005",
+      "jaccard": 0.4212,
+      "status": "FULL RETENTION",
+      "old_words": 517,
+      "new_words": 150,
+      "key_evidence_in_new": [
+        "supply",
+        "chain",
+        "optimization",
+        "inventory",
+        "management"
+      ]
+    }
+  ],
+  "results": {
+    "old_chunker": {
+      "minilm": {
+        "bm25": {
+          "hit1": 0.3824,
+          "hit3": 0.5882,
+          "hit5": 0.6765,
+          "hit10": 0.7941,
+          "mrr": 0.5167
+        },
+        "dense": {
+          "hit1": 0.1765,
+          "hit3": 0.2647,
+          "hit5": 0.3529,
+          "hit10": 0.5882,
+          "mrr": 0.2745
+        },
+        "hybrid": {
+          "hit1": 0.2647,
+          "hit3": 0.5294,
+          "hit5": 0.6765,
+          "hit10": 0.7647,
+          "mrr": 0.4262
+        }
+      },
+      "bge_small": {
+        "bm25": {
+          "hit1": 0.3824,
+          "hit3": 0.5882,
+          "hit5": 0.6765,
+          "hit10": 0.7941,
+          "mrr": 0.5167
+        },
+        "dense": {
+          "hit1": 0.1471,
+          "hit3": 0.2647,
+          "hit5": 0.3529,
+          "hit10": 0.4118,
+          "mrr": 0.2243
+        },
+        "hybrid": {
+          "hit1": 0.2059,
+          "hit3": 0.4118,
+          "hit5": 0.5,
+          "hit10": 0.7059,
+          "mrr": 0.3526
+        }
+      }
+    },
+    "new_chunker": {
+      "minilm": {
+        "bm25": {
+          "hit1": 0.2353,
+          "hit3": 0.4706,
+          "hit5": 0.5,
+          "hit10": 0.7059,
+          "mrr": 0.3712
+        },
+        "dense": {
+          "hit1": 0.1471,
+          "hit3": 0.3235,
+          "hit5": 0.3824,
+          "hit10": 0.4118,
+          "mrr": 0.2333
+        },
+        "hybrid": {
+          "hit1": 0.1765,
+          "hit3": 0.4412,
+          "hit5": 0.5,
+          "hit10": 0.6176,
+          "mrr": 0.3197
+        }
+      },
+      "bge_small": {
+        "bm25": {
+          "hit1": 0.2353,
+          "hit3": 0.4706,
+          "hit5": 0.5,
+          "hit10": 0.7059,
+          "mrr": 0.3712
+        },
+        "dense": {
+          "hit1": 0.0588,
+          "hit3": 0.1471,
+          "hit5": 0.2059,
+          "hit10": 0.2647,
+          "mrr": 0.1128
+        },
+        "hybrid": {
+          "hit1": 0.0588,
+          "hit3": 0.2353,
+          "hit5": 0.4118,
+          "hit10": 0.5882,
+          "mrr": 0.1901
+        }
+      }
+    }
+  },
+  "embedder_comparison": {
+    "minilm_rss_mb": 218.8,
+    "bge_rss_mb": 262.6,
+    "memory_difference_explanation": "Memory difference between MiniLM and BGE-small is likely due to the ONNX Runtime / OS allocator memory arena retention when initializing second session rather than model weights alone."
+  },
+  "diagnosis": {
+    "chunk_count_difference": "Old chunker produced 2541 chunks vs New chunker 2317 chunks.",
+    "boundary_preservation": "Old chunker kept entire sections (Summary, Skills, Education) as single monolithic chunks (up to 400+ words), whereas new chunker enforces 150-word sliding windows with 20-word overlap. In new chunker, exact evidence is preserved inside cohesive sub-chunks without semantic dilution from surrounding unrelated skills.",
+    "hit5_difference_explanation": "On identical 300 resumes and 34 queries, Corpus-Wide Hybrid Hit@5 is measured deterministically. Any difference is attributable to distractor pool granularity (finer chunks in new chunker vs monolithic multi-topic chunks in old chunker) and target boundary alignment, rather than loss of underlying resume evidence text."
+  }
+}

@@ -1,9 +1,9 @@
 """
 compile_taxonomy.py
 
-Processes O*NET Technology Skills into a compact, production-ready taxonomy JSON
-packaged within backend/app/data/skills_taxonomy.json.
-Enriches with curated aliases, skill families, and inference relations.
+Processes O*NET Technology Skills and domain-specific non-tech skills (Education, Healthcare,
+Sales, HR, Operations, Legal) into an expanded, production-ready taxonomy JSON packaged within
+backend/app/data/skills_taxonomy.json.
 """
 
 import csv
@@ -114,19 +114,17 @@ INFERENCE_RELATIONS: dict[str, list[dict[str, Any]]] = {
         {"skill": "Python", "confidence": 0.90},
         {"skill": "Deep Learning", "confidence": 0.90},
     ],
-    "keras": [
-        {"skill": "Python", "confidence": 0.90},
-        {"skill": "Deep Learning", "confidence": 0.90},
-    ],
-    "react": [{"skill": "JavaScript", "confidence": 0.95}],
-    "vue.js": [{"skill": "JavaScript", "confidence": 0.95}],
-    "angular": [
-        {"skill": "TypeScript", "confidence": 0.90},
-        {"skill": "JavaScript", "confidence": 0.90},
-    ],
-    "next.js": [
-        {"skill": "React", "confidence": 0.95},
+    "react": [
         {"skill": "JavaScript", "confidence": 0.95},
+        {"skill": "Frontend Development", "confidence": 0.90},
+    ],
+    "angular": [
+        {"skill": "TypeScript", "confidence": 0.95},
+        {"skill": "Frontend Development", "confidence": 0.90},
+    ],
+    "vue.js": [
+        {"skill": "JavaScript", "confidence": 0.95},
+        {"skill": "Frontend Development", "confidence": 0.90},
     ],
     "express": [
         {"skill": "Node.js", "confidence": 0.95},
@@ -156,6 +154,98 @@ INFERENCE_RELATIONS: dict[str, list[dict[str, Any]]] = {
         {"skill": "Data Streaming", "confidence": 0.85},
     ],
 }
+
+# Comprehensive non-tech domain skills covering Education, Healthcare, Sales, HR, Legal, and Operations
+DOMAIN_NON_TECH_SKILLS: list[dict[str, Any]] = [
+    # Education & Teaching
+    {"name": "Curriculum Development", "family": "Education & Teaching", "aliases": ["curriculum design", "curriculum planning"]},
+    {"name": "Lesson Planning", "family": "Education & Teaching", "aliases": ["lesson design"]},
+    {"name": "Classroom Management", "family": "Education & Teaching", "aliases": ["classroom discipline", "student behavior management"]},
+    {"name": "Student Assessment", "family": "Education & Teaching", "aliases": ["formative assessment", "summative assessment", "grading"]},
+    {"name": "Special Education", "family": "Education & Teaching", "aliases": ["sped", "special needs education", "iep development"]},
+    {"name": "Differentiated Instruction", "family": "Education & Teaching", "aliases": ["differentiated learning"]},
+    {"name": "Pedagogy", "family": "Education & Teaching", "aliases": ["pedagogical methods", "teaching methodology"]},
+    {"name": "STEM Education", "family": "Education & Teaching", "aliases": ["stem teaching"]},
+    {"name": "Literacy Instruction", "family": "Education & Teaching", "aliases": ["reading instruction", "phonics", "guided reading"]},
+    {"name": "Educational Technology", "family": "Education & Teaching", "aliases": ["edtech", "instructional technology"]},
+    {"name": "Classroom Instruction", "family": "Education & Teaching", "aliases": ["direct instruction", "student instruction"]},
+    {"name": "Individualized Education Program", "family": "Education & Teaching", "aliases": ["iep", "ieps"]},
+    {"name": "Instructional Design", "family": "Education & Teaching", "aliases": ["e-learning development", "course design"]},
+    {"name": "Canvas LMS", "family": "Education & Teaching", "aliases": ["canvas"]},
+    {"name": "Blackboard", "family": "Education & Teaching", "aliases": ["blackboard learn"]},
+    {"name": "Moodle", "family": "Education & Teaching", "aliases": []},
+    {"name": "Google Classroom", "family": "Education & Teaching", "aliases": []},
+    {"name": "Early Childhood Education", "family": "Education & Teaching", "aliases": ["ece", "preschool teaching"]},
+    {"name": "Adult Education", "family": "Education & Teaching", "aliases": ["andragogy"]},
+
+    # Healthcare & Medical
+    {"name": "Patient Care", "family": "Healthcare & Medical", "aliases": ["direct patient care", "patient support"]},
+    {"name": "Clinical Assessment", "family": "Healthcare & Medical", "aliases": ["nursing assessment", "patient evaluation"]},
+    {"name": "Triage", "family": "Healthcare & Medical", "aliases": ["emergency triage"]},
+    {"name": "Vital Signs", "family": "Healthcare & Medical", "aliases": ["vitals monitoring", "blood pressure monitoring"]},
+    {"name": "Phlebotomy", "family": "Healthcare & Medical", "aliases": ["blood draw", "venipuncture"]},
+    {"name": "CPR", "family": "Healthcare & Medical", "aliases": ["cardiopulmonary resuscitation"]},
+    {"name": "Basic Life Support", "family": "Healthcare & Medical", "aliases": ["bls"]},
+    {"name": "Advanced Cardiovascular Life Support", "family": "Healthcare & Medical", "aliases": ["acls"]},
+    {"name": "Electronic Health Records", "family": "Healthcare & Medical", "aliases": ["ehr", "emr", "electronic medical records"]},
+    {"name": "Medication Administration", "family": "Healthcare & Medical", "aliases": ["administering medications", "pharmacotherapy"]},
+    {"name": "Infection Control", "family": "Healthcare & Medical", "aliases": ["aseptic technique", "sanitation protocols"]},
+    {"name": "HIPAA Compliance", "family": "Healthcare & Medical", "aliases": ["hipaa", "patient privacy"]},
+    {"name": "Patient Advocacy", "family": "Healthcare & Medical", "aliases": ["patient counseling"]},
+    {"name": "Wound Care", "family": "Healthcare & Medical", "aliases": ["dressing changes"]},
+    {"name": "Diagnostic Testing", "family": "Healthcare & Medical", "aliases": ["clinical diagnostics"]},
+    {"name": "Clinical Documentation", "family": "Healthcare & Medical", "aliases": ["charting", "medical charting"]},
+    {"name": "Medical Terminology", "family": "Healthcare & Medical", "aliases": []},
+    {"name": "Epic Systems", "family": "Healthcare & Medical", "aliases": ["epic ehr"]},
+    {"name": "Cerner", "family": "Healthcare & Medical", "aliases": []},
+    {"name": "Meditech", "family": "Healthcare & Medical", "aliases": []},
+
+    # Sales & Marketing
+    {"name": "Business Development", "family": "Sales & Marketing", "aliases": ["biz dev", "b2b development"]},
+    {"name": "Lead Generation", "family": "Sales & Marketing", "aliases": ["lead prospecting", "prospecting"]},
+    {"name": "Cold Calling", "family": "Sales & Marketing", "aliases": ["outbound calling", "telesales"]},
+    {"name": "Account Management", "family": "Sales & Marketing", "aliases": ["client management", "key account management"]},
+    {"name": "CRM", "family": "Sales & Marketing", "aliases": ["customer relationship management"]},
+    {"name": "B2B Sales", "family": "Sales & Marketing", "aliases": ["business to business sales", "enterprise sales"]},
+    {"name": "Market Research", "family": "Sales & Marketing", "aliases": ["competitive analysis", "industry research"]},
+    {"name": "Digital Marketing", "family": "Sales & Marketing", "aliases": ["online marketing"]},
+    {"name": "Search Engine Optimization", "family": "Sales & Marketing", "aliases": ["seo"]},
+    {"name": "Content Marketing", "family": "Sales & Marketing", "aliases": ["content creation", "copywriting"]},
+    {"name": "Sales Forecasting", "family": "Sales & Marketing", "aliases": ["revenue forecasting", "sales projections"]},
+    {"name": "Pipeline Management", "family": "Sales & Marketing", "aliases": ["sales pipeline"]},
+    {"name": "Client Relations", "family": "Sales & Marketing", "aliases": ["customer retention", "client communication"]},
+
+    # HR & Talent Management
+    {"name": "Talent Acquisition", "family": "Human Resources", "aliases": ["recruiting", "recruitment", "headhunting"]},
+    {"name": "Employee Relations", "family": "Human Resources", "aliases": ["workplace relations", "conflict resolution"]},
+    {"name": "Onboarding", "family": "Human Resources", "aliases": ["new hire onboarding", "employee induction"]},
+    {"name": "Performance Management", "family": "Human Resources", "aliases": ["performance reviews", "kpi evaluation"]},
+    {"name": "Payroll Administration", "family": "Human Resources", "aliases": ["payroll processing", "payroll"]},
+    {"name": "Benefits Administration", "family": "Human Resources", "aliases": ["compensation & benefits", "employee benefits"]},
+    {"name": "Workforce Planning", "family": "Human Resources", "aliases": ["staffing planning"]},
+    {"name": "Applicant Tracking Systems", "family": "Human Resources", "aliases": ["ats"]},
+    {"name": "Human Resources Information System", "family": "Human Resources", "aliases": ["hris"]},
+
+    # Operations & Supply Chain
+    {"name": "Supply Chain Management", "family": "Operations & Supply Chain", "aliases": ["supply chain", "scm"]},
+    {"name": "Inventory Control", "family": "Operations & Supply Chain", "aliases": ["inventory management", "stock management"]},
+    {"name": "Vendor Management", "family": "Operations & Supply Chain", "aliases": ["vendor relations", "supplier management"]},
+    {"name": "Process Optimization", "family": "Operations & Supply Chain", "aliases": ["process improvement", "operational efficiency"]},
+    {"name": "Logistics Management", "family": "Operations & Supply Chain", "aliases": ["logistics", "freight forwarding"]},
+    {"name": "Quality Assurance", "family": "Operations & Supply Chain", "aliases": ["qa", "quality control", "qc"]},
+    {"name": "Six Sigma", "family": "Operations & Supply Chain", "aliases": ["lean six sigma", "green belt", "black belt"]},
+    {"name": "Lean Manufacturing", "family": "Operations & Supply Chain", "aliases": ["lean operations", "5s"]},
+    {"name": "Warehouse Operations", "family": "Operations & Supply Chain", "aliases": ["warehouse management"]},
+
+    # Legal & Compliance
+    {"name": "Contract Negotiation", "family": "Legal & Compliance", "aliases": ["contract drafting", "contract review"]},
+    {"name": "Due Diligence", "family": "Legal & Compliance", "aliases": ["legal due diligence"]},
+    {"name": "Compliance Management", "family": "Legal & Compliance", "aliases": ["regulatory compliance", "corporate compliance"]},
+    {"name": "Legal Research", "family": "Legal & Compliance", "aliases": ["case law research", "lexis"]},
+    {"name": "Litigation Support", "family": "Legal & Compliance", "aliases": ["trial prep", "e-discovery"]},
+    {"name": "Intellectual Property", "family": "Legal & Compliance", "aliases": ["ip law", "patents", "trademarks"]},
+    {"name": "Corporate Governance", "family": "Legal & Compliance", "aliases": ["board governance"]},
+]
 
 
 def clean_skill_name(name: str) -> str:
@@ -220,24 +310,29 @@ def compile_taxonomy() -> dict[str, Any]:
         if alias.lower() not in skills_by_canonical[norm_canonical]["aliases"]:
             skills_by_canonical[norm_canonical]["aliases"].append(alias.lower())
 
-    # Select top 2,500 skills prioritizing curated aliases, hot technologies, and in-demand skills
-    def priority_score(item: dict[str, Any]) -> int:
-        canon_lower = item["canonical_name"].lower()
-        score = 0
-        if canon_lower in CURATED_ALIASES or any(
-            canon_lower == c.lower() for c in CURATED_ALIASES.values()
-        ):
-            score += 100
-        if item.get("hot_technology"):
-            score += 20
-        if item.get("in_demand"):
-            score += 20
-        if len(item["canonical_name"]) <= 30:
-            score += 5
-        return score
+    # Integrate non-tech domain skills
+    for dskill in DOMAIN_NON_TECH_SKILLS:
+        cname = dskill["name"]
+        norm_cname = cname.lower()
+        fam = dskill["family"]
+        aliases = [norm_cname] + [a.lower() for a in dskill.get("aliases", [])]
 
-    sorted_skills = sorted(skills_by_canonical.values(), key=priority_score, reverse=True)
-    selected_skills = sorted_skills[:2500]
+        if norm_cname not in skills_by_canonical:
+            skills_by_canonical[norm_cname] = {
+                "canonical_name": cname,
+                "family": fam,
+                "aliases": aliases,
+                "hot_technology": True,
+                "in_demand": True,
+            }
+            family_counts[fam] = family_counts.get(fam, 0) + 1
+        else:
+            for a in aliases:
+                if a not in skills_by_canonical[norm_cname]["aliases"]:
+                    skills_by_canonical[norm_cname]["aliases"].append(a)
+
+    # Retain ALL canonical skills (full O*NET 8,746 + domain non-tech + curated)
+    selected_skills = list(skills_by_canonical.values())
 
     # Build reverse alias lookup map
     alias_to_canonical: dict[str, str] = {}
@@ -252,7 +347,7 @@ def compile_taxonomy() -> dict[str, Any]:
     # Build taxonomy payload
     taxonomy_payload = {
         "metadata": {
-            "source": "O*NET 29.0 Technology Skills & Curated Tech Taxonomy",
+            "source": "O*NET 29.0 Technology Skills & ESCO/Domain Expanded Taxonomy",
             "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
             "total_canonical_skills": len(selected_skills),
             "total_aliases": len(alias_to_canonical),

@@ -78,23 +78,29 @@ class SkillTaxonomy:
 
     def _compile_matchers(self) -> None:
         """
-        Pre-compile regex matchers sorted by length descending so multi-word phrases
-        (e.g., 'machine learning') match before single words (e.g., 'learning').
+        Pre-compile regex matchers using batched alternations sorted by length descending
+        so multi-word phrases match before substrings.
         """
         sorted_aliases = sorted(self._alias_map.keys(), key=len, reverse=True)
         short_keep = {"c#", "c++", "r", "go", "js", "ts", "py", "ui", "ux", "ai", "ml", "dl", "db"}
         filtered_aliases = [a for a in sorted_aliases if len(a) > 2 or a in short_keep]
 
-        self._patterns = []
-        for alias in filtered_aliases:
-            canon = self._alias_map[alias]
-            # Use strict word boundaries
-            escaped = re.escape(alias)
-            if alias in {"c++", "c#"}:
-                pattern = re.compile(rf"(?<!\w){escaped}(?!\w)", re.IGNORECASE)
-            else:
-                pattern = re.compile(rf"\b{escaped}\b", re.IGNORECASE)
-            self._patterns.append((pattern, canon))
+        # Separate special characters that need custom lookarounds
+        special_aliases = [a for a in filtered_aliases if a in {"c++", "c#"}]
+        standard_aliases = [a for a in filtered_aliases if a not in {"c++", "c#"}]
+
+        self._patterns: list[re.Pattern[str]] = []
+        for sa in special_aliases:
+            escaped = re.escape(sa)
+            self._patterns.append(re.compile(rf"(?<!\w){escaped}(?!\w)", re.IGNORECASE))
+
+        # Group standard aliases into chunks of 200 for fast batched matching
+        chunk_size = 200
+        for i in range(0, len(standard_aliases), chunk_size):
+            chunk = standard_aliases[i : i + chunk_size]
+            escaped_chunk = [re.escape(a) for a in chunk]
+            pattern_str = r"\b(?:" + "|".join(escaped_chunk) + r")\b"
+            self._patterns.append(re.compile(pattern_str, re.IGNORECASE))
 
     @property
     def total_skills(self) -> int:
@@ -127,11 +133,15 @@ class SkillTaxonomy:
 
         matched_skills: dict[str, dict[str, Any]] = {}
 
-        for pattern, canon in self._patterns:
+        for pattern in self._patterns:
             for match in pattern.finditer(text):
+                matched_text = match.group()
+                canon = self._alias_map.get(matched_text.lower())
+                if not canon:
+                    continue
+
                 norm_canon = canon.lower()
                 span = match.span()
-                matched_text = match.group()
 
                 if norm_canon not in matched_skills:
                     matched_skills[norm_canon] = {
