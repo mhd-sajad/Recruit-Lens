@@ -248,7 +248,7 @@ async def test_evidence_packet_and_emailer_coverage() -> None:
             chunk_id="c_01",
             section="EXP",
             text="Alice Smith worked 4 years in Python and AWS.",
-            token_count=10,
+            metadata={"token_count": 10},
         )
     ]
     jd_reqs = JobRequirements(
