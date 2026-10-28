@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Literal
 
+import ftfy
 import pdfplumber
 from pypdf import PdfReader
 
@@ -72,7 +73,8 @@ SECTION_HEADERS: dict[str, list[str]] = {
     ],
 }
 
-# Negative document signatures (invoices, academic papers, books)
+# Negative document signatures (invoices, academic papers, cover letters, meeting minutes,
+# job postings, brochures, certificates)
 NEGATIVE_SIGNALS = [
     r"\binvoice\s*(?:#|no|number)?\b",
     r"\bbill\s+to\b",
@@ -84,7 +86,14 @@ NEGATIVE_SIGNALS = [
     r"\bieee\s+transactions\b",
     r"\barxiv:\d{4}\b",
     r"\bbibliography\b",
+    r"\b(?:dear\s+(?:hiring|recruitment|selection|search|sir|madam)|to\s+the\s+recruitment|to\s+whom\s+it\s+may\s+concern)\b",
+    r"\b(?:sincerely|respectfully|yours\s+faithfully|warm\s+regards),?\s*\n",
+    r"\b(?:meeting\s+minutes|board\s+of\s+directors\s+meeting|steering\s+committee\s+minutes)\b",
+    r"\b(?:job\s+posting|hiring\s+organization|role\s+overview\s+and\s+responsibilities)\b",
+    r"\b(?:product\s+brochure|solution\s+overview|technical\s+specifications\s+&\s+features)\b",
+    r"\b(?:certificate\s+of\s+completion|has\s+successfully\s+completed|continuing\s+education\s+units)\b",
 ]
+
 
 EMAIL_REGEX = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
 PHONE_REGEX = re.compile(r"(?:\+?\d{1,3}[-.\s]?)?\(?\b\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
@@ -107,7 +116,9 @@ def parse_resume_pdf(pdf_path: str | Path, resume_id: str | None = None) -> Resu
         extracted_text, page_count = _extract_with_pypdf(path)
         layout_type = "unknown"
 
-    raw_text = extracted_text.strip()
+    cleaned_text = ftfy.fix_text(extracted_text.strip())
+    cleaned_text = cleaned_text.replace("\u200b", "").replace("ï¼", " - ")
+    raw_text = cleaned_text
 
     # 3. Resume Gate Evaluation (rule-based, no LLM)
     is_resume, gate_confidence, gate_signals = evaluate_resume_gate(raw_text, page_count)
@@ -275,10 +286,17 @@ def evaluate_resume_gate(text: str, page_count: int) -> tuple[bool, float, dict[
         len(negative_hits) >= 1 and not has_experience_section
     )
 
+    # Check distinct canonical section count (experience, education, skills)
+    distinct_sections = sum(
+        [bool(has_experience_section), bool(has_education_section), bool(has_skills_section)]
+    )
+    has_sufficient_sections = distinct_sections >= 2
+
     signals: dict[str, bool] = {
         "experience_section": has_experience_section,
         "education_section": has_education_section,
         "skills_section": has_skills_section,
+        "distinct_sections_count": has_sufficient_sections,
         "date_ranges": has_dates,
         "contact_info": has_contact,
         "valid_page_length": valid_length,
@@ -301,7 +319,7 @@ def evaluate_resume_gate(text: str, page_count: int) -> tuple[bool, float, dict[
     if is_negative:
         score = max(0.0, score - 0.6)
 
-    is_resume = score >= 0.40 and not is_negative
+    is_resume = score >= 0.40 and not is_negative and has_sufficient_sections
     return is_resume, round(score, 2), signals
 
 
@@ -326,6 +344,20 @@ def calculate_parse_confidence(text: str, page_count: int, is_resume: bool) -> f
     unprintable_ratio = unprintable_chars / max(1, chars)
     if unprintable_ratio > 0.08:
         confidence -= 0.3
+
+    # Penalize form template boilerplate or non-English application forms
+    form_matches = len(
+        re.findall(
+            r"\b(?:puesto que solicita|nombre de la organizaci|t[ií]tulo del puesto|"
+            r"fechas de\s*/\s*a|por favor escriba|solicitud de empleo|"
+            r"informaci[oó]n de contacto|por que dejo|referencias profesionales|"
+            r"habilidades:|agencia de empleo|distinci[oó]n de raza)\b",
+            text,
+            re.IGNORECASE,
+        )
+    )
+    if form_matches >= 2:
+        confidence = min(confidence, 0.35)
 
     if not is_resume:
         confidence = min(confidence, 0.3)
