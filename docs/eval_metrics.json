@@ -1,0 +1,157 @@
+{
+  "batch": "Batch 2 - Explainable Scoring & Candidate Triage",
+  "timestamp": "2026-10-28 08:43:25",
+  "total_evaluation_runtime_s": 12.55,
+  "retrieval": {
+    "candidate_pool_stats": {
+      "min_chunks_per_resume": 4,
+      "median_chunks_per_resume": 8,
+      "max_chunks_per_resume": 16,
+      "mean_chunks_per_resume": 8.7,
+      "random_guess_baseline": {
+        "hit@5": 0.6292,
+        "hit@10": 0.9534,
+        "mrr": 0.3381
+      }
+    },
+    "within_resume_test": {
+      "queries_evaluated": 34,
+      "bm25": {
+        "hit@1": 0.441,
+        "hit@3": 0.882,
+        "hit@5": 0.941,
+        "hit@10": 0.971,
+        "mrr": 0.6395
+      },
+      "dense_minilm": {
+        "hit@1": 0.5,
+        "hit@3": 0.765,
+        "hit@5": 0.824,
+        "hit@10": 0.971,
+        "mrr": 0.6412
+      },
+      "hybrid_rrf": {
+        "hit@1": 0.559,
+        "hit@3": 0.853,
+        "hit@5": 0.882,
+        "hit@10": 0.971,
+        "mrr": 0.6913
+      }
+    },
+    "corpus_wide_test": {
+      "queries_evaluated": 34,
+      "total_chunks_pooled": 2318,
+      "total_resumes_pooled": 300,
+      "bm25": {
+        "hit@1": 0.235,
+        "hit@3": 0.471,
+        "hit@5": 0.471,
+        "hit@10": 0.706,
+        "mrr": 0.3702
+      },
+      "dense_minilm": {
+        "hit@1": 0.147,
+        "hit@3": 0.382,
+        "hit@5": 0.382,
+        "hit@10": 0.441,
+        "mrr": 0.2574
+      },
+      "hybrid_rrf": {
+        "hit@1": 0.206,
+        "hit@3": 0.382,
+        "hit@5": 0.471,
+        "hit@10": 0.618,
+        "mrr": 0.3283
+      },
+      "dense_bge_small": {
+        "hit@1": 0.088,
+        "hit@3": 0.118,
+        "hit@5": 0.147,
+        "hit@10": 0.324,
+        "mrr": 0.1312
+      },
+      "hybrid_bge_small": {
+        "hit@1": 0.029,
+        "hit@3": 0.176,
+        "hit@5": 0.324,
+        "hit@10": 0.471,
+        "mrr": 0.1516
+      },
+      "primary_retrieval_decision": "BM25 (MRR 0.3702 beats Dense MiniLM 0.2574 and Hybrid 0.3283)"
+    }
+  },
+  "scoring": {
+    "cv_method": "5-Fold GroupKFold (grouped by resume_id)",
+    "total_pairs_evaluated": 1080,
+    "total_candidates": 120,
+    "models": {
+      "weighted_baseline": {
+        "ndcg@5": 0.9143607409430763,
+        "ndcg@10": 0.9254871405548339,
+        "spearman_rho": 0.35749249424254714,
+        "mae": 0.17362,
+        "rmse": 0.21637999999999996,
+        "ece": 0.11964000000000001
+      },
+      "monotonic_xgboost": {
+        "ndcg@5": 0.9302970117346696,
+        "ndcg@10": 0.9406153947805634,
+        "spearman_rho": 0.446338737154921,
+        "mae": 0.14842,
+        "rmse": 0.17112,
+        "ece": 0.01906
+      }
+    },
+    "deltas": {
+      "ndcg_10_delta": 0.0151,
+      "spearman_rho_delta": 0.0888,
+      "mae_delta": -0.0252
+    },
+    "winning_model": "monotonic_xgboost",
+    "decision_rule_met": true,
+    "monotonic_constraints_enforced": true
+  },
+  "tiers": {
+    "tier_metrics": {
+      "Strong Fit": {
+        "precision": 1.0,
+        "recall": 0.3529,
+        "f1": 0.5217,
+        "support": 17
+      },
+      "Interview": {
+        "precision": 0.4894,
+        "recall": 0.3286,
+        "f1": 0.3932,
+        "support": 70
+      },
+      "Hold": {
+        "precision": 0.3732,
+        "recall": 0.3842,
+        "f1": 0.3786,
+        "support": 341
+      },
+      "Reject": {
+        "precision": 0.6953,
+        "recall": 0.7209,
+        "f1": 0.7079,
+        "support": 652
+      }
+    },
+    "must_have_overrides_triggered": 8,
+    "override_trigger_rate": 0.0074
+  },
+  "performance_and_slas": {
+    "scoring_latency_per_candidate_ms": 5.928,
+    "scoring_latency_p95_ms": 11.091,
+    "retrieval_and_scoring_latency_per_candidate_ms": 10.978,
+    "latency_sla_target_ms": 500.0,
+    "latency_sla_met": true,
+    "embedder_peak_rss_mb": 164.2,
+    "memory_sla_target_mb": 400.0,
+    "memory_sla_met": true,
+    "batch_200_resumes_estimated_duration_s": 2.2,
+    "batch_sla_target_s": 300.0,
+    "batch_sla_met": true
+  }
+}
