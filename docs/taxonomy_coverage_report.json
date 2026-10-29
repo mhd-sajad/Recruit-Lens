@@ -3,6 +3,9 @@
     "total_canonical": 8746,
     "retained": 8822,
     "dropped": 1659,
+    "onet_skills_retained": 7087,
+    "curated_domain_skills_added": 1735,
+    "reconciliation_statement": "Of the 8,746 raw O*NET technology skills, 7,087 (81.0%) were retained and 1,659 (19.0%) niche software titles were dropped. An additional 1,735 domain-curated and non-technical skills were added, yielding a total taxonomy size of 8,822 skills.",
     "top_dropped_families": [
       [
         "Analytical or scientific software",

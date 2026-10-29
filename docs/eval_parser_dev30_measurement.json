@@ -1,0 +1,271 @@
+{
+  "metadata": {
+    "dev_resumes_count": 30,
+    "total_reviewer_rows": 153,
+    "total_reviewer_real_entries": 121,
+    "total_reviewer_fragments": 32
+  },
+  "parser_counts": {
+    "total_parser_extracted_entries": 136,
+    "resumes_with_exact_count_match": 19,
+    "exact_count_match_pct": 63.33,
+    "per_resume": {
+      "19124258": {
+        "expected_real": 5,
+        "reviewer_total_rows": 5,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 7,
+        "delta": 2
+      },
+      "18949843": {
+        "expected_real": 5,
+        "reviewer_total_rows": 5,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 5,
+        "delta": 0
+      },
+      "24530382": {
+        "expected_real": 7,
+        "reviewer_total_rows": 8,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 8,
+        "delta": 1
+      },
+      "34953092": {
+        "expected_real": 4,
+        "reviewer_total_rows": 4,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 4,
+        "delta": 0
+      },
+      "35421497": {
+        "expected_real": 3,
+        "reviewer_total_rows": 3,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 3,
+        "delta": 0
+      },
+      "49127329": {
+        "expected_real": 3,
+        "reviewer_total_rows": 3,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 5,
+        "delta": 2
+      },
+      "17499196": {
+        "expected_real": 3,
+        "reviewer_total_rows": 5,
+        "reviewer_fragments": 2,
+        "parser_extracted_entries": 3,
+        "delta": 0
+      },
+      "47410104": {
+        "expected_real": 3,
+        "reviewer_total_rows": 3,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 2,
+        "delta": -1
+      },
+      "24251588": {
+        "expected_real": 5,
+        "reviewer_total_rows": 5,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 5,
+        "delta": 0
+      },
+      "29306433": {
+        "expected_real": 1,
+        "reviewer_total_rows": 1,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 1,
+        "delta": 0
+      },
+      "24695561": {
+        "expected_real": 4,
+        "reviewer_total_rows": 6,
+        "reviewer_fragments": 2,
+        "parser_extracted_entries": 4,
+        "delta": 0
+      },
+      "17641670": {
+        "expected_real": 4,
+        "reviewer_total_rows": 4,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 6,
+        "delta": 2
+      },
+      "20176584": {
+        "expected_real": 10,
+        "reviewer_total_rows": 14,
+        "reviewer_fragments": 4,
+        "parser_extracted_entries": 12,
+        "delta": 2
+      },
+      "89049979": {
+        "expected_real": 3,
+        "reviewer_total_rows": 14,
+        "reviewer_fragments": 11,
+        "parser_extracted_entries": 5,
+        "delta": 2
+      },
+      "18311419": {
+        "expected_real": 3,
+        "reviewer_total_rows": 3,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 3,
+        "delta": 0
+      },
+      "14640322": {
+        "expected_real": 2,
+        "reviewer_total_rows": 2,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 2,
+        "delta": 0
+      },
+      "11957080": {
+        "expected_real": 6,
+        "reviewer_total_rows": 7,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 6,
+        "delta": 0
+      },
+      "34783330": {
+        "expected_real": 2,
+        "reviewer_total_rows": 3,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 2,
+        "delta": 0
+      },
+      "14181049": {
+        "expected_real": 1,
+        "reviewer_total_rows": 1,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 1,
+        "delta": 0
+      },
+      "53701275": {
+        "expected_real": 2,
+        "reviewer_total_rows": 2,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 4,
+        "delta": 2
+      },
+      "20211577": {
+        "expected_real": 8,
+        "reviewer_total_rows": 11,
+        "reviewer_fragments": 3,
+        "parser_extracted_entries": 11,
+        "delta": 3
+      },
+      "83206166": {
+        "expected_real": 3,
+        "reviewer_total_rows": 4,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 3,
+        "delta": 0
+      },
+      "28973180": {
+        "expected_real": 1,
+        "reviewer_total_rows": 1,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 1,
+        "delta": 0
+      },
+      "15680735": {
+        "expected_real": 9,
+        "reviewer_total_rows": 10,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 10,
+        "delta": 1
+      },
+      "16121015": {
+        "expected_real": 3,
+        "reviewer_total_rows": 3,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 3,
+        "delta": 0
+      },
+      "14910300": {
+        "expected_real": 3,
+        "reviewer_total_rows": 4,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 3,
+        "delta": 0
+      },
+      "26896699": {
+        "expected_real": 6,
+        "reviewer_total_rows": 6,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 6,
+        "delta": 0
+      },
+      "65708020": {
+        "expected_real": 4,
+        "reviewer_total_rows": 7,
+        "reviewer_fragments": 3,
+        "parser_extracted_entries": 3,
+        "delta": -1
+      },
+      "24767027": {
+        "expected_real": 4,
+        "reviewer_total_rows": 5,
+        "reviewer_fragments": 1,
+        "parser_extracted_entries": 4,
+        "delta": 0
+      },
+      "62184086": {
+        "expected_real": 4,
+        "reviewer_total_rows": 4,
+        "reviewer_fragments": 0,
+        "parser_extracted_entries": 4,
+        "delta": 0
+      }
+    }
+  },
+  "objective_defects": {
+    "total_evaluated_titles": 136,
+    "placeholder_titles_count": 3,
+    "ends_in_date_or_to_count": 0,
+    "mojibake_encoding_count": 0,
+    "one_word_no_marker_count": 1,
+    "school_or_credential_count": 1,
+    "total_defective_titles": 5,
+    "sample_offending_titles": [
+      {
+        "resume_id": "24251588",
+        "title": "Certified Fitness Trainer",
+        "defects": [
+          "school_or_credential"
+        ]
+      },
+      {
+        "resume_id": "20176584",
+        "title": "Executive Director of Operations   Company Name City",
+        "defects": [
+          "placeholder"
+        ]
+      },
+      {
+        "resume_id": "20176584",
+        "title": "Aircraft Mechanic/Technician   Company Name City",
+        "defects": [
+          "placeholder"
+        ]
+      },
+      {
+        "resume_id": "89049979",
+        "title": "Paralegal",
+        "defects": [
+          "one_word_no_marker"
+        ]
+      },
+      {
+        "resume_id": "20211577",
+        "title": "Customer Service/ Sales Rep   Company Name City",
+        "defects": [
+          "placeholder"
+        ]
+      }
+    ]
+  }
+}

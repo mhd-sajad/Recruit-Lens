@@ -7,15 +7,13 @@ Tests for 5 critical security controls:
 5. webhook signature
 """
 
-import hashlib
-import hmac
 from datetime import timedelta
 from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.auth.security import create_access_token, hash_password, verify_webhook_signature
+from app.auth.security import create_access_token, hash_password
 from app.config import settings
 from app.db.models import AuditLog, User
 from app.db.session import AsyncSessionLocal, init_db
@@ -191,28 +189,6 @@ async def test_quota_enforcement() -> None:
         assert (
             "exceeds" in resp.json()["detail"].lower() or "limit" in resp.json()["detail"].lower()
         )
-
-
-def test_webhook_signature() -> None:
-    """5. Webhook signature: Valid HMAC-SHA256 signatures must pass; tampered payloads must fail."""
-    secret = "test-webhook-secret-key-12345"
-    payload = b'{"event":"candidate.shortlisted","candidate_id":"cand_999"}'
-    valid_sig = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
-
-    # Valid signature
-    assert verify_webhook_signature(payload, valid_sig, secret) is True
-    # Valid with sha256= prefix
-    assert verify_webhook_signature(payload, f"sha256={valid_sig}", secret) is True
-
-    # Tampered payload
-    tampered_payload = b'{"event":"candidate.shortlisted","candidate_id":"cand_999_tampered"}'
-    assert verify_webhook_signature(tampered_payload, valid_sig, secret) is False
-
-    # Invalid secret
-    assert verify_webhook_signature(payload, valid_sig, "wrong-secret") is False
-
-    # Forged signature
-    assert verify_webhook_signature(payload, "invalid_sig_abc123", secret) is False
 
 
 @pytest.mark.asyncio

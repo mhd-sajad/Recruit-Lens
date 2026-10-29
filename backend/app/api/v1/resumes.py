@@ -69,6 +69,12 @@ async def upload_resumes(
                 detail=f"File '{upload_file.filename}' exceeds maximum {settings.MAX_UPLOAD_FILE_SIZE_MB}MB size",
             )
 
+        if not content.startswith(b"%PDF"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File '{upload_file.filename}' is not a valid PDF document (invalid magic bytes)",
+            )
+
         file_hash = hashlib.sha256(content).hexdigest()
         file_key = f"{job_id}/{file_hash[:16]}_{upload_file.filename}"
 

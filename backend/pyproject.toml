@@ -72,3 +72,6 @@ disallow_untyped_defs = true
 asyncio_mode = "auto"
 testpaths = ["tests"]
 addopts = "--strict-markers --cov=app --cov-report=term-missing"
+
+[tool.coverage.run]
+concurrency = ["greenlet", "thread"]

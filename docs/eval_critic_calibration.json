@@ -90,5 +90,17 @@
     "false_reject_count": 9,
     "false_reject_rate_percent": 15.0,
     "eligible_far_le_2pct": true
+  },
+  "upper_bound_statistics": {
+    "point_estimate_far_percent": 0.0,
+    "trials_count": 60,
+    "rule_of_three_upper_bound_at_n60_percent": 5.0,
+    "wilson_ci95_at_n60_percent": [
+      0.0,
+      4.87
+    ],
+    "sample_size_to_prove_2pct_upper_bound": 150,
+    "rule_of_three_upper_bound_at_n150_percent": 2.0,
+    "explanation": "With 0 false accepts observed in N=60 trials, the empirical point estimate is 0.0%. By the Rule of Three, the 95% one-sided upper confidence limit for a zero-event binomial experiment is 3/N = 3/60 = 5.0% (Wilson 95% CI [0.0%, 4.87%]). To mathematically bound the false accept rate below the 2.0% bar under zero observed events, a sample size of N >= 3/0.02 = 150 sentences is required."
   }
 }

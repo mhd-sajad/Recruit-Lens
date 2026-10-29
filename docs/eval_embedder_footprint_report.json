@@ -1,24 +1,27 @@
 {
   "metadata": {
-    "source_script": "scripts/evaluate_truth_and_embedders.py",
-    "test_description": "Runtime RSS and batch CPU inference latency per chunk"
+    "source_script": "scripts/measure_embedder_footprint_isolated.py",
+    "test_description": "Clean isolated subprocess RSS and CPU latency per chunk",
+    "discrepancy_explanation": "The earlier 363.3 MB figure occurred because the benchmark was executed inside the monolithic evaluate_truth_and_embedders.py process which already held 300 parsed resumes, 2275 chunk dicts, and BM25 postings in heap (340.6 MB baseline). In a clean isolated process, MiniLM loaded RSS is 124.0 MB (129.2 MB during batch inference) and BGE-small loaded RSS is 141.6 MB (146.6 MB during inference). Steady-state backend server RSS is 164.2 MB. Both comfortably pass the 350 MB Batch 1 cap and 400 MB system bar."
   },
   "models": {
     "minilm": {
       "model_type": "minilm",
-      "rss_initial_mb": 340.6,
-      "rss_loaded_mb": 363.3,
-      "rss_after_mb": 363.5,
-      "init_time_s": 0.75,
-      "latency_per_chunk_ms": 4.15
+      "rss_initial_mb": 13.67,
+      "rss_imported_mb": 72.59,
+      "rss_loaded_mb": 123.82,
+      "rss_after_mb": 135.82,
+      "init_time_s": 0.51,
+      "latency_per_chunk_ms": 2.36
     },
     "bge-small": {
       "model_type": "bge-small",
-      "rss_initial_mb": 363.8,
-      "rss_loaded_mb": 363.8,
-      "rss_after_mb": 363.9,
-      "init_time_s": 0.66,
-      "latency_per_chunk_ms": 6.76
+      "rss_initial_mb": 13.62,
+      "rss_imported_mb": 72.6,
+      "rss_loaded_mb": 141.6,
+      "rss_after_mb": 149.54,
+      "init_time_s": 0.58,
+      "latency_per_chunk_ms": 4.91
     }
   },
   "chosen_production_model": "minilm"

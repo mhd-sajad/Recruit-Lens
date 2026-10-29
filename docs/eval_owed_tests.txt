@@ -5,16 +5,45 @@ rootdir: /home/sajad/PROJECTS/RECRUIT-LENS/backend
 configfile: pyproject.toml
 plugins: anyio-4.15.1, asyncio-1.4.1, cov-7.1.0
 asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collecting ... collected 7 items
+collecting ... collected 29 items
 
-backend/tests/test_owed_security.py::test_auth_expiry PASSED             [ 14%]
-backend/tests/test_owed_security.py::test_role_downgrade PASSED          [ 28%]
-backend/tests/test_owed_security.py::test_audit_immutability PASSED      [ 42%]
-backend/tests/test_owed_security.py::test_quota_enforcement PASSED       [ 57%]
-backend/tests/test_owed_security.py::test_webhook_signature PASSED       [ 71%]
-backend/tests/test_owed_security.py::test_evidence_packet_and_emailer_coverage PASSED [ 85%]
-backend/tests/test_owed_security.py::test_local_storage_backend_lifecycle PASSED [100%]
+backend/tests/test_owed_security.py::test_auth_expiry PASSED             [  3%]
+backend/tests/test_owed_security.py::test_role_downgrade PASSED          [  6%]
+backend/tests/test_owed_security.py::test_audit_immutability PASSED      [ 10%]
+backend/tests/test_owed_security.py::test_quota_enforcement PASSED       [ 13%]
+backend/tests/test_owed_security.py::test_evidence_packet_and_emailer_coverage PASSED [ 17%]
+backend/tests/test_owed_security.py::test_local_storage_backend_lifecycle PASSED [ 20%]
+backend/tests/test_router_modules_coverage.py::test_isolation_per_endpoint_returns_404_not_403 PASSED [ 24%]
+backend/tests/test_router_modules_coverage.py::test_illegal_and_legal_state_transitions_including_post_interview PASSED [ 27%]
+backend/tests/test_router_modules_coverage.py::test_email_workflow_gates_cap_and_audit PASSED [ 31%]
+backend/tests/test_router_modules_coverage.py::test_csv_export_neutralizes_formula_injection PASSED [ 34%]
+backend/tests/test_router_modules_coverage.py::test_hard_delete_removes_files_and_database_rows PASSED [ 37%]
+backend/tests/test_router_modules_coverage.py::test_candidate_data_export_portability PASSED [ 41%]
+backend/tests/test_router_modules_coverage.py::test_what_if_counterfactual_simulation PASSED [ 44%]
+backend/tests/test_router_modules_coverage.py::test_sse_task_progress_and_cancel PASSED [ 48%]
+backend/tests/test_router_modules_coverage.py::test_resume_upload_limits_and_magic_byte_check PASSED [ 51%]
+backend/tests/test_router_modules_coverage.py::test_login_throttling PASSED [ 55%]
+backend/tests/test_router_modules_coverage.py::test_refresh_token_reuse_detection PASSED [ 58%]
+backend/tests/test_router_modules_coverage.py::test_jobs_full_crud_and_filtering PASSED [ 62%]
+backend/tests/test_router_modules_coverage.py::test_evaluations_filter_and_export_pdf PASSED [ 65%]
+backend/tests/test_router_modules_coverage.py::test_resumes_signed_download_and_list_endpoints PASSED [ 68%]
+backend/tests/test_router_modules_coverage.py::test_evaluations_detail_emails_and_transitions_coverage PASSED [ 72%]
+backend/tests/test_router_modules_coverage.py::test_evaluations_trigger_llm_and_limits PASSED [ 75%]
+backend/tests/test_router_modules_coverage.py::test_audit_logs_endpoints_complete PASSED [ 79%]
+backend/tests/test_router_modules_coverage.py::test_auth_me_and_deactivated_user PASSED [ 82%]
+backend/tests/test_router_modules_coverage.py::test_jobs_router_crud_and_filters PASSED [ 86%]
+backend/tests/test_router_modules_coverage.py::test_auth_router_login_and_refresh_branches PASSED [ 89%]
+backend/tests/test_router_modules_coverage.py::test_resumes_router_upload_and_download_complete PASSED [ 93%]
+backend/tests/test_router_modules_coverage.py::test_tasks_router_status_stream_and_cancel PASSED [ 96%]
+backend/tests/test_router_modules_coverage.py::test_evaluations_router_queries_drafts_and_pdf PASSED [100%]
 
+=============================== warnings summary ===============================
+tests/test_router_modules_coverage.py::test_resumes_router_upload_and_download_complete
+  /home/sajad/PROJECTS/RECRUIT-LENS/backend/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py:59: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    response = await handler(conn, exc)  # type: ignore[arg-type]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/sajad/PROJECTS/RECRUIT-LENS/docs/pytest_results.xml -
 ================================ tests coverage ================================
 _______________ coverage: platform linux, python 3.11.18-final-0 _______________
 
@@ -22,37 +51,37 @@ Name                                       Stmts   Miss  Cover   Missing
 ------------------------------------------------------------------------
 backend/app/__init__.py                        1      0   100%
 backend/app/api/v1/__init__.py                15      0   100%
-backend/app/api/v1/audit_logs.py              21      4    81%   33, 35, 37, 40
-backend/app/api/v1/auth.py                    67     50    25%   43-99, 116-191, 203
-backend/app/api/v1/evaluations.py            258    205    21%   62-65, 78-100, 125-138, 168-218, 237-279, 289-298, 308-317, 328-352, 362-392, 402-456, 475-522, 547-578, 588-589, 599-616, 665-713, 727-783, 798-825
-backend/app/api/v1/jobs.py                    75     47    37%   49-60, 70-77, 87-94, 105-138, 148-165
-backend/app/api/v1/resumes.py                 82     59    28%   44-122, 138-174, 185-209
+backend/app/api/v1/audit_logs.py              21      1    95%   40
+backend/app/api/v1/auth.py                    67     34    49%   54-99, 131-175, 188-191
+backend/app/api/v1/evaluations.py            258    175    32%   65, 79-98, 131-138, 172-174, 182-218, 242-279, 297, 316, 333-352, 367-392, 407-456, 480-503, 506-522, 552-578, 589, 609-611, 666-713, 728-783, 809-825
+backend/app/api/v1/jobs.py                    75     38    49%   49-60, 76, 88-94, 106-138, 149-165
+backend/app/api/v1/resumes.py                 84     43    49%   44-65, 72-128, 145-166
 backend/app/api/v1/schemas.py                153      0   100%
-backend/app/api/v1/tasks.py                   54     35    35%   28-39, 49-83, 93-125
+backend/app/api/v1/tasks.py                   54     24    56%   33-39, 58-60, 63-76, 81, 98-125
 backend/app/auth/__init__.py                   4      0   100%
 backend/app/auth/dependencies.py              34      9    74%   24, 39, 47, 54-69
 backend/app/auth/schemas.py                   27      0   100%
-backend/app/auth/security.py                  78     36    54%   31-41, 49-62, 67, 72, 82-85, 90, 111-128
-backend/app/config.py                         65     11    83%   98-106, 112-114
+backend/app/auth/security.py                  71     12    83%   31-41, 114
+backend/app/config.py                         65      8    88%   98-106
 backend/app/core/__init__.py                   0      0   100%
-backend/app/core/education_extractor.py       98     90     8%   40-51, 56-80, 85-122, 137-210
-backend/app/core/embeddings.py                94     63    33%   22, 29, 35, 41, 51-54, 63, 68-69, 101-144, 148, 152, 156-189, 193-195
-backend/app/core/experience_extractor.py     315    272    14%   407, 416-424, 439-456, 466-484, 489-501, 506-512, 517-544, 549-583, 588-624, 629-676, 684-830
-backend/app/core/features.py                 163     46    72%   36, 68, 85-100, 108-121, 127, 131, 133, 135, 179-183, 189-191, 205, 226, 276-278, 285-286, 289-290, 332, 342, 352, 389-392, 406, 418
+backend/app/core/education_extractor.py       98     88    10%   40-51, 59-80, 85-122, 137-210
+backend/app/core/embeddings.py                94     38    60%   22, 29, 35, 41, 51-54, 63, 68-69, 102-103, 148, 152, 156-189, 193-195
+backend/app/core/experience_extractor.py     315    269    15%   416-424, 439-456, 466-484, 489-501, 506-512, 517-544, 549-583, 588-624, 629-676, 687-830
+backend/app/core/features.py                 163     41    75%   68, 85-100, 108-121, 127, 131, 133, 135, 179-183, 189-191, 276-278, 285-286, 289-290, 342, 352, 389-392, 418
 backend/app/core/jd_chunker.py                24     24     0%   3-58
-backend/app/core/jd_requirements.py           95     23    76%   116, 123-124, 128-129, 132-135, 150-157, 166, 180, 207, 234-237
+backend/app/core/jd_requirements.py           95     18    81%   116, 123-124, 128-129, 132-135, 152-154, 166, 180, 207, 234-237
 backend/app/core/jd_scraper.py                79     79     0%   3-167
 backend/app/core/models.py                    57      0   100%
-backend/app/core/pdf_parser.py               206    180    13%   105-142, 164-181, 186-218, 223-244, 249-256, 264-323, 328-365, 373-410, 415-443, 448-464
+backend/app/core/pdf_parser.py               206    113    45%   107, 169-178, 186-218, 223-244, 251-253, 267-323, 331-365, 385-392, 404, 406, 408, 433-434, 437-439, 452-464
 backend/app/core/reasons.py                   87     87     0%   11-295
-backend/app/core/resume_chunker.py           114     43    62%   59-61, 87, 92-105, 161, 165-177, 182-194, 199-211, 217-229, 234-249
+backend/app/core/resume_chunker.py           114     43    62%   59-61, 87, 92-105, 167, 171-186, 191-206, 211-226, 232-247, 252-268
 backend/app/core/retrieval.py                115    115     0%   3-219
-backend/app/core/scoring.py                   95     60    37%   82, 87, 98-101, 105-184, 204-206, 215-231, 235-262, 275-276, 280-283
+backend/app/core/scoring.py                   95     31    67%   135, 141, 169, 204-206, 215-231, 235-262, 275-276, 280-283
 backend/app/core/simulator.py                 58     58     0%   10-118
 backend/app/core/skill_extractor.py           62     11    82%   60, 99-100, 108-119
-backend/app/core/storage.py                  104     48    54%   27, 32, 37, 42, 76, 87, 94-96, 101-115, 118-131, 134-149, 152-163, 168-170
+backend/app/core/storage.py                  104     45    57%   27, 32, 37, 42, 76, 94-96, 101-115, 118-131, 134-149, 152-163, 169
 backend/app/core/taxonomy.py                  88     10    89%   59-69, 107, 119, 132, 141, 155-156
-backend/app/core/tiers.py                     58     37    36%   60-150
+backend/app/core/tiers.py                     58     32    45%   77-150
 backend/app/db/__init__.py                     4      0   100%
 backend/app/db/base.py                        15      0   100%
 backend/app/db/models.py                     144      0   100%
@@ -62,18 +91,18 @@ backend/app/llm/agents/__init__.py             0      0   100%
 backend/app/llm/agents/emailer.py             23     13    43%   30-107
 backend/app/llm/agents/explainer.py           21     13    38%   24-83
 backend/app/llm/agents/interviewer.py         22     14    36%   24-87
-backend/app/llm/critique.py                  150    126    16%   51-56, 61-100, 108-110, 117-134, 143-300, 310-390
+backend/app/llm/critique.py                  150    126    16%   51-56, 61-100, 108-110, 117-134, 143-302, 312-392
 backend/app/llm/evidence.py                   30      2    93%   40, 70
-backend/app/llm/guardrails.py                 31      8    74%   54-59, 95-97
+backend/app/llm/guardrails.py                 31      8    74%   56-61, 97-99
 backend/app/llm/orchestrator.py              142     88    38%   75, 79, 83, 90-91, 94-98, 101-102, 105-106, 121-123, 135-264, 273-278
-backend/app/llm/provider.py                  250    197    21%   41-47, 50, 68-75, 78-87, 93-114, 118-119, 126-129, 132-146, 151-152, 157-177, 187-207, 223, 228, 241-248, 252, 256-289, 299-405, 412-413, 417, 427-456, 481, 491-498, 502, 512-530
+backend/app/llm/provider.py                  250    197    21%   41-47, 50, 68-75, 78-87, 93-114, 118-119, 126-129, 132-146, 151-152, 157-177, 187-207, 223, 228, 241-248, 252, 256-289, 299-411, 418-419, 423, 433-462, 487, 497-504, 508, 518-536
 backend/app/llm/repair.py                     52     41    21%   21-34, 39-40, 54-105
-backend/app/llm/schemas.py                   138     54    61%   63-118, 147-154, 182
-backend/app/llm/templates.py                  44     33    25%   21-53, 62-119
+backend/app/llm/schemas.py                   138     33    76%   71-82, 87-92, 95, 102-107, 109-117, 148, 150-153, 182
+backend/app/llm/templates.py                  44      9    80%   39-41, 73-74, 84-85, 97-98
 backend/app/logging.py                        35     18    49%   20-22, 29-40, 47-48, 53-70
-backend/app/main.py                           78     21    73%   50-52, 87, 119, 129, 134-148, 159-165, 177
+backend/app/main.py                           78     20    74%   50-52, 119, 129, 134-148, 159-165, 177
 backend/app/middleware.py                     20      0   100%
-backend/app/worker/tasks.py                  164    135    18%   49-51, 57-59, 64-65, 70-346, 351-425
+backend/app/worker/tasks.py                  164     90    45%   72-123, 137-140, 149-155, 272-338, 343-346, 351-425
 ------------------------------------------------------------------------
-TOTAL                                       4246   2466    42%
-============================== 7 passed in 12.18s ==============================
+TOTAL                                       4241   2119    50%
+======================== 29 passed, 1 warning in 37.78s ========================

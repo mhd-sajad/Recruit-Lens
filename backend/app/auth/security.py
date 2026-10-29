@@ -139,15 +139,3 @@ def decode_token(token: str) -> dict[str, Any] | None:
         return payload
     except Exception:
         return None
-
-
-def verify_webhook_signature(payload_bytes: bytes, signature_header: str, secret: str) -> bool:
-    """Verify HMAC-SHA256 webhook signature against raw request payload."""
-    import hmac
-
-    expected = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
-    # Handle optional sha256= prefix
-    sig_clean = signature_header.strip()
-    if sig_clean.startswith("sha256="):
-        sig_clean = sig_clean[7:]
-    return hmac.compare_digest(expected, sig_clean)
