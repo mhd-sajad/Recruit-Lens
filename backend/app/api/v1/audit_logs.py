@@ -14,6 +14,7 @@ from app.db.session import get_db
 router = APIRouter(prefix="/audit-logs", tags=["Audit Logs"])
 
 
+@router.get("", response_model=list[AuditLogResponse], include_in_schema=False)
 @router.get("/", response_model=list[AuditLogResponse])
 async def list_audit_logs(
     current_user: Annotated[User, Depends(get_current_user)],

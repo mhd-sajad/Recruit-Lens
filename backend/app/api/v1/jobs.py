@@ -16,6 +16,9 @@ from app.db.session import get_db
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
 
+@router.post(
+    "", response_model=JobResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False
+)
 @router.post("/", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
 async def create_job(
     payload: JobCreateRequest,
@@ -60,6 +63,7 @@ async def create_job(
     return JobResponse.model_validate(job)
 
 
+@router.get("", response_model=list[JobResponse], include_in_schema=False)
 @router.get("/", response_model=list[JobResponse])
 async def list_jobs(
     current_user: Annotated[User, Depends(get_current_user)],

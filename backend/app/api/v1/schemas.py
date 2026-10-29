@@ -5,6 +5,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.llm.schemas import CopilotCitation, CopilotQueryRequest, CopilotQueryResponse
+
 
 class JobCreateRequest(BaseModel):
     """Job requisition creation payload."""
@@ -265,31 +267,8 @@ class UserSettingsUpdate(BaseModel):
     export_anonymized: bool | None = None
 
 
-class CopilotCitation(BaseModel):
-    """Citation referencing supporting evidence chunk in candidate resume."""
-
-    chunk_id: str
-    section: str
-    snippet: str
-    relevance_score: float = 1.0
-
-
-class CopilotQueryRequest(BaseModel):
-    """Request payload for on-demand grounded Q&A."""
-
-    query: str = Field(..., min_length=2, max_length=1000)
-    candidate_id: str | None = None
-    evaluation_id: str | None = None
-    job_id: str | None = None
-    blind_mode: bool = False
-
-
-class CopilotQueryResponse(BaseModel):
-    """Grounded Copilot response with citations and critique status."""
-
-    answer: str
-    citations: list[CopilotCitation] = Field(default_factory=list)
-    grounded: bool = True
-    critic_passed: bool = True
-    found_in_resume: bool = True
-    latency_ms: float = 0.0
+__all__ = [
+    "CopilotCitation",
+    "CopilotQueryRequest",
+    "CopilotQueryResponse",
+]

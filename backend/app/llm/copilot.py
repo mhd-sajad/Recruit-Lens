@@ -16,7 +16,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.v1.schemas import CopilotCitation, CopilotQueryResponse
 from app.db.models import Evaluation, EvidenceChunkModel, Resume
 from app.llm.critique import (
     extract_citations,
@@ -29,6 +28,7 @@ from app.llm.guardrails import (
     redact_pii_blind_mode,
 )
 from app.llm.provider import BaseLLMProvider, FallbackLLMProvider
+from app.llm.schemas import CopilotCitation, CopilotQueryResponse
 from app.logging import get_logger
 
 logger = get_logger("llm.copilot")

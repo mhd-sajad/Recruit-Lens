@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.4
 # Multi-stage production Dockerfile for Recruit Lens
 
 # ==============================================================================
@@ -54,6 +53,7 @@ ENV ENVIRONMENT=production
 COPY --from=backend-builder /app/backend/.venv /app/backend/.venv
 COPY --from=backend-builder /app/backend /app/backend
 COPY --from=frontend-builder /frontend/dist /app/frontend/dist
+COPY scripts /app/scripts
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
 # Set ownership and permissions
