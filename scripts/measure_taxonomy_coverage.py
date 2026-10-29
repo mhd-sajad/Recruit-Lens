@@ -13,10 +13,12 @@ from collections import defaultdict
 from pathlib import Path
 import numpy as np
 
-# Ensure backend on sys.path
-backend_dir = Path(__file__).resolve().parent.parent / "backend"
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+backend_dir = repo_root / "backend"
 sys.path.insert(0, str(backend_dir))
 
+from scripts.provenance_helper import get_provenance
 from app.core.taxonomy import SkillTaxonomy
 from app.core.pdf_parser import parse_resume_pdf
 
@@ -226,14 +228,27 @@ def main():
     else:
         jd_stats = {}
 
+    onet_skills_retained = total_canonical - len(dropped)
+    curated_domain_skills_added = len(current_skills) - onet_skills_retained
+    reconciliation_statement = (
+        f"Of the {total_canonical:,} raw O*NET technology skills, {onet_skills_retained:,} ({(onet_skills_retained / total_canonical) * 100:.1f}%) "
+        f"were retained and {len(dropped):,} ({(len(dropped) / total_canonical) * 100:.1f}%) niche software titles were dropped. "
+        f"An additional {curated_domain_skills_added:,} domain-curated and non-technical skills were added, "
+        f"yielding a total taxonomy size of {len(current_skills):,} skills."
+    )
+
     out_json = repo_root / "docs" / "taxonomy_coverage_report.json"
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(
             {
+                "metadata": get_provenance("scripts/measure_taxonomy_coverage.py"),
                 "dropped_analysis": {
                     "total_canonical": total_canonical,
                     "retained": len(current_skills),
                     "dropped": len(dropped),
+                    "onet_skills_retained": onet_skills_retained,
+                    "curated_domain_skills_added": curated_domain_skills_added,
+                    "reconciliation_statement": reconciliation_statement,
                     "top_dropped_families": top_dropped_families,
                 },
                 "category_stats": category_stats,

@@ -1,6 +1,8 @@
 {
   "metadata": {
-    "source_script": "scripts/generate_harder_critic_benchmark.py",
+    "generated_by": "scripts/generate_harder_critic_benchmark.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "78ab5359403efcbcd0b2768fbe219c409789c7bf23423d8aad3c19c8bfee60b7",
     "supported_sample_size": 60,
     "unsupported_sample_size": 60,
     "embedder_model": "all-MiniLM-L6-v2",
@@ -97,10 +99,8 @@
     "rule_of_three_upper_bound_at_n60_percent": 5.0,
     "wilson_ci95_at_n60_percent": [
       0.0,
-      4.87
+      6.02
     ],
-    "sample_size_to_prove_2pct_upper_bound": 150,
-    "rule_of_three_upper_bound_at_n150_percent": 2.0,
-    "explanation": "With 0 false accepts observed in N=60 trials, the empirical point estimate is 0.0%. By the Rule of Three, the 95% one-sided upper confidence limit for a zero-event binomial experiment is 3/N = 3/60 = 5.0% (Wilson 95% CI [0.0%, 4.87%]). To mathematically bound the false accept rate below the 2.0% bar under zero observed events, a sample size of N >= 3/0.02 = 150 sentences is required."
+    "explanation": "With 0 false accepts observed in N=60 trials, the empirical point estimate is 0.0%. By the Rule of Three, the 95% one-sided upper limit for a zero-event binomial experiment is 3/N = 3/60 = 5.0% (Wilson 95% two-sided CI [0.0, 6.02]%)."
   }
 }

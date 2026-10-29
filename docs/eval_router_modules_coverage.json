@@ -1,4 +1,9 @@
 {
+  "metadata": {
+    "generated_by": "scripts/generate_router_coverage_report.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "d18a30fd36e9e1c1151ea06933cf8e8865c3e6b8a80ac4596f7ea5cdcd0be097"
+  },
   "__init__.py": {
     "num_statements": 15,
     "covered_lines": 15,
@@ -7,33 +12,33 @@
   },
   "audit_logs.py": {
     "num_statements": 21,
-    "covered_lines": 21,
-    "missing_lines": 0,
-    "percent_covered": 100.0
+    "covered_lines": 20,
+    "missing_lines": 1,
+    "percent_covered": 95.24
   },
   "auth.py": {
     "num_statements": 67,
-    "covered_lines": 63,
-    "missing_lines": 4,
-    "percent_covered": 94.03
+    "covered_lines": 33,
+    "missing_lines": 34,
+    "percent_covered": 49.25
   },
   "evaluations.py": {
     "num_statements": 258,
-    "covered_lines": 250,
-    "missing_lines": 8,
-    "percent_covered": 96.9
+    "covered_lines": 84,
+    "missing_lines": 174,
+    "percent_covered": 32.56
   },
   "jobs.py": {
     "num_statements": 75,
-    "covered_lines": 75,
-    "missing_lines": 0,
-    "percent_covered": 100.0
+    "covered_lines": 37,
+    "missing_lines": 38,
+    "percent_covered": 49.33
   },
   "resumes.py": {
     "num_statements": 84,
-    "covered_lines": 82,
-    "missing_lines": 2,
-    "percent_covered": 97.62
+    "covered_lines": 41,
+    "missing_lines": 43,
+    "percent_covered": 48.81
   },
   "schemas.py": {
     "num_statements": 153,
@@ -43,8 +48,8 @@
   },
   "tasks.py": {
     "num_statements": 54,
-    "covered_lines": 53,
-    "missing_lines": 1,
-    "percent_covered": 98.15
+    "covered_lines": 30,
+    "missing_lines": 24,
+    "percent_covered": 55.56
   }
 }

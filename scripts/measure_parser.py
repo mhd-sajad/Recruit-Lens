@@ -4,9 +4,12 @@ import random
 import sys
 from pathlib import Path
 
-# Add backend directory to sys.path
-backend_dir = Path(__file__).resolve().parent.parent / "backend"
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+backend_dir = repo_root / "backend"
 sys.path.insert(0, str(backend_dir))
+
+from scripts.provenance_helper import get_provenance
 
 from app.core.pdf_parser import parse_resume_pdf  # noqa: E402
 from reportlab.lib.pagesizes import letter  # noqa: E402
@@ -208,7 +211,7 @@ def run_benchmark() -> tuple[float, float, int]:
     docs_dir.mkdir(parents=True, exist_ok=True)
     report_data = {
         "metadata": {
-            "source_script": "scripts/measure_parser.py",
+            **get_provenance("scripts/measure_parser.py"),
             "real_resumes_tested": len(selected_100_real),
             "non_resumes_tested": len(non_resume_pdfs),
         },

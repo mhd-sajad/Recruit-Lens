@@ -1,6 +1,8 @@
 {
   "metadata": {
-    "source_script": "scripts/measure_chunk_cleanliness.py",
+    "generated_by": "scripts/measure_chunk_cleanliness.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "cd7b293925c35062c6ff4d7fab7da751ef528eaf78b75b7f3812939425c699d7",
     "chunks_directory": "data/chunks_batch1_verified",
     "total_resumes_chunked": 300
   },

@@ -1,6 +1,8 @@
 {
   "metadata": {
-    "source_script": "scripts/evaluate_truth_and_embedders.py",
+    "generated_by": "scripts/evaluate_truth_and_embedders.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "851256e3a0d0ba53fcca95cdfe1db47b8314e97a5a240538c82c6f0d69f4042f",
     "total_pooled_chunks": 2275,
     "total_resumes": 300,
     "total_gold_pairs": 31,
@@ -346,6 +348,9 @@
     "minilm_hybrid_mrr": 0.3013,
     "bge_hybrid_hit5": 38.71,
     "bge_hybrid_mrr": 0.2283,
-    "bge_wins_both": false
+    "bge_wins_both": false,
+    "primary_keyword_engine": "bm25",
+    "primary_keyword_engine_rationale": "BM25 provides deterministic exact token matching on specialized technical acronyms and role titles, requires zero neural inference latency, and achieves the highest empirical point estimate (45.2% Hit@5, 0.3017 MRR). Given overlapping Wilson 95% confidence intervals at N=31 (BM25: [29.2%, 62.2%] vs Hybrid MiniLM: [26.4%, 59.2%]), there is no statistical evidence that neural dense retrieval outperforms BM25 alone in the unconstrained corpus-wide setting.",
+    "drop_from_old_project_explanation": "The old project reported 64.7% Hit@5 within isolated single-candidate pools (median 8 chunks per resume), where BM25 achieves 93.5% Hit@5. In the true corpus-wide setting across all 300 resumes (2,275 pooled chunks), Hit@5 drops to 45.2% because candidate chunks compete against 2,274 cross-domain distractors rather than ~7 local chunks."
   }
 }

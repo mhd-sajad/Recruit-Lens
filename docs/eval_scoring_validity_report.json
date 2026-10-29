@@ -1,5 +1,10 @@
 {
-  "timestamp": "2026-10-28T15:15:32Z",
+  "metadata": {
+    "generated_by": "scripts/evaluate_scoring_validity.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
+  },
+  "timestamp": "2026-10-29T08:34:00Z",
   "section_e_scoring_validity": {
     "e1_must_have_correlation": {
       "spearman_rho": 0.3567,
@@ -82,21 +87,21 @@
   "section_e4_end_to_end_200_benchmark": {
     "resumes_count": 200,
     "total_chunks": 1528,
-    "total_wall_time_s": 125.04,
+    "total_wall_time_s": 155.14,
     "time_breakdown_s": {
-      "parsing": 0.08,
-      "chunking": 1.30,
-      "embedding": 75.14,
+      "parsing": 0.15,
+      "chunking": 1.62,
+      "embedding": 100.36,
       "retrieval": 0.001,
-      "scoring": 48.38
+      "scoring": 52.79
     },
-    "per_resume_ms": 625.2,
-    "per_chunk_embed_ms": 49.18,
-    "peak_rss_mb": 349.3,
+    "per_resume_ms": 775.7,
+    "per_chunk_embed_ms": 65.68,
+    "peak_rss_mb": 313.6,
     "rss_cap_mb": 400.0,
     "rss_compliant": true,
     "time_compliant": true,
-    "latency_explanation": "Median run of 3 consecutive executions of the full 200-resume pipeline with 2-worker parsing pool, SHA256 parse caching, and streamed batch embedding (batch_size=24). Both wall time (125.04s <= 300s) and peak RSS (349.3 MB <= 400 MB) pass the required bars."
+    "latency_explanation": "Median warm run of 3 consecutive executions of the full 200-resume pipeline with 2-worker parsing pool, SHA256 parse caching, and streamed batch embedding (batch_size=24). Cold run wall time was 265.43s (peak RSS 320.6 MB). Both cold and warm runs strictly meet the <=300s wall time and <=400MB peak process tree RSS bars."
   },
   "parser_impact_comparison": {
     "before_fixes": {
@@ -108,19 +113,27 @@
       "title_match_impact": "Keyword columns and placeholder strings treated as job titles, producing false matches"
     },
     "after_fixes": {
-      "exact_count_match_resumes": 19,
-      "exact_count_match_resumes_total": 30,
-      "exact_count_match_percent": 63.33,
-      "objective_defective_titles_count": 5,
-      "total_extracted_titles": 136,
-      "objective_defective_titles_percent": 3.68,
-      "years_gap_impact": "Regex strictly enforces YYYY or MM/YYYY boundaries; years_gap capped between -10.0 and +15.0 years",
+      "fresh_dev_exact_count_match_resumes": 25,
+      "fresh_dev_exact_count_match_total": 30,
+      "fresh_dev_exact_count_match_percent": 83.33,
+      "fresh_dev_duplicates": 0,
+      "fresh_dev_fragments": 0,
+      "fresh_dev_wrong_missing": 5,
+      "fresh_dev_wrong_missing_percent": 3.7,
+      "fresh_dev_recoverable": 130,
+      "fresh_dev_recoverable_percent": 96.3,
+      "years_gap_impact": "Regex strictly enforces YYYY or MM/YYYY boundaries; inverted dates nullified with date_known=False",
       "title_match_impact": "Placeholders (Company Name, City, State) sanitized and skills headers excluded from titles"
     }
   },
   "section_f1_vocabulary_mismatch": {
+    "metadata": {
+      "generated_by": "scripts/evaluate_scoring_validity.py",
+      "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+      "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
+    },
     "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
-    "timestamp": "2026-10-28T15:15:32Z",
+    "timestamp": "2026-10-29T08:34:00Z",
     "candidate_a_synonyms": {
       "exact_matches_without_taxonomy": [
         "docker",

@@ -27,9 +27,13 @@ import time
 from pathlib import Path
 from typing import Any
 
-# Ensure backend on sys.path
-backend_dir = Path(__file__).resolve().parent.parent / "backend"
+# Ensure backend and scripts on sys.path
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+backend_dir = repo_root / "backend"
 sys.path.insert(0, str(backend_dir))
+
+from scripts.provenance_helper import get_provenance
 
 import httpx
 from app.config import settings
@@ -250,7 +254,7 @@ async def run_comparison() -> dict[str, Any]:
 
     report = {
         "metadata": {
-            "source_script": "scripts/compare_llm_models.py",
+            **get_provenance("scripts/compare_llm_models.py"),
             "candidates_tested_per_model": 20,
         },
         "models": all_results,

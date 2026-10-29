@@ -1,4 +1,9 @@
 {
+  "metadata": {
+    "generated_by": "scripts/measure_taxonomy_coverage.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "e003955cb2b35577cda3b0a4de3cba92b769d06f47260361ce1f1d36f26d99f5"
+  },
   "dropped_analysis": {
     "total_canonical": 8746,
     "retained": 8822,

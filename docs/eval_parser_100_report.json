@@ -1,6 +1,8 @@
 {
   "metadata": {
-    "source_script": "scripts/measure_parser.py",
+    "generated_by": "scripts/measure_parser.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "018d0916431b46ee7cd2affa9a9f82924d6f576c56623782e055f4cbff30cf66",
     "real_resumes_tested": 100,
     "non_resumes_tested": 20
   },

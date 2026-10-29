@@ -40,6 +40,9 @@ jobs:
       - name: Run Pytest with Coverage Bar (>=80%)
         run: uv run pytest --cov=app --cov-report=term-missing --cov-fail-under=80
 
+      - name: Verify Evaluation Provenance & Audit Integrity
+        run: uv run python ../scripts/verify_eval_provenance.py
+
   frontend:
     name: Frontend Lint, Typecheck & Tests
     runs-on: ubuntu-latest

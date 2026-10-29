@@ -1,0 +1,460 @@
+{
+  "metadata": {
+    "generated_by": "scripts/measure_parser_dev_fresh.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "3c06c179259f8c7c4425615cb0836c73ccedc3e016686de519e3a4ee8e39500b",
+    "total_resumes_evaluated": 30,
+    "reviewer_total_rows": 171,
+    "reviewer_real_entries": 135,
+    "reviewer_fragments": 14,
+    "reviewer_duplicates": 17
+  },
+  "metrics": {
+    "total_extracted_entries": 130,
+    "resumes_exact_count_match": 25,
+    "exact_count_match_pct": 83.33,
+    "duplicates_count": 0,
+    "duplicates_pct": 0.0,
+    "duplicates_compliant": true,
+    "fragments_count": 0,
+    "fragments_pct": 0.0,
+    "fragments_compliant": true,
+    "wrong_or_missing_count": 5,
+    "wrong_or_missing_pct": 3.7,
+    "wrong_or_missing_compliant": true,
+    "recoverable_rate_pct": 96.3,
+    "recoverable_compliant": true
+  },
+  "per_resume_details": [
+    {
+      "resume_id": "10466583",
+      "reviewer_code": "OOOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 3,
+      "exact_match": false,
+      "extracted_titles": [
+        "Floral designer",
+        "Cashier",
+        "Manager/Floral designer"
+      ]
+    },
+    {
+      "resume_id": "12155206",
+      "reviewer_code": "OFOWOOOO",
+      "reviewer_total_rows": 8,
+      "reviewer_real_entries": 7,
+      "parser_extracted_entries": 7,
+      "exact_match": true,
+      "extracted_titles": [
+        "KINDERGARTEN TEACHER",
+        "STUDENT TEACHER/SUBSTITUTE",
+        "Independent Director",
+        "PHARMACY TECHNICIAN",
+        "ACCOUNTANT I",
+        "ACCOUNTANT ASSISTANT",
+        "ADMINISTRATIVE CLERK"
+      ]
+    },
+    {
+      "resume_id": "12904972",
+      "reviewer_code": "OOOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "Manager, Continuous Improvement",
+        "A&P Mechanic / Aircraft Technician",
+        "Aviation Technician",
+        "Sales Associate"
+      ]
+    },
+    {
+      "resume_id": "13294301",
+      "reviewer_code": "OOODDD",
+      "reviewer_total_rows": 6,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Accountant",
+        "Branch Service Specialist",
+        "Cashier"
+      ]
+    },
+    {
+      "resume_id": "15651486",
+      "reviewer_code": "OOOFFOO",
+      "reviewer_total_rows": 7,
+      "reviewer_real_entries": 5,
+      "parser_extracted_entries": 5,
+      "exact_match": true,
+      "extracted_titles": [
+        "Director of Information Technology",
+        "Network Engineer/I.T. Manager",
+        "Network Administrator/Help Desk Manager",
+        "Help Desk Analyst",
+        "Help Desk Support/IT Technician/Network Admin"
+      ]
+    },
+    {
+      "resume_id": "16276121",
+      "reviewer_code": "OO?",
+      "reviewer_total_rows": 3,
+      "reviewer_real_entries": 2,
+      "parser_extracted_entries": 2,
+      "exact_match": true,
+      "extracted_titles": [
+        "Digital Marketing Associate",
+        "Account Manager"
+      ]
+    },
+    {
+      "resume_id": "16511249",
+      "reviewer_code": "OOOOOOOOOOOO??",
+      "reviewer_total_rows": 14,
+      "reviewer_real_entries": 12,
+      "parser_extracted_entries": 9,
+      "exact_match": false,
+      "extracted_titles": [
+        "Serve as a Company representative with Costco management",
+        "Catering Chef",
+        "Server",
+        "Loss Prevention Officer",
+        "Construction Security Supervisor",
+        "Security Officer",
+        "Room Service Assistant Manager",
+        "Line Cook",
+        "Line cook"
+      ]
+    },
+    {
+      "resume_id": "18795567",
+      "reviewer_code": "OCWF",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Senior Industrial Designer",
+        "FutureDash, Principal Design Consultant",
+        "Front-End Research Consultant"
+      ]
+    },
+    {
+      "resume_id": "23914451",
+      "reviewer_code": "OOOFOO",
+      "reviewer_total_rows": 6,
+      "reviewer_real_entries": 5,
+      "parser_extracted_entries": 5,
+      "exact_match": true,
+      "extracted_titles": [
+        "HR Generalist",
+        "Human Resource Manager",
+        "Front End Supervisor",
+        "Customer Service Technical Trainer",
+        "Bakery Manager"
+      ]
+    },
+    {
+      "resume_id": "24416961",
+      "reviewer_code": "FOOOOO",
+      "reviewer_total_rows": 6,
+      "reviewer_real_entries": 5,
+      "parser_extracted_entries": 5,
+      "exact_match": true,
+      "extracted_titles": [
+        "Founder and Principal",
+        "PMO Director",
+        "Product Manager",
+        "Project Management Consultant",
+        "Regional Manager"
+      ]
+    },
+    {
+      "resume_id": "24533931",
+      "reviewer_code": "OOO",
+      "reviewer_total_rows": 3,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Apparel Associate",
+        "Recruiting Assistant",
+        "Cashier/Sales Associate"
+      ]
+    },
+    {
+      "resume_id": "25150191",
+      "reviewer_code": "OFOOO",
+      "reviewer_total_rows": 5,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "HR Contact Center Specialist",
+        "Admissions Representative",
+        "Recruiting Coordinator",
+        "Branch Coordinator"
+      ]
+    },
+    {
+      "resume_id": "27024099",
+      "reviewer_code": "?OO?WOO",
+      "reviewer_total_rows": 7,
+      "reviewer_real_entries": 5,
+      "parser_extracted_entries": 5,
+      "exact_match": true,
+      "extracted_titles": [
+        "Quality Analyst/Senior Record Keeping",
+        "Customer Service Representative",
+        "Receptionist/Administrative/Telephone Service",
+        "Service Counselor",
+        "Performing Arts Director/Project Manager"
+      ]
+    },
+    {
+      "resume_id": "27914096",
+      "reviewer_code": "OOFOO",
+      "reviewer_total_rows": 5,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "Finance Manager",
+        "Portfolio Administrator",
+        "Staff Accountant",
+        "Advanced Staff Auditor"
+      ]
+    },
+    {
+      "resume_id": "28298773",
+      "reviewer_code": "OOCO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "Staff Accountant",
+        "Staff Accountant",
+        "Accounts Receivable/Audit Clerk   Company Name City",
+        "Data Analyst Assistant"
+      ]
+    },
+    {
+      "resume_id": "29072179",
+      "reviewer_code": "OWOOOO",
+      "reviewer_total_rows": 6,
+      "reviewer_real_entries": 6,
+      "parser_extracted_entries": 6,
+      "exact_match": true,
+      "extracted_titles": [
+        "Sous Chef",
+        "Chef and Relief Chef",
+        "General Manager",
+        "Customer Service Rep",
+        "Dog Grooming Assistant",
+        "Swing/Assistant Manager"
+      ]
+    },
+    {
+      "resume_id": "29173771",
+      "reviewer_code": "DOOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Center Director/Head Start Family Advocate",
+        "Head Start Family Advocate",
+        "Assistant Teacher"
+      ]
+    },
+    {
+      "resume_id": "29221006",
+      "reviewer_code": "OOO",
+      "reviewer_total_rows": 3,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Aviation Safety Assistant",
+        "Administrative Assistant",
+        "Human Resources/Administrative Assistant"
+      ]
+    },
+    {
+      "resume_id": "29406313",
+      "reviewer_code": "OOOOOOO",
+      "reviewer_total_rows": 7,
+      "reviewer_real_entries": 7,
+      "parser_extracted_entries": 6,
+      "exact_match": false,
+      "extracted_titles": [
+        "Principal Consultant",
+        "Chief Operating Officer",
+        "Senior Vice President",
+        "Senior Vice President Regional Manager",
+        "Chief Lending Officer",
+        "Senior Vice President - Director of Strategic Projects"
+      ]
+    },
+    {
+      "resume_id": "29897742",
+      "reviewer_code": "OOO",
+      "reviewer_total_rows": 3,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Adult Education Teacher",
+        "Agriculture/Credit Recovery Teacher",
+        "Agriculture Teacher"
+      ]
+    },
+    {
+      "resume_id": "34452806",
+      "reviewer_code": "OOOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "Store Chef",
+        "Executive Chef",
+        "Executive Chef/ Food service Manager",
+        "Executive Sous Chef"
+      ]
+    },
+    {
+      "resume_id": "36102323",
+      "reviewer_code": "OO",
+      "reviewer_total_rows": 2,
+      "reviewer_real_entries": 2,
+      "parser_extracted_entries": 2,
+      "exact_match": true,
+      "extracted_titles": [
+        "Department Manager",
+        "Service Director"
+      ]
+    },
+    {
+      "resume_id": "37087824",
+      "reviewer_code": "OOOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "Director of Operations",
+        "Fitness Operations Manager",
+        "Administrative Assistant",
+        "Training and Readiness Manager"
+      ]
+    },
+    {
+      "resume_id": "37472265",
+      "reviewer_code": "WOOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 4,
+      "parser_extracted_entries": 4,
+      "exact_match": true,
+      "extracted_titles": [
+        "4/5 grade teacher",
+        "Eighth grade English/Language Arts Teacher",
+        "Site Director",
+        "Program Manager"
+      ]
+    },
+    {
+      "resume_id": "37521676",
+      "reviewer_code": "OOOOOOOFOFDDDDDDDDDD",
+      "reviewer_total_rows": 20,
+      "reviewer_real_entries": 8,
+      "parser_extracted_entries": 9,
+      "exact_match": false,
+      "extracted_titles": [
+        "Business Development Manager",
+        "Regional Sales Manager",
+        "WW Key Account Manager",
+        "Senior Account Manager",
+        "Senior Account Manager",
+        "Senior Account Manager",
+        "Senior Account Manager",
+        "Senior Buyer / Program Manager",
+        "Program manager for IDT subsystems"
+      ]
+    },
+    {
+      "resume_id": "43378989",
+      "reviewer_code": "OOO",
+      "reviewer_total_rows": 3,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Consultant",
+        "Database Administrator",
+        "Machinist, CNC Programmer"
+      ]
+    },
+    {
+      "resume_id": "58048626",
+      "reviewer_code": "OFOO",
+      "reviewer_total_rows": 4,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Assistant to Managing Director",
+        "Business Manager",
+        "Travel consultant"
+      ]
+    },
+    {
+      "resume_id": "62994611",
+      "reviewer_code": "OOODDD",
+      "reviewer_total_rows": 6,
+      "reviewer_real_entries": 3,
+      "parser_extracted_entries": 3,
+      "exact_match": true,
+      "extracted_titles": [
+        "Software Developer",
+        "Computer Engineer Intern",
+        "Computer Engineer Intern"
+      ]
+    },
+    {
+      "resume_id": "91467795",
+      "reviewer_code": "OOOOOOO",
+      "reviewer_total_rows": 7,
+      "reviewer_real_entries": 7,
+      "parser_extracted_entries": 7,
+      "exact_match": true,
+      "extracted_titles": [
+        "Business Development Consultant",
+        "Account Executive",
+        "Southeast Sales Executive",
+        "Manager, Business Development",
+        "Account Manager I",
+        "Sales Consultant",
+        "Fundraising and Marketing Intern"
+      ]
+    },
+    {
+      "resume_id": "93002334",
+      "reviewer_code": "OFFOOFOW",
+      "reviewer_total_rows": 8,
+      "reviewer_real_entries": 5,
+      "parser_extracted_entries": 4,
+      "exact_match": false,
+      "extracted_titles": [
+        "HR Analyst",
+        "HR Coordinator",
+        "Senior HR Coordinator",
+        "Administrative Assistant"
+      ]
+    }
+  ]
+}

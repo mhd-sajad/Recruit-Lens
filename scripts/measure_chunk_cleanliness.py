@@ -8,7 +8,13 @@ Outputs docs/eval_chunker_cleanliness.json.
 
 import json
 import re
+import sys
 from pathlib import Path
+
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+
+from scripts.provenance_helper import get_provenance
 
 MOJIBAKE_PAT = re.compile(r"[\xc2\xa0Ââ€\x80-\x9fï]")
 PLACEHOLDER_PAT = re.compile(r"(Name\s+City\s*,\s*State|\bPhone\s*:|\bEmail\s*:)", re.IGNORECASE)
@@ -52,7 +58,7 @@ def main() -> None:
 
     report = {
         "metadata": {
-            "source_script": "scripts/measure_chunk_cleanliness.py",
+            **get_provenance("scripts/measure_chunk_cleanliness.py"),
             "chunks_directory": "data/chunks_batch1_verified",
             "total_resumes_chunked": len(chunk_files),
         },

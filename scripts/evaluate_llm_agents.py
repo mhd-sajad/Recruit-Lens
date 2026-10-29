@@ -19,6 +19,13 @@ import json
 import time
 from pathlib import Path
 
+# Add backend and scripts to sys.path
+backend_dir = Path(__file__).resolve().parent.parent / "backend"
+sys.path.insert(0, str(backend_dir))
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+
+from scripts.provenance_helper import get_provenance
 from app.config import settings
 from app.core.features import extract_candidate_features
 from app.core.jd_requirements import JobRequirements
@@ -186,7 +193,7 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
 
     summary = {
         "metadata": {
-            "source_script": "scripts/evaluate_llm_agents.py",
+            **get_provenance("scripts/evaluate_llm_agents.py"),
             "benchmark": "40-candidate multi-agent evaluation",
             "max_rewrites": 2,
             "target_pass_rate_pct": 60.0,
@@ -415,6 +422,7 @@ async def main() -> None:
     adversarial_metrics = await run_adversarial_suite()
 
     final_report = {
+        "metadata": get_provenance("scripts/evaluate_llm_agents.py"),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "groq_model_used": settings.GROQ_MODEL,
         "faithfulness_evaluation": faithfulness_metrics,

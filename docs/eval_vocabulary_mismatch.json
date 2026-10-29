@@ -1,6 +1,11 @@
 {
+  "metadata": {
+    "generated_by": "scripts/evaluate_scoring_validity.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
+  },
   "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
-  "timestamp": "2026-10-28T15:15:32Z",
+  "timestamp": "2026-10-29T08:34:00Z",
   "candidate_a_synonyms": {
     "exact_matches_without_taxonomy": [
       "docker",

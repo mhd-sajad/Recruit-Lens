@@ -1,18 +1,20 @@
 {
   "metadata": {
-    "source_script": "scripts/measure_parser_audit.py",
+    "generated_by": "scripts/measure_parser_audit.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "29d7f0a52b298c1760a2f4afdbd53919846c17a18b61a7da7ada65ec70a88665",
     "audit_type": "self-graded",
     "resumes_tested": 40,
     "csv_file": "data/parser_audit_40.csv"
   },
   "metrics": {
-    "total_extracted_entries": 199,
-    "clean_correct_entries": 192,
+    "total_extracted_entries": 173,
+    "clean_correct_entries": 169,
     "noise_attached_entries": 3,
-    "fragment_entries": 4,
+    "fragment_entries": 1,
     "wrong_entries": 0,
-    "self_graded_clean_accuracy_percent": 96.48,
-    "self_graded_recoverable_accuracy_percent": 97.99,
-    "accuracy_estimate_percent": 96.48
+    "self_graded_clean_accuracy_percent": 97.69,
+    "self_graded_recoverable_accuracy_percent": 99.42,
+    "accuracy_estimate_percent": 97.69
   }
 }

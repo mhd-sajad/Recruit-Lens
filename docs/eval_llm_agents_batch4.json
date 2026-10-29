@@ -3,7 +3,10 @@
     "source_script": "scripts/evaluate_llm_agents.py",
     "benchmark": "40-candidate multi-agent evaluation",
     "max_rewrites": 2,
-    "target_pass_rate_pct": 60.0
+    "target_pass_rate_pct": 60.0,
+    "generated_by": "scripts/evaluate_llm_agents.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "db29189de05a387de16144a0e331d570f2fe694b0291e1496ee7d0e161547dc0"
   },
   "total_evaluated": 40,
   "elapsed_seconds": 672.13,

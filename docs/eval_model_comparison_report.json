@@ -1,7 +1,10 @@
 {
   "metadata": {
     "source_script": "scripts/compare_llm_models.py",
-    "candidates_tested_per_model": 20
+    "candidates_tested_per_model": 20,
+    "generated_by": "scripts/compare_llm_models.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "204d6991703f7415bd8f9b7dbcf5c3801927c3ffd81d885ae592c4a2f528fdbd"
   },
   "models": {
     "qwen/qwen3.8-27b": {

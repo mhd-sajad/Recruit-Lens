@@ -595,5 +595,10 @@
       "status": "PASSED",
       "repair_loop_available": true
     }
+  },
+  "metadata": {
+    "generated_by": "scripts/evaluate_llm_agents.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "db29189de05a387de16144a0e331d570f2fe694b0291e1496ee7d0e161547dc0"
   }
 }

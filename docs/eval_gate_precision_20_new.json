@@ -1,6 +1,8 @@
 {
   "metadata": {
-    "source_script": "scripts/measure_parser_audit.py",
+    "generated_by": "scripts/measure_parser_audit.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "29d7f0a52b298c1760a2f4afdbd53919846c17a18b61a7da7ada65ec70a88665",
     "non_resumes_tested": 20
   },
   "metrics": {

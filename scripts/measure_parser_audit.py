@@ -25,10 +25,13 @@ from typing import Any
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-# Ensure backend is on sys.path
-backend_dir = Path(__file__).resolve().parent.parent / "backend"
+# Ensure backend and scripts are on sys.path
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+backend_dir = repo_root / "backend"
 sys.path.insert(0, str(backend_dir))
 
+from scripts.provenance_helper import get_provenance
 from app.core.pdf_parser import parse_resume_pdf  # noqa: E402
 
 
@@ -203,7 +206,7 @@ def generate_audit_csv() -> tuple[Path, float]:
     docs_dir.mkdir(parents=True, exist_ok=True)
     audit_report = {
         "metadata": {
-            "source_script": "scripts/measure_parser_audit.py",
+            **get_provenance("scripts/measure_parser_audit.py"),
             "audit_type": "self-graded",
             "resumes_tested": 40,
             "csv_file": "data/parser_audit_40.csv",
@@ -420,7 +423,7 @@ def create_and_eval_non_resumes() -> dict[str, Any]:
     docs_dir.mkdir(parents=True, exist_ok=True)
     gate_report = {
         "metadata": {
-            "source_script": "scripts/measure_parser_audit.py",
+            **get_provenance("scripts/measure_parser_audit.py"),
             "non_resumes_tested": len(non_resume_files),
         },
         "metrics": {

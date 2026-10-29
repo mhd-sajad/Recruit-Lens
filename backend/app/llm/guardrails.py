@@ -15,13 +15,13 @@ from app.core.models import ContactPII
 # Patterns indicative of prompt injection, role hijacking, or instruction override
 INJECTION_PATTERNS = [
     re.compile(
-        r"(?i)\b(ignore|disregard|forget|override|ignora|ignorer|ignoriere)\s+(all\s+|las\s+|alle\s+|toutes\s+)?(previous|prior|above|former|everything|rules|instrucciones|vorherigen)?\s*(instructions|prompts|rules|commands|context|anweisungen|instrucciones)?\b"
+        r"(?i)\b(ignore|disregard|forget|override|ignora|ignorer|ignoriere)\s+(?:all\s+|las\s+|alle\s+|toutes\s+)?(?:(?:previous|prior|above|former|everything|rules|instrucciones|vorherigen)\s+(?:instructions|prompts|rules|commands|context|anweisungen|instrucciones)?|(?:instructions|prompts|rules|commands|context|anweisungen|instrucciones))\b"
     ),
     re.compile(
         r"(?i)\b(system\s+(?:prompt|override|message|command|instruction)|developer\s+mode|dan\s+mode|jailbreak|unrestricted\s+mode)\b"
     ),
     re.compile(
-        r"(?i)\b(you\s+must|you\s+are\s+now|act\s+as\s+an?\s+(?:unrestricted|unfiltered)|pretend\s+you\s+are|unfiltered\s+recruitment\s+assistant|always\s+shortlists?)\b"
+        r"(?i)\b(you\s+must\s+(?:ignore|override|disregard|forget|bypass|say|output\s+json)|you\s+are\s+now|act\s+as\s+an?\s+(?:unrestricted|unfiltered)|pretend\s+you\s+are|unfiltered\s+recruitment\s+assistant|always\s+shortlists?)\b"
     ),
     re.compile(
         r"(?i)\b(rate\s+(?:me|this|candidate)\s+(?:100|10|perfect|top)|give\s+(?:me|this|candidate)\s+(?:a\s+)?100%?|shortlist\s+this\s+candidate|hire\s+(?:immediately|candidate)|candidate\s+is\s+hired|verdict\s+pass\s+and\s+100%|output\s+json\s+with\s+verdict|fasttrack\s+tier|assign\s+fasttrack)\b"

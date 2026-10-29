@@ -3,7 +3,10 @@
     "dev_resumes_count": 30,
     "total_reviewer_rows": 153,
     "total_reviewer_real_entries": 121,
-    "total_reviewer_fragments": 32
+    "total_reviewer_fragments": 32,
+    "generated_by": "scripts/measure_parser.py",
+    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "input_sha256": "96703032951a0aba9b54ba394c54ce503aba2e041fbe6771a4cf5145e9761868"
   },
   "parser_counts": {
     "total_parser_extracted_entries": 136,

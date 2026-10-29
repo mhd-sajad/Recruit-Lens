@@ -173,14 +173,12 @@ VALID_SINGLE_WORD_TITLES = {
     "scientist",
     "programmer",
     "analyst",
-    "specialist",
     "counsel",
     "attendant",
     "officer",
     "director",
     "administrator",
     "coordinator",
-    "assistant",
     "laborer",
     "worker",
     "estimator",
@@ -300,14 +298,27 @@ BLACKLIST_SUBSTRINGS = [
 TITLE_START_BLACKLIST = re.compile(
     r"^(?:with|using|as|by|at|in|on|for|to|from|and|or|attended?|attending|upgraded?|upgrading|"
     r"use[ds]?|applying?|applied|installed?|installing|configured?|configuring|"
-    r"lead(?:ing)?\s+(?:team\s+to|product|strategy|projects?|initiatives?)|managers?\s+and|"
-    r"proper|ongoing|my|so\s+i['’]?m)\b",
+    r"lead(?:ing)?\s+(?:the|a|an|team|product|strategy|projects?|initiatives?|development)|"
+    r"answer(?:ing)?\s+(?:and|calls?|inquiries?|issues?)|"
+    r"support(?:ing)?\s+(?:sr\.?|the|a|an|teams?|director|group)|"
+    r"distribut(?:e|ing|ed)\s+|"
+    r"serve(?:s|d)?\s+as\s+lead|"
+    r"possesses?\s+|offered?\s+|discuss(?:ed)?\s+|"
+    r"managers?\s+and|proper|ongoing|my|so\s+i['’]?m)\b",
     re.IGNORECASE,
 )
 
 TITLE_END_BLACKLIST = re.compile(
-    r"\b(?:that|the|and|to|as|or|in|on|at|for|with|by|from|of|now|which|while|so|"
-    r"covering\s+the|closing|remarkable|financial|reporting\.e)$",
+    r"(?:\b(?:that|the|and|to|as|an|a|or|in|on|at|for|with|by|from|of|now|which|while|so|"
+    r"covering\s+the|closing|remarkable|financial|reporting\.e|including|providing|analyzing|"
+    r"completed|quarterly|all|other)\b|[(\[{])\s*$",
+    re.IGNORECASE,
+)
+
+AWARD_AND_CERT_REGEX = re.compile(
+    r"\b(?:teacher|employee|associate|salesman|manager|officer)\s+of\s+the\s+(?:year|month|quarter)\b|"
+    r"\bpci\s+compliance\b|\b(?:cisco\s+certified|ccna|attendant\s+console)\b|"
+    r"\btracking\s+system\b|\baward\b",
     re.IGNORECASE,
 )
 
@@ -487,13 +498,13 @@ def extract_seniority_level(title_text: str, years: float | None = None) -> int:
 def clean_placeholders(text: str) -> str:
     """Strip repetitive template placeholders like Company Name, City, State."""
     t = re.sub(
-        r"^(?:(?:company\s*name|city\s*,\s*state|state\s*,\s*city|state|city|organization)\s*[,–-—|]?\s*)+",
+        r"^(?:(?:company\s*name\s*(?:city)?|city\s*,\s*state|state\s*,\s*city|state|city|organization|company)\s*[,–-—|/]?\s*)+",
         "",
         text,
         flags=re.IGNORECASE,
     ).strip()
     t = re.sub(
-        r"(?:[,–-—|]?\s*(?:company\s*name|city\s*,\s*state|state\s*,\s*city|state|city|company|organization)\s*)+$",
+        r"(?:[,–-—|/]?\s*(?:company\s*name\s*(?:city)?|city\s*,\s*state|state\s*,\s*city|state|city|company|organization)\s*)+$",
         "",
         t,
         flags=re.IGNORECASE,
@@ -548,9 +559,30 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
     """Clean trailing noise, dates, placeholders, and punctuation from title string."""
     t = ftfy.fix_text(raw_title)
     t = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", t).strip()
-    t = re.sub(r"^[ •*·–—\-\t\d.]+", "", t).strip()
-    t = re.sub(r"^[A-Za-z]+[-–—]\s*", "", t).strip()
+    # Only strip leading bullet symbols and numbered bullet markers (e.g. "1. " or "• "), NOT numbers like "4/5"
+    t = re.sub(r"^[ •*·–—\-\t]+", "", t).strip()
+    t = re.sub(r"^\d+[\.\)]\s+", "", t).strip()
+    # Only strip single character bullet prefixes (e.g. "a- ") not full words like "Front-"
+    t = re.sub(r"^[a-zA-Z][-–—]\s+", "", t).strip()
     t = clean_placeholders(t)
+
+    # Split title fused with description
+    split_fused = re.split(
+        r"\s+(?:mid\s+shift|to\s+(?:support|ensure|provide|assist|maintain|help|lead|develop)|for\s+(?:changing|the\s+purpose))\b",
+        t,
+        flags=re.IGNORECASE,
+    )
+    if len(split_fused) > 1 and len(split_fused[0].strip()) >= 3:
+        t = split_fused[0].strip()
+
+    # Normalize inverted titles: "DIRECTOR, INDEPENDENT" -> "Independent Director"
+    m_inv = re.match(
+        r"^([A-Z\s]+),\s*(INDEPENDENT|SENIOR|ASSOCIATE|ASSISTANT|LEAD)$",
+        t,
+        re.IGNORECASE,
+    )
+    if m_inv:
+        t = f"{m_inv.group(2).title()} {m_inv.group(1).title()}"
 
     start_d, end_d, is_cur = None, None, False
 
@@ -589,9 +621,16 @@ def is_valid_title(title: str | None) -> bool:
         return False
     t_clean = title.strip(" ,–-—|.")
     t_lower = t_clean.lower()
+    words = t_clean.split()
+    if len(words) > 8:
+        return False
+    if t_clean.count("/") >= 3:
+        return False
     if t_lower in BLACKLIST_EXACT or t_lower in SECTION_NOISE_TOKENS:
         return False
     if DATE_ONLY_REGEX.match(t_lower):
+        return False
+    if AWARD_AND_CERT_REGEX.search(t_clean):
         return False
     for pat in BLACKLIST_SUBSTRINGS:
         if re.search(pat, t_lower):
@@ -604,12 +643,11 @@ def is_valid_title(title: str | None) -> bool:
         return False
     if t_lower.endswith((".", "!", ";", ")", ".e")) and not re.search(r"\([A-Z/]+\)$", t_clean):
         return False
-    if t_clean.startswith("("):
+    if t_clean.startswith("(") or t_clean.count("(") > t_clean.count(")"):
         return False
     if ACTION_VERBS.match(t_clean):
         return False
 
-    words = t_clean.split()
     if len(words) == 1:
         clean_w = re.sub(r"[^a-zA-Z]", "", words[0]).lower()
         return clean_w in VALID_SINGLE_WORD_TITLES
@@ -625,14 +663,25 @@ def is_valid_title(title: str | None) -> bool:
 
 
 def is_valid_company(company: str | None, title: str | None) -> bool:
-    """Validate that company string is legitimate and not a placeholder, title echo, or verb."""
+    """Validate that company string is legitimate and not a placeholder, title echo, salary, or verb."""
     if not company:
         return False
     c = ftfy.fix_text(company)
     c = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", c).strip(" ,–-—|.")
     c = clean_placeholders(c)
     c_lower = c.lower()
-    if len(c) < 2 or len(c) > 60:
+    if len(c) < 2 or len(c) > 50:
+        return False
+    # Never store salary, rate, or compensation text
+    if re.search(
+        r"\b(?:salary|usd|per\s+year|per\s+hour|hourly|rate|annual|pay|hours|stipend)\b|\$", c_lower
+    ):
+        return False
+    # Never store customer lists, duties, or descriptions
+    if re.search(
+        r"\b(?:customers?|clients?|responsibilities|duties|provided|managed|support|worked|including)\b",
+        c_lower,
+    ):
         return False
     if title and c_lower == title.lower().strip(" ,–-—|."):
         return False
@@ -667,13 +716,111 @@ def is_valid_company(company: str | None, title: str | None) -> bool:
         re.search(
             r"\b(?:inc|llc|corp|corporation|ltd|limited|co|company|group|services|bank|solutions|"
             r"systems|technologies|hospital|clinic|center|firm|agency|studio|university|college|"
-            r"school|partners|labs|store|restaurant|hotel|organization)\b",
+            r"school|partners|labs|store|restaurant|hotel|organization|enterprises|associates)\b",
             c_lower,
         )
     )
     if has_marker and not has_comp_suffix:
         return False
     return True
+
+
+def validate_date_order(
+    start_date: str | None, end_date: str | None
+) -> tuple[str | None, str | None, bool, float]:
+    """Validate start and end date ordering. If end precedes start, dates set to None and confidence low."""
+    if not start_date:
+        return None, end_date, False, 1.0
+    if not end_date:
+        return start_date, None, True, 1.0
+
+    months = {
+        "jan": 1,
+        "feb": 2,
+        "mar": 3,
+        "apr": 4,
+        "may": 5,
+        "jun": 6,
+        "jul": 7,
+        "aug": 8,
+        "sep": 9,
+        "oct": 10,
+        "nov": 11,
+        "dec": 12,
+    }
+
+    def parse_ym(d_str: str) -> tuple[int, int] | None:
+        d_clean = d_str.strip().lower()
+        if re.search(r"current|present", d_clean):
+            return (2026, 12)
+        m_yr = re.search(r"\b(19[7-9]\d|20[0-2]\d)\b", d_clean)
+        if not m_yr:
+            return None
+        year = int(m_yr.group(1))
+        month = 6
+        m_mo = re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b", d_clean)
+        if m_mo:
+            month = months.get(m_mo.group(1)[:3], 6)
+        else:
+            m_num = re.search(r"\b(0?[1-9]|1[0-2])(?:\/|-)\d{4}\b", d_clean)
+            if m_num:
+                month = int(m_num.group(1))
+        return (year, month)
+
+    p_start = parse_ym(start_date)
+    p_end = parse_ym(end_date)
+    if p_start and p_end and p_end < p_start:
+        return None, None, False, 0.5
+
+    return start_date, end_date, True, 1.0
+
+
+def deduplicate_experience_entries(
+    entries: list[WorkExperienceEntry],
+) -> list[WorkExperienceEntry]:
+    """Deduplicate entries within a resume by normalized title, dates, and raw text.
+    Drops undated entries whose title matches a dated entry.
+    """
+    if not entries:
+        return []
+
+    def norm_t(t: str | None) -> str:
+        return re.sub(r"[^a-z0-9]", "", (t or "").lower())
+
+    # 1. Identify titles that have dates
+    dated_titles = set()
+    for e in entries:
+        if e.title and (e.start_date or e.end_date):
+            dated_titles.add(norm_t(e.title))
+
+    # 2. Filter out undated duplicates where a dated entry exists
+    filtered = []
+    for e in entries:
+        nt = norm_t(e.title)
+        if not e.start_date and not e.end_date and nt in dated_titles:
+            continue
+        filtered.append(e)
+
+    # 3. Deduplicate exact or near-identical repeats
+    deduped: list[WorkExperienceEntry] = []
+    seen_signatures: set[str] = set()
+
+    for e in filtered:
+        nt = norm_t(e.title)
+        s_d = (e.start_date or "").strip().lower()
+        e_d = (e.end_date or "").strip().lower()
+        sig = f"{nt}|{s_d}|{e_d}"
+        raw_snippet = re.sub(r"[^a-z0-9]", "", (e.raw_text or "").lower()[:100])
+
+        if sig in seen_signatures or (raw_snippet and raw_snippet in seen_signatures):
+            continue
+
+        seen_signatures.add(sig)
+        if raw_snippet:
+            seen_signatures.add(raw_snippet)
+        deduped.append(e)
+
+    return deduped
 
 
 def extract_structured_experiences(experience_text: str) -> list[WorkExperienceEntry]:
@@ -809,13 +956,16 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
                         break
                 j += 1
 
+            v_start, v_end, d_known, conf = validate_date_order(start_d, end_d)
             entries.append(
                 WorkExperienceEntry(
                     title=curr_title,
                     company=final_company,
-                    start_date=start_d,
-                    end_date=end_d,
+                    start_date=v_start,
+                    end_date=v_end,
                     is_current=is_cur,
+                    date_known=d_known,
+                    confidence=conf,
                     bullets=[],
                     raw_text=line,
                 )
@@ -827,4 +977,4 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
             entries[-1].bullets.append(line)
         i += 1
 
-    return entries
+    return deduplicate_experience_entries(entries)

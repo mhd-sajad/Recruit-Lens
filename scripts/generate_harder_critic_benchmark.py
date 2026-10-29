@@ -10,7 +10,9 @@ from pathlib import Path
 import re
 import sys
 
-backend_dir = Path(__file__).resolve().parent.parent / "backend"
+repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(repo_root))
+backend_dir = repo_root / "backend"
 sys.path.insert(0, str(backend_dir))
 
 import numpy as np
@@ -878,12 +880,32 @@ def evaluate_harder_calibration() -> None:
         f"\nRecommended Calibration Threshold: tau = {chosen_threshold} (False Accept Rate <= 2.0%)"
     )
 
+    # Compute Wilson score interval with exact function
+    def wilson_interval(k: int, n: int) -> list[float]:
+        if n == 0:
+            return [0.0, 100.0]
+        z = 1.95996
+        p = k / n
+        denom = 1.0 + (z**2) / n
+        center = (p + (z**2) / (2 * n)) / denom
+        margin = z * np.sqrt((p * (1 - p) / n) + (z**2 / (4 * n**2))) / denom
+        return [float(round(max(0.0, center - margin) * 100.0, 2)), float(round(min(1.0, center + margin) * 100.0, 2))]
+
+    n_unsupp = len(UNSUPPORTED_PAIRS)
+    chosen_row = next(r for r in calibration_table if r["threshold"] == chosen_threshold)
+    k_fa = chosen_row["false_accept_count"]
+    wilson_ci95 = [float(x) for x in wilson_interval(k_fa, n_unsupp)]
+    rule_of_three_upper = float(round((3.0 / n_unsupp) * 100.0, 2))
+
     # Save to docs/eval_critic_calibration.json and docs/eval_critic_benchmark_harder.json
     docs_dir = Path(__file__).resolve().parent.parent / "docs"
     docs_dir.mkdir(parents=True, exist_ok=True)
+    from scripts.provenance_helper import get_provenance
+    provenance = get_provenance("scripts/generate_harder_critic_benchmark.py")
+
     report = {
         "metadata": {
-            "source_script": "scripts/generate_harder_critic_benchmark.py",
+            **provenance,
             "supported_sample_size": len(SUPPORTED_PAIRS),
             "unsupported_sample_size": len(UNSUPPORTED_PAIRS),
             "embedder_model": "all-MiniLM-L6-v2",
@@ -901,7 +923,14 @@ def evaluate_harder_calibration() -> None:
         },
         "threshold_sweep": calibration_table,
         "chosen_threshold": chosen_threshold,
-        "chosen_metrics": next(r for r in calibration_table if r["threshold"] == chosen_threshold),
+        "chosen_metrics": chosen_row,
+        "upper_bound_statistics": {
+            "point_estimate_far_percent": round(chosen_row["false_accept_rate_percent"], 2),
+            "trials_count": n_unsupp,
+            "rule_of_three_upper_bound_at_n60_percent": rule_of_three_upper,
+            "wilson_ci95_at_n60_percent": wilson_ci95,
+            "explanation": f"With {k_fa} false accepts observed in N={n_unsupp} trials, the empirical point estimate is {chosen_row['false_accept_rate_percent']}%. By the Rule of Three, the 95% one-sided upper limit for a zero-event binomial experiment is 3/N = 3/{n_unsupp} = {rule_of_three_upper}% (Wilson 95% two-sided CI {wilson_ci95}%)."
+        },
     }
 
     with open(docs_dir / "eval_critic_calibration.json", "w", encoding="utf-8") as f:
