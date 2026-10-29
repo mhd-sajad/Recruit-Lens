@@ -44,4 +44,4 @@
 - [x] 3.5 README: mermaid diagram, screenshots, quickstart, make_report table, Limitations section, MIT licence, O*NET CC BY 4.0 attribution.
 - [x] 3.6 Finalize PROJECT_EXPLAINED.md (5-minute demo, how to explain).
 - [x] 3.7 Generate docs/FINAL_REPORT.md via script.
-- [ ] 3.8 Tag v1.0.0 after green CI on main.
+- [x] 3.8 Tag v1.0.0 after green CI on main (Commit 2832f75, CI run 40890124145, Tag v1.0.0).
