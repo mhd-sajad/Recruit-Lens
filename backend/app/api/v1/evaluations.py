@@ -2,7 +2,8 @@
 
 import csv
 import io
-from datetime import UTC, datetime
+import secrets
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -37,6 +38,7 @@ from app.db.models import (
     Evaluation,
     InterviewFeedbackRecord,
     Job,
+    McpConfirmationToken,
     User,
 )
 from app.db.session import get_db
@@ -903,4 +905,54 @@ async def trigger_on_demand_llm(
         "email_drafts": ev.email_drafts_json,
         "llm_generated": ev.llm_generated,
         "explanation_type": ev.explanation_type,
+    }
+
+
+@router.post("/{evaluation_id}/mcp-token")
+async def generate_mcp_confirmation_token(
+    evaluation_id: str,
+    decision: str = Query(
+        ...,
+        description="Target decision stage (e.g. shortlisted, interview_scheduled, held, rejected, hired)",
+    ),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """
+    Generate a secure, single-use confirmation token for executing an MCP decision.
+    Valid for 15 minutes.
+    """
+    res = await db.execute(
+        select(Evaluation).where(
+            Evaluation.id == evaluation_id, Evaluation.user_id == current_user.id
+        )
+    )
+    ev = res.scalar_one_or_none()
+    if ev is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Evaluation '{evaluation_id}' not found",
+        )
+
+    token = f"mcp_{secrets.token_hex(16)}"
+    expires_at = datetime.now(UTC) + timedelta(minutes=15)
+
+    record = McpConfirmationToken(
+        user_id=current_user.id,
+        token=token,
+        action="make_decision",
+        target_id=evaluation_id,
+        decision=decision,
+        is_used=False,
+        expires_at=expires_at,
+    )
+    db.add(record)
+    await db.commit()
+
+    return {
+        "token": token,
+        "evaluation_id": evaluation_id,
+        "decision": decision,
+        "expires_at": expires_at.isoformat(),
+        "instructions": "Pass this token as 'confirmation_token' to the MCP make_decision tool.",
     }

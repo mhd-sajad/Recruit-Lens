@@ -40,6 +40,19 @@ INJECTION_PATTERNS = [
 # Standard regexes for PII detection
 EMAIL_REGEX = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 PHONE_REGEX = re.compile(r"(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b")
+DOB_REGEX = re.compile(
+    r"(?i)\b(?:dob|date\s+of\s+birth|born)\s*[:\-]?\s*(?:\d{4}[/-]\d{1,2}[/-]\d{1,2}|\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|[A-Za-z]+\s+\d{1,2},?\s+\d{4})\b"
+)
+ADDRESS_REGEX = re.compile(
+    r"(?i)\b\d{1,5}\s+[A-Za-z0-9\s]{1,35}?\b(?:Street|St\b|Avenue|Ave\b|Road|Rd\b|Boulevard|Blvd\b|Drive|Dr\b|Lane|Ln\b|Terrace|Ter\b|Way|Court|Ct\b)\b"
+)
+INSTITUTION_REGEX = re.compile(
+    r"\b(?:[A-Z][A-Za-z0-9&'\-]+\s+)+(?:University|College|Institute|Academy|Polytechnic)\b|"
+    r"\b(?:University|College|Institute|Academy)\s+of\s+[A-Z][A-Za-z0-9&'\-]+\b"
+)
+GENDER_PRONOUNS_REGEX = re.compile(
+    r"\b(he|she|him|her|his|hers|mr\.|mrs\.|ms\.|miss)\b", re.IGNORECASE
+)
 
 
 def detect_and_neutralize_injections(text: str) -> tuple[str, bool]:
@@ -67,17 +80,22 @@ def detect_and_neutralize_injections(text: str) -> tuple[str, bool]:
     return sanitized, injection_detected
 
 
-def redact_pii_blind_mode(text: str, pii: ContactPII | None = None) -> str:
+def redact_pii_blind_mode(
+    text: str,
+    pii: ContactPII | None = None,
+    redact_institutions: bool = True,
+    candidate_name: str | None = None,
+) -> str:
     """
     Redact candidate PII for blind evaluation before sending to external LLM providers.
-    Removes email, phone numbers, and explicit known names.
+    Removes email, phone numbers, addresses, DOB, gender indicators, and explicit names.
     """
     redacted = text
 
     # Redact explicit candidate name if available
-    if pii and pii.name and len(pii.name.strip()) > 2:
-        name_clean = pii.name.strip()
-        # Word boundary match for candidate name
+    name_to_redact = candidate_name or (pii.name if pii else None)
+    if name_to_redact and len(name_to_redact.strip()) > 2:
+        name_clean = name_to_redact.strip()
         name_pattern = re.compile(rf"\b{re.escape(name_clean)}\b", re.IGNORECASE)
         redacted = name_pattern.sub("[Candidate]", redacted)
 
@@ -86,6 +104,19 @@ def redact_pii_blind_mode(text: str, pii: ContactPII | None = None) -> str:
 
     # Redact phone numbers
     redacted = PHONE_REGEX.sub("[PHONE REDACTED]", redacted)
+
+    # Redact Date of Birth
+    redacted = DOB_REGEX.sub("[DOB REDACTED]", redacted)
+
+    # Redact street addresses
+    redacted = ADDRESS_REGEX.sub("[ADDRESS REDACTED]", redacted)
+
+    # Redact gender pronouns and honorifics
+    redacted = GENDER_PRONOUNS_REGEX.sub("[Candidate]", redacted)
+
+    # Redact university / academic institutions if requested
+    if redact_institutions:
+        redacted = INSTITUTION_REGEX.sub("[INSTITUTION REDACTED]", redacted)
 
     return redacted
 

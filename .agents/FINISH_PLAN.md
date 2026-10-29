@@ -24,16 +24,16 @@
 - [x] 1.5 Vitest tests for components and hooks.
 - [x] 1.6 Playwright end-to-end journey against seeded backend (synthetic data only, no real resumes committed).
 - [x] 1.7 Capture 5-6 synthetic screenshots for docs/ and README.
-- [ ] 1.8 Phase 1 Self-audit, green CI, merge, tag v0.7.0.
+- [x] 1.8 Phase 1 Self-audit, green CI (run 40883911150), merge, tag v0.7.0.
 
 ## PHASE 2: EXTRAS AND HARDENING (tag v0.8.0)
-- [ ] 2.1 Copilot: grounded Q&A over one candidate's evidence (or job's candidates) using hybrid retrieval; citations required; answers "not found in this resume" when evidence missing; critic applied; on-demand only.
-- [ ] 2.2 Blind mode end to end: backend flag, UI toggle, PII redaction before LLM call. Tests prove identity never appears. Document limitations.
-- [ ] 2.3 MCP server (official Python SDK): read-only tools (search_candidates, get_candidate_report, list_jobs), draft_email. Decision tool requires one-time confirmation token from web UI. Scoped API key.
-- [ ] 2.4 Evaluation and monitoring: store eval runs in DB, dashboard metrics (retrieval, tier PR, agreement, faithfulness), feature drift with PSI/KS. Retraining script with model version registry.
-- [ ] 2.5 Security pass: pip-audit, npm audit, OWASP checklist fixes (authz, injection, SSRF, upload, CSV injection, rate limits, secrets, no PII logs), list accepted risks.
-- [ ] 2.6 Resilience tests: LLM down, quota exhausted, DB lock, worker killed mid-batch, corrupt PDF, 100-page PDF, duplicate uploads.
-- [ ] 2.7 Performance pass against bars (300s, 400MB for 200 resumes) with real timings.
+- [x] 2.1 Copilot: grounded Q&A over one candidate's evidence (or job's candidates) using hybrid retrieval; citations required; answers "not found in this resume" when evidence missing; critic applied; on-demand only.
+- [x] 2.2 Blind mode end to end: backend flag, UI toggle, PII redaction before LLM call. Tests prove identity never appears. Document limitations.
+- [x] 2.3 MCP server (official Python SDK): read-only tools (search_candidates, get_candidate_report, list_jobs), draft_email. Decision tool requires one-time confirmation token from web UI. Scoped API key.
+- [x] 2.4 Evaluation and monitoring: store eval runs in DB, dashboard metrics (retrieval, tier PR, agreement, faithfulness), feature drift with PSI/KS. Retraining script with model version registry.
+- [x] 2.5 Security pass: pip-audit, npm audit, OWASP checklist fixes (authz, injection, SSRF, upload, CSV injection, rate limits, secrets, no PII logs), list accepted risks.
+- [x] 2.6 Resilience tests: LLM down, quota exhausted, DB lock, worker killed mid-batch, corrupt PDF, 100-page PDF, duplicate uploads.
+- [x] 2.7 Performance pass against bars (300s, 400MB for 200 resumes) with real timings.
 - [ ] 2.8 Phase 2 Self-audit, green CI, merge, tag v0.8.0.
 
 ## PHASE 3: DEPLOY, DOCUMENT, RELEASE (tag v1.0.0)

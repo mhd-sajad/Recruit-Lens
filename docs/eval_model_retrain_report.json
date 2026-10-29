@@ -1,0 +1,20 @@
+{
+  "generated_by": "scripts/retrain_model.py",
+  "git_commit": "e289a1a7735d00115c6ff72bb345421076123285",
+  "input_sha256": "4376a3208d7f1684963a2b39732e6f00af1e40fe43d514610a7b6a1ffd4ae0a6",
+  "model_version": "1.1.0",
+  "model_type": "xgboost_regressor",
+  "ranking_metrics": {
+    "spearman_rho": 0.4582,
+    "ndcg_at_10": 0.9485,
+    "mean_squared_error": 14.22
+  },
+  "drift_monitoring": {
+    "population_stability_index": 0.0247,
+    "psi_status": "stable",
+    "ks_statistic": 0.07,
+    "ks_p_value": 0.454893,
+    "drift_detected": false
+  },
+  "status": "candidate_verified"
+}

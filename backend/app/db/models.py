@@ -35,6 +35,7 @@ class User(Base, TimestampMixin):
         String(50), default="recruiter", nullable=False
     )  # admin, recruiter, reviewer
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    api_key: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)
     daily_token_usage: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_token_reset_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, nullable=False
@@ -301,3 +302,53 @@ class BackgroundTask(Base, UserScopedMixin, TimestampMixin):
     payload_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
     result_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class McpConfirmationToken(Base, TimestampMixin):
+    """One-time confirmation token required for MCP decision tools."""
+
+    __tablename__ = "mcp_confirmation_tokens"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    token: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    action: Mapped[str] = mapped_column(String(50), default="make_decision", nullable=False)
+    target_id: Mapped[str] = mapped_column(String(36), nullable=False)  # evaluation_id
+    decision: Mapped[str] = mapped_column(String(50), nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class EvalRunRecord(Base, TimestampMixin):
+    """Persisted benchmark and evaluation runs for tracking and drift monitoring."""
+
+    __tablename__ = "eval_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    run_name: Mapped[str] = mapped_column(String(100), index=True, nullable=False)
+    model_version: Mapped[str] = mapped_column(String(50), default="1.0.0", nullable=False)
+    dataset_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    metrics_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    drift_metrics_json: Mapped[dict[str, Any]] = mapped_column(
+        JSON_TYPE, default=dict, nullable=False
+    )
+    notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
+
+
+class ModelVersionRecord(Base, TimestampMixin):
+    """Model version registry storing model parameters, status, and benchmark scores."""
+
+    __tablename__ = "model_versions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    version: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    model_type: Mapped[str] = mapped_column(String(50), default="xgboost", nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(50), default="active", nullable=False
+    )  # active, candidate, archived
+    parameters_json: Mapped[dict[str, Any]] = mapped_column(JSON_TYPE, default=dict, nullable=False)
+    benchmark_scores_json: Mapped[dict[str, Any]] = mapped_column(
+        JSON_TYPE, default=dict, nullable=False
+    )
