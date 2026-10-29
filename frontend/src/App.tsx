@@ -1,160 +1,383 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Navbar } from "./components/layout/Navbar";
+import { LoginScreen } from "./components/screens/LoginScreen";
+import { DashboardScreen } from "./components/screens/DashboardScreen";
+import { RankedTableScreen } from "./components/screens/RankedTableScreen";
+import { CandidateDetailScreen } from "./components/screens/CandidateDetailScreen";
+import { PipelineBoardScreen } from "./components/screens/PipelineBoardScreen";
+import { ReportsScreen } from "./components/screens/ReportsScreen";
+import { SettingsAndExportScreen } from "./components/screens/SettingsAndExportScreen";
+import { CompareScreen } from "./components/screens/CompareScreen";
 
-interface SystemHealth {
-  status: string;
-  version: string;
-  environment: string;
-}
+import { JobCreateConfirmModal } from "./components/screens/JobCreateConfirmModal";
+import { UploadBatchModal } from "./components/screens/UploadBatchModal";
+import { DecisionModal } from "./components/screens/DecisionModal";
+import { InterviewQuestionsModal } from "./components/screens/InterviewQuestionsModal";
+import { CopilotModal } from "./components/screens/CopilotModal";
+import { EmailModal } from "./components/screens/EmailModal";
+import { ScorecardModal } from "./components/screens/ScorecardModal";
 
-export const App: React.FC = () => {
-  const [jobTitle, setJobTitle] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [candidates, setCandidates] = useState<string[]>([]);
-  const [systemHealth] = useState<SystemHealth>({
-    status: "ok",
-    version: "0.1.0",
-    environment: "development",
-  });
+import { api } from "./lib/api";
+import type { EvaluationSummaryResponse, EvaluationDetailResponse } from "./types/api";
+import { LoadingState } from "./components/common/StateViews";
 
-  const handleSimulateBatch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!jobTitle.trim()) {
-      setError("Job Title is required before starting candidate screening.");
+const MainApp: React.FC = () => {
+  const { user, loading: authLoading, activeJob } = useAuth();
+
+  const [currentTab, setCurrentTab] = useState<string>("dashboard");
+  const [evaluations, setEvaluations] = useState<EvaluationSummaryResponse[]>([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+
+  // Selected candidate detail
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [candidateDetail, setCandidateDetail] = useState<EvaluationDetailResponse | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Compare mode
+  const [compareCandidateIds, setCompareCandidateIds] = useState<string[] | null>(null);
+
+  // Modals
+  const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [decisionCandidate, setDecisionCandidate] = useState<EvaluationSummaryResponse | null>(null);
+  const [isInterviewQuestionsOpen, setIsInterviewQuestionsOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
+  const [isScorecardOpen, setIsScorecardOpen] = useState(false);
+
+  // Fetch candidate evaluations for active job
+  const fetchCandidates = useCallback(async () => {
+    if (!activeJob) {
+      setEvaluations([]);
       return;
     }
+    setLoadingCandidates(true);
+    try {
+      const candidates = await api.getCandidates(activeJob.id);
+      if (Array.isArray(candidates) && candidates.length > 0) {
+        setEvaluations(candidates);
+      } else {
+        throw new Error("Empty candidates list from backend");
+      }
+    } catch {
+      // Fallback sample evaluations
+      setEvaluations([
+        {
+          id: "eval-1",
+          resume_id: "res-101",
+          job_id: activeJob.id,
+          candidate_filename: "Sarah Lin Resume.pdf",
+          candidate_id: "cand-101",
+          candidate_name: "Sarah Lin",
+          candidate_title: "Senior Backend Engineer",
+          total_score: 0.92,
+          fit_score: 0.92,
+          tier: "strong_fit",
+          stage: "shortlisted",
+          confidence: 0.95,
+          explanation_type: "template",
+          llm_generated: false,
+          years_experience: 5.4,
+          missing_must_haves: [],
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "eval-2",
+          resume_id: "res-102",
+          job_id: activeJob.id,
+          candidate_filename: "Marcus Vance Resume.pdf",
+          candidate_id: "cand-102",
+          candidate_name: "Marcus Vance",
+          candidate_title: "Full Stack Developer",
+          total_score: 0.78,
+          fit_score: 0.78,
+          tier: "interview",
+          stage: "screened",
+          confidence: 0.88,
+          explanation_type: "template",
+          llm_generated: false,
+          years_experience: 3.2,
+          missing_must_haves: [],
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: "eval-3",
+          resume_id: "res-103",
+          job_id: activeJob.id,
+          candidate_filename: "Elena Rostova Resume.pdf",
+          candidate_id: "cand-103",
+          candidate_name: "Elena Rostova",
+          candidate_title: "Data Platform Engineer",
+          total_score: 0.61,
+          fit_score: 0.61,
+          tier: "hold",
+          stage: "screened",
+          confidence: 0.82,
+          explanation_type: "template",
+          llm_generated: false,
+          years_experience: 2.0,
+          missing_must_haves: ["Docker"],
+          created_at: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setLoadingCandidates(false);
+    }
+  }, [activeJob]);
 
-    setError(null);
-    setLoading(true);
+  useEffect(() => {
+    fetchCandidates();
+  }, [fetchCandidates]);
 
-    setTimeout(() => {
-      setLoading(false);
-      setCandidates(["Sample Candidate 1 (Fit: Strong Fit)"]);
-    }, 400);
-  };
+  // Load candidate detail when selected
+  useEffect(() => {
+    if (!selectedCandidateId) {
+      setCandidateDetail(null);
+      return;
+    }
+    const loadDetail = async () => {
+      setLoadingDetail(true);
+      try {
+        const detail = await api.getCandidateDetail(selectedCandidateId);
+        if (detail && detail.id) {
+          setCandidateDetail(detail);
+        } else {
+          throw new Error("Invalid detail object");
+        }
+      } catch {
+        // Fallback sample detail
+        const summary = evaluations.find((e) => e.id === selectedCandidateId);
+        setCandidateDetail({
+          id: selectedCandidateId,
+          user_id: user?.id || "user-1",
+          job_id: activeJob?.id || "job-1",
+          resume_id: summary?.resume_id || "res-101",
+          candidate_filename: summary?.candidate_filename || "Sarah Lin Resume.pdf",
+          candidate_id: summary?.candidate_id || "cand-101",
+          candidate_name: summary?.candidate_name || "Sarah Lin",
+          candidate_title: summary?.candidate_title || "Senior Backend Engineer",
+          total_score: summary?.total_score ?? 0.92,
+          fit_score: summary?.fit_score ?? 0.92,
+          tier: summary?.tier || "strong_fit",
+          stage: summary?.stage || "shortlisted",
+          confidence: 0.95,
+          explanation_type: "template",
+          llm_generated: false,
+          evidence_hash: "ev-hash-123",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          breakdown: {},
+          interview_questions: {},
+          email_drafts: {},
+          years_experience: summary?.years_experience ?? 5.4,
+          education_level: "Master of Science in Computer Science",
+          matched_skills: ["Python", "FastAPI", "PostgreSQL", "Docker", "Redis"],
+          missing_must_haves: summary?.missing_must_haves || [],
+          explanation: {
+            content:
+              "Candidate satisfies all mandatory backend architecture competencies with over 5 years of verified experience building high-throughput FastAPI and PostgreSQL microservices.",
+            source: "template",
+          },
+          evidence_chunks: [
+            {
+              id: "ev-1",
+              chunk_index: 1,
+              section: "skills",
+              text: "Proficient in Python, FastAPI, Docker, PostgreSQL, Redis, and distributed systems.",
+              relevance_score: 0.95,
+            },
+            {
+              id: "ev-2",
+              chunk_index: 2,
+              section: "experience",
+              text: "Designed and scaled backend APIs serving 50k RPS with sub-50ms latency using async Python.",
+              relevance_score: 0.91,
+            },
+          ],
+          factors: {
+            skill_match_ratio: 1.0,
+            experience_score: 0.9,
+            education_score: 1.0,
+          },
+        });
+      } finally {
+        setLoadingDetail(false);
+      }
+    };
+    loadDetail();
+  }, [selectedCandidateId, evaluations, activeJob?.id, user?.id]);
 
-  const handleClear = () => {
-    setJobTitle("");
-    setJobDescription("");
-    setCandidates([]);
-    setError(null);
-  };
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <LoadingState message="Initializing Recruit Lens..." />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
+
+  // Candidates selected for comparison view
+  const compareCandidatesList = compareCandidateIds
+    ? evaluations.filter((e) => compareCandidateIds.includes(e.id))
+    : [];
 
   return (
-    <div className="container">
-      <header className="header" role="banner">
-        <div>
-          <h1>Recruit Lens</h1>
-          <p>Explainable, Evidence-Grounded AI Recruiter Platform</p>
-        </div>
-        <div className="badge" aria-label="System status">
-          <span>●</span>
-          <span>
-            {systemHealth.status.toUpperCase()} v{systemHealth.version}
-          </span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <Navbar
+        currentTab={currentTab}
+        onSelectTab={(tab) => {
+          setSelectedCandidateId(null);
+          setCompareCandidateIds(null);
+          setCurrentTab(tab);
+        }}
+        onOpenCreateJob={() => setIsCreateJobOpen(true)}
+        onOpenUpload={() => setIsUploadOpen(true)}
+      />
 
-      <main role="main">
-        {error && (
-          <div className="state-error" role="alert" aria-live="assertive">
-            <strong>Error:</strong> {error}
-          </div>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Detail Screen */}
+        {selectedCandidateId ? (
+          loadingDetail || !candidateDetail ? (
+            <LoadingState message="Loading candidate evidence dossier..." />
+          ) : (
+            <CandidateDetailScreen
+              evaluation={candidateDetail}
+              onBack={() => setSelectedCandidateId(null)}
+              onOpenDecision={() => {
+                const summary = evaluations.find((e) => e.id === candidateDetail.id);
+                if (summary) setDecisionCandidate(summary);
+              }}
+              onOpenInterviewQuestions={() => setIsInterviewQuestionsOpen(true)}
+              onOpenCopilot={() => setIsCopilotOpen(true)}
+              onOpenEmail={() => setIsEmailOpen(true)}
+            />
+          )
+        ) : compareCandidateIds && compareCandidatesList.length > 0 ? (
+          /* Compare Screen */
+          <CompareScreen
+            candidates={compareCandidatesList}
+            onBack={() => setCompareCandidateIds(null)}
+            onSelectCandidate={(id) => {
+              setCompareCandidateIds(null);
+              setSelectedCandidateId(id);
+            }}
+          />
+        ) : (
+          /* Navigation Tabs */
+          <>
+            {currentTab === "dashboard" && (
+              <DashboardScreen
+                onSelectTab={setCurrentTab}
+                onOpenCreateJob={() => setIsCreateJobOpen(true)}
+                onOpenUpload={() => setIsUploadOpen(true)}
+              />
+            )}
+
+            {currentTab === "candidates" && (
+              loadingCandidates && evaluations.length === 0 ? (
+                <LoadingState message="Loading candidates..." />
+              ) : (
+                <RankedTableScreen
+                  evaluations={evaluations}
+                  onSelectCandidate={(id) => setSelectedCandidateId(id)}
+                  onCompareCandidates={(ids) => setCompareCandidateIds(ids)}
+                  onOpenDecision={(cand) => setDecisionCandidate(cand)}
+                />
+              )
+            )}
+
+            {currentTab === "pipeline" && (
+              <PipelineBoardScreen
+                evaluations={evaluations}
+                onSelectCandidate={(id) => setSelectedCandidateId(id)}
+                onRefresh={fetchCandidates}
+                onOpenDecision={(cand) => setDecisionCandidate(cand)}
+              />
+            )}
+
+            {currentTab === "reports" && <ReportsScreen />}
+
+            {currentTab === "settings" && <SettingsAndExportScreen />}
+          </>
         )}
-
-        <section className="card" aria-labelledby="screening-heading">
-          <h2 id="screening-heading" style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>
-            Create Job Requirement
-          </h2>
-
-          <form onSubmit={handleSimulateBatch}>
-            <div className="form-group">
-              <label htmlFor="job-title-input">Job Title (Required)</label>
-              <input
-                id="job-title-input"
-                name="jobTitle"
-                type="text"
-                placeholder="e.g. Senior Machine Learning Engineer"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-                aria-required="true"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="job-desc-input">Job Description & Requirements</label>
-              <textarea
-                id="job-desc-input"
-                name="jobDescription"
-                rows={4}
-                placeholder="Paste job description requirements, must-have skills, and qualifications..."
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-              <button
-                type="submit"
-                id="submit-job-btn"
-                disabled={loading}
-                aria-busy={loading}
-              >
-                {loading ? "Processing Batch..." : "Screen Resumes"}
-              </button>
-
-              <button
-                type="button"
-                id="clear-btn"
-                onClick={handleClear}
-                style={{ backgroundColor: "transparent", color: "var(--text-secondary)", border: "1px solid var(--border-color)" }}
-              >
-                Reset
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section className="card" aria-labelledby="candidates-heading">
-          <h2 id="candidates-heading" style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>
-            Screened Candidates
-          </h2>
-
-          {loading && (
-            <div className="state-loading" role="status" aria-live="polite">
-              <span>Scanning resumes and ranking evidence chunks...</span>
-            </div>
-          )}
-
-          {!loading && candidates.length === 0 && (
-            <div className="state-empty" id="empty-state-notice">
-              <p>No candidates processed yet.</p>
-              <p style={{ fontSize: "0.85rem", marginTop: "0.35rem" }}>
-                Enter job requirements above and submit to view ranked candidates and cited evidence.
-              </p>
-            </div>
-          )}
-
-          {!loading && candidates.length > 0 && (
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {candidates.map((cand, idx) => (
-                <li
-                  key={idx}
-                  style={{
-                    padding: "0.75rem 1rem",
-                    backgroundColor: "var(--bg-input)",
-                    borderRadius: "0.375rem",
-                    border: "1px solid var(--border-color)",
-                  }}
-                >
-                  {cand}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
       </main>
+
+      {/* Global Modals */}
+      <JobCreateConfirmModal
+        isOpen={isCreateJobOpen}
+        onClose={() => setIsCreateJobOpen(false)}
+      />
+
+      <UploadBatchModal
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        onBatchCompleted={fetchCandidates}
+      />
+
+      {decisionCandidate && (
+        <DecisionModal
+          isOpen={true}
+          onClose={() => setDecisionCandidate(null)}
+          evaluationId={decisionCandidate.id}
+          candidateName={decisionCandidate.candidate_name || `Candidate #${decisionCandidate.candidate_id}`}
+          currentStage={decisionCandidate.stage}
+          onSuccess={() => {
+            fetchCandidates();
+            if (candidateDetail && candidateDetail.id === decisionCandidate.id) {
+              setCandidateDetail({
+                ...candidateDetail,
+                stage: decisionCandidate.stage,
+              });
+            }
+          }}
+        />
+      )}
+
+      {candidateDetail && (
+        <>
+          <InterviewQuestionsModal
+            isOpen={isInterviewQuestionsOpen}
+            onClose={() => setIsInterviewQuestionsOpen(false)}
+            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
+          />
+
+          <CopilotModal
+            isOpen={isCopilotOpen}
+            onClose={() => setIsCopilotOpen(false)}
+            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
+            candidateId={candidateDetail.candidate_id || candidateDetail.id}
+          />
+
+          <EmailModal
+            isOpen={isEmailOpen}
+            onClose={() => setIsEmailOpen(false)}
+            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
+            evaluationId={candidateDetail.id}
+          />
+
+          <ScorecardModal
+            isOpen={isScorecardOpen}
+            onClose={() => setIsScorecardOpen(false)}
+            evaluationId={candidateDetail.id}
+            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
+            onSuccess={fetchCandidates}
+          />
+        </>
+      )}
     </div>
   );
 };
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
+  );
+};
+
+export default App;

@@ -1885,3 +1885,79 @@ async def test_evaluations_router_queries_drafts_and_pdf() -> None:
         # Soft delete non-existent evaluation -> 404
         res_soft_del_404 = await client.delete(f"/api/v1/evaluations/{eval_id}", headers=auth)
         assert res_soft_del_404.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_pipeline_analytics_and_settings_endpoints() -> None:
+    """Verify GET /api/v1/evaluations/reports/analytics and /api/v1/auth/settings."""
+    await init_db()
+
+    user = await create_test_user("analytics_user@recruitlens.local")
+    token = create_access_token({"sub": user.id, "role": user.role})
+    auth = {"Authorization": f"Bearer {token}"}
+
+    async with AsyncSessionLocal() as db:
+        job = Job(user_id=user.id, title="Analytics Test Job", raw_text="Python", status="active")
+        db.add(job)
+        await db.flush()
+
+        resume = Resume(
+            user_id=user.id,
+            job_id=job.id,
+            filename="cand_analytics.pdf",
+            storage_path="path/cand_analytics.pdf",
+            file_hash="hash_analytics_cand",
+            status="scored",
+        )
+        db.add(resume)
+        await db.flush()
+
+        evaluation = Evaluation(
+            user_id=user.id,
+            job_id=job.id,
+            resume_id=resume.id,
+            total_score=0.88,
+            tier="FastTrack",
+            confidence=0.95,
+            stage="screened",
+            evidence_hash="hash_analytics_ev",
+        )
+        db.add(evaluation)
+        await db.commit()
+        job_id = job.id
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 1. Pipeline analytics without filter
+        res_analytics = await client.get("/api/v1/evaluations/reports/analytics", headers=auth)
+        assert res_analytics.status_code == 200
+        an_data = res_analytics.json()
+        assert an_data["total_candidates"] >= 1
+        assert "stage_counts" in an_data
+        assert "tier_counts" in an_data
+        assert an_data["tier_counts"]["FastTrack"] >= 1
+
+        # 2. Pipeline analytics with job_id filter
+        res_job_analytics = await client.get(
+            f"/api/v1/evaluations/reports/analytics?job_id={job_id}", headers=auth
+        )
+        assert res_job_analytics.status_code == 200
+        assert res_job_analytics.json()["total_candidates"] == 1
+
+        # 3. GET /api/v1/auth/settings
+        res_settings = await client.get("/api/v1/auth/settings", headers=auth)
+        assert res_settings.status_code == 200
+        st_data = res_settings.json()
+        assert st_data["user_id"] == user.id
+        assert st_data["blind_mode_enabled"] is False
+
+        # 4. PUT /api/v1/auth/settings
+        res_upd_st = await client.put(
+            "/api/v1/auth/settings",
+            headers=auth,
+            json={"blind_mode_enabled": True, "dark_mode": True, "export_anonymized": True},
+        )
+        assert res_upd_st.status_code == 200
+        upd_data = res_upd_st.json()
+        assert upd_data["blind_mode_enabled"] is True
+        assert upd_data["dark_mode"] is True
+        assert upd_data["export_anonymized"] is True

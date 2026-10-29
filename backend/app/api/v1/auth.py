@@ -1,11 +1,12 @@
 """Authentication API endpoints: login, token refresh with rotation, and user profile."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.schemas import UserSettingsResponse, UserSettingsUpdate
 from app.auth.dependencies import get_current_user
 from app.auth.schemas import (
     RefreshTokenRequest,
@@ -201,3 +202,49 @@ async def get_current_user_profile(
 ) -> UserResponse:
     """Retrieve profile and token quota of currently authenticated recruiter."""
     return UserResponse.model_validate(current_user)
+
+
+_USER_SETTINGS: dict[str, dict[str, Any]] = {}
+
+
+@router.get("/settings", response_model=UserSettingsResponse)
+async def get_user_settings(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> UserSettingsResponse:
+    """Retrieve recruiter UI preferences, blind mode setting, and export options."""
+    stored = _USER_SETTINGS.get(current_user.id, {})
+    return UserSettingsResponse(
+        user_id=current_user.id,
+        email=current_user.email,
+        role=current_user.role,
+        blind_mode_enabled=stored.get("blind_mode_enabled", False),
+        dark_mode=stored.get("dark_mode", False),
+        export_anonymized=stored.get("export_anonymized", False),
+    )
+
+
+@router.put("/settings", response_model=UserSettingsResponse)
+async def update_user_settings(
+    payload: UserSettingsUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> UserSettingsResponse:
+    """Update recruiter UI preferences, blind mode setting, and export options."""
+    stored = _USER_SETTINGS.setdefault(
+        current_user.id,
+        {"blind_mode_enabled": False, "dark_mode": False, "export_anonymized": False},
+    )
+    if payload.blind_mode_enabled is not None:
+        stored["blind_mode_enabled"] = payload.blind_mode_enabled
+    if payload.dark_mode is not None:
+        stored["dark_mode"] = payload.dark_mode
+    if payload.export_anonymized is not None:
+        stored["export_anonymized"] = payload.export_anonymized
+
+    return UserSettingsResponse(
+        user_id=current_user.id,
+        email=current_user.email,
+        role=current_user.role,
+        blind_mode_enabled=stored["blind_mode_enabled"],
+        dark_mode=stored["dark_mode"],
+        export_anonymized=stored["export_anonymized"],
+    )

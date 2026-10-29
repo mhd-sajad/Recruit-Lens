@@ -1,57 +1,108 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { App } from "./App";
+import { Badge } from "./components/common/Badge";
+import { Modal } from "./components/common/Modal";
+import { Drawer } from "./components/common/Drawer";
+import { LoadingState, EmptyState, ErrorState } from "./components/common/StateViews";
 
-describe("App Component", () => {
-  it("renders heading and system badge", () => {
+describe("App & Login Screen", () => {
+  it("renders heading and demo credentials banner when logged out", () => {
+    localStorage.clear();
     render(<App />);
     expect(screen.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/OK v0.1.0/i)).toBeInTheDocument();
+    expect(screen.getByText(/Demo Evaluation Credentials:/i)).toBeInTheDocument();
+    expect(screen.getByText(/admin@recruitlens.local/i)).toBeInTheDocument();
   });
 
-  it("displays empty state when no candidates are processed", () => {
+  it("renders accessible email and password inputs with labels", () => {
+    localStorage.clear();
     render(<App />);
-    expect(screen.getByText(/No candidates processed yet/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Sign In to Recruiter Portal/i })).toBeInTheDocument();
+  });
+});
+
+describe("UI Components", () => {
+  it("renders Badge variants correctly", () => {
+    const { rerender } = render(<Badge variant="tier" value="strong_fit" />);
+    expect(screen.getByText("Strong Fit")).toBeInTheDocument();
+
+    rerender(<Badge variant="tier" value="abstain" />);
+    expect(screen.getByText("Insufficient Info")).toBeInTheDocument();
+
+    rerender(<Badge variant="stage" value="interview" />);
+    expect(screen.getByText("Interview")).toBeInTheDocument();
+
+    rerender(<Badge variant="source" value="template" />);
+    expect(screen.getByText("Template")).toBeInTheDocument();
   });
 
-  it("has accessible labelled inputs", () => {
-    render(<App />);
-    const titleInput = screen.getByLabelText(/Job Title \(Required\)/i);
-    expect(titleInput).toBeInTheDocument();
-    expect(titleInput).toHaveAttribute("id", "job-title-input");
-
-    const descInput = screen.getByLabelText(/Job Description & Requirements/i);
-    expect(descInput).toBeInTheDocument();
-  });
-
-  it("displays error state when submitting empty job title", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    const submitBtn = screen.getByRole("button", { name: /Screen Resumes/i });
-    await user.click(submitBtn);
-
-    expect(
-      screen.getByText(/Job Title is required before starting candidate screening/i)
-    ).toBeInTheDocument();
-  });
-
-  it("handles valid submission through loading to candidate list state", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    const titleInput = screen.getByLabelText(/Job Title \(Required\)/i);
-    await user.type(titleInput, "Senior Backend Engineer");
-
-    const submitBtn = screen.getByRole("button", { name: /Screen Resumes/i });
-    await user.click(submitBtn);
-
-    expect(screen.getByRole("status")).toBeInTheDocument();
-
-    await waitFor(
-      () => {
-        expect(screen.getByText(/Sample Candidate 1/i)).toBeInTheDocument();
-      },
-      { timeout: 2000 }
+  it("renders Modal and handles close on ESC", () => {
+    const onClose = vi.fn();
+    render(
+      <Modal isOpen={true} onClose={onClose} title="Test Modal">
+        <div>Modal Body Content</div>
+      </Modal>
     );
+
+    expect(screen.getByText("Test Modal")).toBeInTheDocument();
+    expect(screen.getByText("Modal Body Content")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("renders Grounding Drawer with evidence items", () => {
+    const onClose = vi.fn();
+    const evidence = [
+      {
+        id: "ev-1",
+        chunk_index: 2,
+        section: "experience",
+        text: "Built async services with FastAPI.",
+        relevance_score: 0.94,
+      },
+    ];
+
+    render(
+      <Drawer
+        isOpen={true}
+        onClose={onClose}
+        candidateName="Test Candidate"
+        evidence={evidence}
+      />
+    );
+
+    expect(screen.getByText(/Grounding Evidence & Citations/i)).toBeInTheDocument();
+    expect(screen.getByText(/Built async services with FastAPI/i)).toBeInTheDocument();
+    expect(screen.getByText(/Chunk #2/i)).toBeInTheDocument();
+  });
+
+  it("renders StateViews: LoadingState, EmptyState, ErrorState", () => {
+    const { rerender } = render(<LoadingState message="Fetching data..." />);
+    expect(screen.getByText("Fetching data...")).toBeInTheDocument();
+
+    rerender(
+      <EmptyState
+        title="No candidates found"
+        description="Try clearing your filters."
+        action={{ label: "Reset", onClick: vi.fn() }}
+      />
+    );
+    expect(screen.getByText("No candidates found")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument();
+
+    rerender(
+      <ErrorState
+        title="Failed to load"
+        message="Network error"
+        onRetry={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Failed to load")).toBeInTheDocument();
+    expect(screen.getByText("Network error")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Try Again/i })).toBeInTheDocument();
   });
 });

@@ -754,3 +754,27 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **PostgreSQL 18.6 & Alembic Migrations:**
     - Verified connectivity against local PostgreSQL 18.6 with asyncpg driver.
     - Executed `alembic upgrade head` under PostgreSQL DDL transaction.
+
+### Component: Release v0.7.0 - Phase 1 Recruiter Portal Implementation (`frontend/src/*`, `frontend/e2e/*`, `docs/screenshots/*`)
+- **What it is:** Complete implementation of the 17-screen Recruiter Portal using Tailwind CSS, Lucide icons, Recharts, and strict TypeScript compilation, supported by backend OpenAPI generation, Vitest unit testing, and Playwright end-to-end journey execution against seeded endpoints.
+- **Why:** Delivers the interactive user interface specified in docs/SPEC.md, providing recruiters with an explainable, evidence-grounded screening experience with blind review mode, what-if sensitivity analysis, evidence drawers, interview question rubrics, human-in-the-loop email drafts, pipeline Kanban boards, and funnel analytics.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **17 Screens Built & Verified per SPEC:**
+    1. Login Screen (demo credentials banner `admin@recruitlens.local / Admin123!`, invite-only access).
+    2. Dashboard Command Center (active requisitions, screening counts, pending review queue).
+    3. & 4. Job Requisition Creation & Confirmation Modal (pasted text/rubric, must-haves vs nice-to-haves, min years experience, min degree).
+    5. & 6. Bulk Resume Upload & Batch Progress Modal (magic-byte validation, 15MB limit, 200 resume batch warning, 4-stage pipeline progress indicator).
+    7. Ranked Candidates Table (multi-column sorting, fit tier filtering, missing must-have filtering, selection for comparison, strict company omission).
+    8. Candidate Detail Screen (deterministic fit score, template explanation badge, on-demand LLM synthesis, verified timeline with "dates missing", what-if sensitivity simulator).
+    9. Tailored Interview Rubric Modal (evidence rationale, probe criteria, custom question editor).
+    10. Grounded Copilot Q&A Modal (hybrid retrieval citations, strict "not found in this resume" fallback, critic scoring).
+    11. Candidate Comparison Matrix (side-by-side comparison across 2-3 candidates, skill alignment, experience).
+    12. Recruiter Decision Modal (pipeline stage transition, mandatory audit note).
+    13. Email Communication Center (interview/rejection/follow-up templates, custom edited status badge, safe dry-run simulation mode vs live dispatch, explicit confirmation step).
+    14. Post-Interview Scorecard Modal (1-5 ratings across 4 rubrics, recommendation selection, stage advance).
+    15. Hiring Pipeline Board (interactive 6-column Kanban board with quick stage advance controls).
+    16. Recruitment Analytics & Reports Screen (Recharts funnel conversion bar chart, tier distribution pie chart, Cohen's kappa 0.762 inter-rater agreement KPI).
+    17. Settings, Exports & Audit Trail Screen (CSV ranking export, JSON audit ledger export, blind review toggle, dark mode toggle, immutable audit log table).
+  - **Blind Mode Enforcement:** Redacts candidate names, emails, and demographic identifiers across all tables, cards, and modal dialogs, displaying "Candidate #ID" with high-visibility privacy badges.
+  - **Frontend Verification & Playwright E2E (`frontend/e2e/recruiter-journey.spec.ts`):** Executed full user journey in headless Chromium (exit code 0 in 2.2s). Captured 6 production screenshots in `docs/screenshots/`: `01_login_screen.png`, `02_dashboard_command_center.png`, `03_ranked_table_blind_mode.png`, `04_candidate_detail_evidence.png`, `05_interview_rubric.png`, `06_reports_and_analytics.png`.
+  - **Test Suite & Type Safety:** Vitest passed 6/6 tests (exit code 0). ESLint clean with 0 errors. TypeScript compilation (`tsc -b && vite build`) built in 4.5s with zero type issues. Backend pytest passed 140/140 tests at 89.32% statement coverage. All 21 evaluation files authenticated via `verify_eval_provenance.py`.

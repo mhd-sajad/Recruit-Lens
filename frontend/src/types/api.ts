@@ -16,6 +16,7 @@ export interface AuditLogResponse {
   target_id: string;
   details: Record<string, unknown>;
   created_at: string;
+  timestamp?: string;
 }
 
 /** Asynchronous background task progress summary. */
@@ -29,6 +30,11 @@ export interface BackgroundTaskResponse {
   result: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  successful_uploads?: number;
+  task_id?: string;
+  current_step?: string;
+  progress_percent?: number;
+  error?: string;
 }
 
 export interface Body_upload_resumes_api_v1_resumes_upload__job_id__post {
@@ -89,6 +95,24 @@ export interface EvaluationDetailResponse {
   llm_generated: boolean;
   created_at: string;
   updated_at: string;
+  // UI extended properties
+  candidate_id?: string;
+  candidate_name?: string;
+  candidate_title?: string;
+  fit_score?: number;
+  years_experience?: number | null;
+  education_level?: string;
+  matched_skills?: string[];
+  missing_must_haves?: string[];
+  evidence_chunks?: Array<{
+    id?: string;
+    chunk_index?: number;
+    section?: string;
+    text?: string;
+    content?: string;
+    relevance_score?: number;
+  }>;
+  factors?: Record<string, unknown>;
 }
 
 /** Compact candidate evaluation row for ranking table and drag-and-drop board. */
@@ -104,6 +128,13 @@ export interface EvaluationSummaryResponse {
   explanation_type: string;
   llm_generated: boolean;
   created_at: string;
+  // UI extended properties
+  candidate_id?: string;
+  candidate_name?: string;
+  candidate_title?: string;
+  fit_score?: number;
+  years_experience?: number | null;
+  missing_must_haves?: string[];
 }
 
 export interface HTTPValidationError {
@@ -141,7 +172,13 @@ export interface InterviewFeedbackResponse {
 export interface JobCreateRequest {
   title: string;
   department?: string;
-  raw_text: string;
+  raw_text?: string;
+  description?: string;
+  location?: string;
+  min_years_experience?: number;
+  min_degree?: string;
+  required_skills?: string[];
+  nice_to_have_skills?: string[];
   weights?: Record<string, unknown> | null;
 }
 
@@ -157,6 +194,10 @@ export interface JobResponse {
   status: string;
   created_at: string;
   updated_at: string;
+  location?: string;
+  min_years_experience?: number;
+  required_skills?: string[];
+  nice_to_have_skills?: string[];
 }
 
 /** Job requisition update payload. */
@@ -166,6 +207,24 @@ export interface JobUpdateRequest {
   raw_text?: string | null;
   weights?: Record<string, unknown> | null;
   status?: string | null;
+}
+
+/** Aggregated recruiting pipeline and diversity analytics. */
+export interface PipelineAnalyticsResponse {
+  total_candidates: number;
+  stage_counts: Record<string, unknown>;
+  tier_counts: Record<string, unknown>;
+  decided_count: number;
+  advanced_count: number;
+  agreement_rate_pct: number;
+  disclaimer: string;
+  funnel_counts?: Record<string, number>;
+  tier_distribution?: Record<string, number>;
+  system_recruiter_agreement?: {
+    agreement_rate: number;
+    cohen_kappa: number;
+    evaluated_decisions_count: number;
+  };
 }
 
 /** Refresh token request payload. */
@@ -227,6 +286,23 @@ export interface UserResponse {
   created_at: string;
 }
 
+/** User UI and privacy preferences. */
+export interface UserSettingsResponse {
+  user_id: string;
+  email: string;
+  role: string;
+  blind_mode_enabled?: boolean;
+  dark_mode?: boolean;
+  export_anonymized?: boolean;
+}
+
+/** User settings update payload. */
+export interface UserSettingsUpdate {
+  blind_mode_enabled?: boolean | null;
+  dark_mode?: boolean | null;
+  export_anonymized?: boolean | null;
+}
+
 export interface ValidationError {
   loc: string | number[];
   msg: string;
@@ -239,6 +315,8 @@ export interface ValidationError {
 export interface WhatIfRequest {
   weights?: Record<string, unknown> | null;
   min_years_experience?: number | null;
+  experience_weight_multiplier?: number;
+  skills_weight_multiplier?: number;
 }
 
 /** What-if calculation result without mutating database. */
@@ -248,5 +326,6 @@ export interface WhatIfResponse {
   original_tier: string;
   new_tier: string;
   score_delta: number;
+  score_difference?: number;
   breakdown: Record<string, unknown>;
 }

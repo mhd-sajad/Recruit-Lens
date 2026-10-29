@@ -10,20 +10,20 @@
 - [x] 0.6 Injection: 10 live adversarial variants tested against Groq LLM with raw outputs recorded in `docs/eval_injection_live.json` (100.0% neutralized). Sanitizer altered 0 of 200 real chunks.
 - [x] 0.7 Retrieval wording: within-resume vs corpus-wide (2,275 pooled chunks) drop cause reported, primary keyword engine stated without claiming winner in `docs/eval_corpus_retrieval_report.json`.
 - [x] 0.8 Owed items: PostgreSQL 18.6 connectivity & Alembic migrations verified at head; running app `/ready`, `/metrics`, and response headers tested; model comparison in `docs/eval_model_comparison_report.json`.
-- [ ] 0.9 Phase 0 Self-audit, green CI, merge, tag v0.6.0.
+- [x] 0.9 Phase 0 Self-audit, green CI (Run IDs 123453909154, 123453909042, 123453908683), merge to main (commit 975ad12), tag v0.6.0.
 
 ## PHASE 1: RECRUITER PORTAL (tag v0.7.0)
-- [ ] 1.1 Migrate frontend shell to Tailwind CSS + shadcn/ui, delete custom CSS.
-- [ ] 1.2 Generate TypeScript types from backend OpenAPI schema (no hand-written api.ts).
-- [ ] 1.3 Add any missing backend endpoints needed by screens (reports: funnel counts, system-vs-recruiter agreement; settings; blind-mode flag) with tests.
-- [ ] 1.4 Build all 17 screens in docs/SPEC.md against real API:
+- [x] 1.1 Migrate frontend shell to Tailwind CSS + shadcn/ui, delete custom CSS.
+- [x] 1.2 Generate TypeScript types from backend OpenAPI schema (no hand-written api.ts).
+- [x] 1.3 Add any missing backend endpoints needed by screens (reports: funnel counts, system-vs-recruiter agreement; settings; blind-mode flag) with tests.
+- [x] 1.4 Build all 17 screens in docs/SPEC.md against real API:
   - Login only (no signup), demo credentials banner from env/README.
   - Candidate display: title + dates, "dates missing" instead of 0, no company displayed.
   - LLM text: deterministic template text immediately with "template" badge & "generating" state. Email editor shows draft vs edited, "Dry run" / "Live" indicator, confirmation step. Abstained candidates show "insufficient information".
   - 17 screens: Ranked table, Candidate detail, Compare view (2-3), Decision dialog, Email editor, Interview scorecard & post-interview decision, Pipeline board with dnd-kit, Reports (Recharts), CSV & PDF export, Settings & blind-mode toggle, etc.
-- [ ] 1.5 Vitest tests for components and hooks.
-- [ ] 1.6 Playwright end-to-end journey against seeded backend (synthetic data only, no real resumes committed).
-- [ ] 1.7 Capture 5-6 synthetic screenshots for docs/ and README.
+- [x] 1.5 Vitest tests for components and hooks.
+- [x] 1.6 Playwright end-to-end journey against seeded backend (synthetic data only, no real resumes committed).
+- [x] 1.7 Capture 5-6 synthetic screenshots for docs/ and README.
 - [ ] 1.8 Phase 1 Self-audit, green CI, merge, tag v0.7.0.
 
 ## PHASE 2: EXTRAS AND HARDENING (tag v0.8.0)

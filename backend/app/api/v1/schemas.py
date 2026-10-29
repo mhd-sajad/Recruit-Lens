@@ -232,3 +232,34 @@ class BackgroundTaskResponse(BaseModel):
     result: dict[str, Any] = Field(validation_alias="result_json", serialization_alias="result")
     created_at: datetime
     updated_at: datetime
+
+
+class PipelineAnalyticsResponse(BaseModel):
+    """Aggregated recruiting pipeline and diversity analytics."""
+
+    total_candidates: int
+    stage_counts: dict[str, int]
+    tier_counts: dict[str, int]
+    decided_count: int
+    advanced_count: int
+    agreement_rate_pct: float
+    disclaimer: str
+
+
+class UserSettingsResponse(BaseModel):
+    """User UI and privacy preferences."""
+
+    user_id: str
+    email: str
+    role: str
+    blind_mode_enabled: bool = False
+    dark_mode: bool = False
+    export_anonymized: bool = False
+
+
+class UserSettingsUpdate(BaseModel):
+    """User settings update payload."""
+
+    blind_mode_enabled: bool | None = None
+    dark_mode: bool | None = None
+    export_anonymized: bool | None = None

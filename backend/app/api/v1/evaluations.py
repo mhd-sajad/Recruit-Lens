@@ -21,6 +21,7 @@ from app.api.v1.schemas import (
     EvaluationSummaryResponse,
     InterviewFeedbackCreate,
     InterviewFeedbackResponse,
+    PipelineAnalyticsResponse,
     StageTransitionRequest,
     StageTransitionResponse,
     WhatIfRequest,
@@ -113,6 +114,78 @@ async def list_evaluations_for_job(
         )
         for ev in evaluations
     ]
+
+
+@router.get("/reports/analytics", response_model=PipelineAnalyticsResponse)
+async def get_pipeline_analytics(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    job_id: str | None = Query(None, description="Optional job ID to filter analytics"),
+) -> PipelineAnalyticsResponse:
+    """Aggregate recruiting pipeline funnel, fit tier distribution, and recruiter agreement analytics."""
+    query = select(Evaluation).where(Evaluation.user_id == current_user.id)
+    if job_id:
+        query = query.where(Evaluation.job_id == job_id)
+
+    result = await db.execute(query)
+    evals = result.scalars().all()
+
+    stage_counts: dict[str, int] = {
+        "screened": 0,
+        "shortlisted": 0,
+        "interview_scheduled": 0,
+        "interviewed": 0,
+        "offer_extended": 0,
+        "hired": 0,
+        "held": 0,
+        "rejected": 0,
+    }
+    tier_counts: dict[str, int] = {
+        "FastTrack": 0,
+        "Review": 0,
+        "Hold": 0,
+        "Reject": 0,
+        "Abstain": 0,
+    }
+
+    advanced_stages = {
+        "shortlisted",
+        "interview_scheduled",
+        "interviewed",
+        "offer_extended",
+        "hired",
+    }
+    decided_count = 0
+    advanced_count = 0
+    agreement_count = 0
+
+    for ev in evals:
+        s = ev.stage or "screened"
+        t = ev.tier or "Review"
+        stage_counts[s] = stage_counts.get(s, 0) + 1
+        tier_counts[t] = tier_counts.get(t, 0) + 1
+
+        if s != "screened":
+            decided_count += 1
+            is_advanced = s in advanced_stages
+            if is_advanced:
+                advanced_count += 1
+            if (t == "FastTrack" and is_advanced) or (t in ("Hold", "Reject") and not is_advanced):
+                agreement_count += 1
+
+    agreement_rate_pct = (
+        round((agreement_count / max(1, decided_count)) * 100.0, 1) if decided_count > 0 else 100.0
+    )
+
+    return PipelineAnalyticsResponse(
+        total_candidates=len(evals),
+        stage_counts=stage_counts,
+        tier_counts=tier_counts,
+        decided_count=decided_count,
+        advanced_count=advanced_count,
+        agreement_rate_pct=agreement_rate_pct,
+        disclaimer="Internal pipeline analytics reflect agreement between deterministic tier rankings and recruiter candidate workflow stage transitions.",
+    )
 
 
 @router.get("/{evaluation_id}", response_model=EvaluationDetailResponse)
