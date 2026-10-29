@@ -36,6 +36,12 @@ The following operating principles must be followed strictly:
 - Merge to main only after CI is green on the branch. Tag only after CI is green on main for that exact commit. Report run IDs and conclusions, including failures and reruns. A tag made on an unverified commit is not moved: make a new tag on a verified commit and record it.
 - Never edit a test to make it pass without showing the diff and the reason in the report. Never lower a quality bar to pass a test.
 
+14. **AUDIT & SPEC INTEGRITY RULES.**
+- A metric must measure the thing it names. A number computed from the reviewer's labels, or graded by your own keyword lists, is not a measurement of the parser. Label self-graded numbers "self-graded" and never put them in a pass/fail table.
+- Every figure in a report comes from a saved file with file:key, and make_report.py exits non-zero on any missing key.
+- Test counts come from saved pytest output (junit xml), never from coverage.json.
+- No feature or test without a requirement in docs/SPEC.md. Do not add webhooks or roles the SPEC does not have.
+
 ## Decision Principles
 - Priority order: correctness and safety, then explainability, then simplicity, then speed, then polish.
 - Prefer boring, proven, light dependencies. Free-tier hosting means small RAM and ephemeral disk.
