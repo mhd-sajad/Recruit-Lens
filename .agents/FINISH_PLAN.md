@@ -34,14 +34,14 @@
 - [x] 2.5 Security pass: pip-audit, npm audit, OWASP checklist fixes (authz, injection, SSRF, upload, CSV injection, rate limits, secrets, no PII logs), list accepted risks.
 - [x] 2.6 Resilience tests: LLM down, quota exhausted, DB lock, worker killed mid-batch, corrupt PDF, 100-page PDF, duplicate uploads.
 - [x] 2.7 Performance pass against bars (300s, 400MB for 200 resumes) with real timings.
-- [ ] 2.8 Phase 2 Self-audit, green CI, merge, tag v0.8.0.
+- [x] 2.8 Phase 2 Self-audit, green CI (run 40888033739), merge, tag v0.8.0.
 
 ## PHASE 3: DEPLOY, DOCUMENT, RELEASE (tag v1.0.0)
-- [ ] 3.1 Verify free-tier limits (Hugging Face Spaces, Render, Vercel, Cloudflare Pages, Supabase). Choose backend host, record limits/sleep/cold-start in PROJECT_EXPLAINED.md.
-- [ ] 3.2 Multi-stage Dockerfile with ONNX model baked in, start migrations, health check, non-root user. Frontend deploy config. CORS locked, HTTPS only, rate limits tuned.
-- [ ] 3.3 Demo workspace with synthetic data only and demo login in README. Groq notice.
-- [ ] 3.4 Final verification: fresh-clone quickstart, CI green, gitleaks across full history, Playwright against deployed/local URLs, DEPLOY_STEPS.md if account action needed, make_report.py final run.
-- [ ] 3.5 README: mermaid diagram, screenshots, quickstart, make_report table, Limitations section, MIT licence, O*NET CC BY 4.0 attribution.
-- [ ] 3.6 Finalize PROJECT_EXPLAINED.md (5-minute demo, how to explain).
-- [ ] 3.7 Generate docs/FINAL_REPORT.md via script.
+- [x] 3.1 Verify free-tier limits (Hugging Face Spaces, Render, Vercel, Cloudflare Pages, Supabase). Choose backend host, record limits/sleep/cold-start in PROJECT_EXPLAINED.md.
+- [x] 3.2 Multi-stage Dockerfile with ONNX model baked in, start migrations, health check, non-root user. Frontend deploy config. CORS locked, HTTPS only, rate limits tuned.
+- [x] 3.3 Demo workspace with synthetic data only and demo login in README. Groq notice.
+- [x] 3.4 Final verification: fresh-clone quickstart, CI green, gitleaks across full history, Playwright against deployed/local URLs, DEPLOY_STEPS.md if account action needed, make_report.py final run.
+- [x] 3.5 README: mermaid diagram, screenshots, quickstart, make_report table, Limitations section, MIT licence, O*NET CC BY 4.0 attribution.
+- [x] 3.6 Finalize PROJECT_EXPLAINED.md (5-minute demo, how to explain).
+- [x] 3.7 Generate docs/FINAL_REPORT.md via script.
 - [ ] 3.8 Tag v1.0.0 after green CI on main.

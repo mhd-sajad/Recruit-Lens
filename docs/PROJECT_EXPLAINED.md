@@ -790,3 +790,53 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Security Pass & Dependency Auditing (`docs/SECURITY.md`):** `pip-audit 2.10.1` passed with **0 known vulnerabilities**. Formula-injection sanitization (`sanitize_csv_cell`) prevents spreadsheet macro execution. Documented OWASP Top 10 mitigations and accepted dev-only test runner dependencies in `docs/SECURITY.md`.
   - **Comprehensive Resilience Test Suite (`tests/test_resilience.py`):** 7 automated tests passed covering corrupt PDF upload rejection (magic bytes), 100-page PDF document parsing, blind mode PII stripping, LLM downtime fallback, copilot "not found" safety, MCP decision token enforcement, and statistical drift metrics.
   - **Full Backend Pytest Suite:** **147 passed tests**, 1 skipped in 274.86s with **88.08% overall statement coverage** (exceeding the 80% bar). All 21 evaluation files authenticated via `scripts/verify_eval_provenance.py`.
+
+### Component: Release v1.0.0 - Production Launch & Final Release Artifacts (`Dockerfile`, `docker-compose.yml`, `docs/FINAL_REPORT.md`, `README.md`, `docs/DEPLOY_STEPS.md`, `scripts/seed_demo_workspace.py`)
+- **What it is:** Multi-stage production containerization, complete deployment runbook, verified synthetic demo workspace, script-generated comprehensive audit report, and final v1.0.0 production release of Recruit Lens.
+- **Why:** Fulfills all Phase 3 requirements of docs/SPEC.md and .agents/FINISH_PLAN.md, ensuring seamless fresh-clone onboarding, free-tier hosting compatibility, and mathematical verification across all 14 project quality bars.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Multi-Stage Dockerfile & Local Production (`Dockerfile`, `docker-compose.yml`):** Implements 3-stage build (Node 20 frontend compilation, uv Python 3.11 environment caching, slim Debian runtime with non-root UID 10001 user, automated Alembic startup migrations, and container health checks).
+  - **Synthetic Demo Workspace (`scripts/seed_demo_workspace.py`):** Seeds demo admin recruiter credentials (`admin@recruitlens.local / Admin123!`), 2 technical requisitions, and 4 evaluated candidates spanning FastTrack, Review, Hold, and Reject tiers with zero candidate PII.
+  - **Free-Tier Limits Fit (`docs/DEPLOY_STEPS.md`):** Benchmarked against Hugging Face Spaces (16 GB RAM CPU tier), Render (512 MB Web Service), Supabase (500 MB PostgreSQL), and Cloudflare Pages (instant edge static hosting). Proved process tree peak RSS stays under 350 MB.
+  - **Final Audit Report Generation (`scripts/generate_final_report.py`, `docs/FINAL_REPORT.md`):** Generated strictly from saved disk artifacts citing explicit `file:key` metadata. Confirmed 140/140 passed tests, 89.21% coverage, 289.16s/143.81s 200-resume benchmark, 0.0% holdout fragments, 96.3% recoverable titles, 100% prompt injection neutralization, and 0 vulnerabilities via `pip-audit 2.10.1`.
+  - **Production README & System Architecture (`README.md`):** Complete system flowchart in Mermaid, 6 embedded high-resolution screenshots, quickstart commands, demo credentials, and O*NET CC BY 4.0 licensing attribution.
+
+---
+
+## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide
+
+When presenting or demoing Recruit Lens to engineering leaders, recruiters, or compliance officers, follow this structured 5-minute walkthrough:
+
+### Minute 1: The Core Problem & Architectural Philosophy
+- **The Problem:** Modern AI recruiting tools treat LLMs as black-box judges. They feed raw resumes into a prompt, ask the model to rate the candidate from 1 to 100, and hallucinate biased, ungrounded verdicts without recourse.
+- **The Solution:** Recruit Lens splits the recruitment pipeline into two strict boundaries:
+  1. *Deterministic Mathematical Scoring:* Monotonic 12-feature XGBoost regressor that calculates transparent feature match scores from verified extracted entities. An LLM is **never** permitted to calculate scores or assign tiers.
+  2. *Evidence-Grounded Agent Synthesis:* LLMs are employed solely to draft human-readable explanations, interview rubrics, and email templates—and every single claim **must** cite retrieved resume excerpts `[c_01]` and pass through an automated Self-RAG grounding critic.
+
+### Minute 2: Bulk Upload, Gate Recall & Memory Footprint
+- **Action:** Open the dashboard and demonstrate batch uploading 200 resumes.
+- **Key Talking Points:**
+  - Fast single-pass layout parsing with magic-byte PDF validation and 15 MB file size guards.
+  - Sequential parsing with heap memory trimming (`malloc_trim(0)`) and isolated ONNX embeddings (`models/minilm-l6-v2-quantized.onnx`) keeps total process tree memory under **350 MB RSS** (well below the 400 MB free-tier limit).
+  - The 200-resume pipeline finishes in **2.4 minutes** warm (under the 5-minute SPEC limit).
+
+### Minute 3: Explainable Scoring & Candidate Dossiers
+- **Action:** Click on a FastTrack candidate and show the Ranked Candidates table.
+- **Key Talking Points:**
+  - Notice the **strict omission of employer company names** from all tables and features to eliminate prestige bias.
+  - Open the candidate dossier: show the score breakdown gauge (Skills, Experience, Education, Semantic).
+  - Highlight the verified career timeline with explicit `"dates missing"` indicators instead of arbitrary 0-year assumptions.
+  - Point to the evidence tags: every bullet point links directly to its underlying resume chunk.
+
+### Minute 4: Blind Review Mode & What-If Sensitivity Simulator
+- **Action:** Toggle **Blind Review Mode** in settings, then open the What-If Simulator.
+- **Key Talking Points:**
+  - Blind mode automatically strips candidate names, emails, phone numbers, street addresses, dates of birth, and universities before review and before any LLM prompt submission.
+  - The **What-If Sensitivity Simulator** lets recruiters test counterfactual scenarios (e.g., *"What if this candidate had 2 more years of experience or knew Kafka?"*) to understand the model's decision boundaries and prevent algorithmic bias.
+
+### Minute 5: Human-Gated Copilot & Protected MCP Agent
+- **Action:** Ask the Grounded Copilot a question, then show the MCP server architecture.
+- **Key Talking Points:**
+  - Grounded Copilot answers recruiter questions using hybrid candidate chunk retrieval. If a skill or credential is absent, it strictly outputs *"Information not found in this resume."*
+  - The official **Python SDK MCP Server** allows external AI assistants (e.g. Claude Desktop) to inspect jobs and candidates read-only.
+  - Recruitment decisions (`make_decision`) strictly mandate a single-use human confirmation token generated from the Web UI—preventing autonomous agents from advancing or rejecting candidates without human sign-off.

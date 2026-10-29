@@ -5,12 +5,14 @@ import resource
 import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -175,6 +177,17 @@ def create_app() -> FastAPI:
     async def echo_endpoint(payload: EchoPayload) -> dict[str, Any]:
         """Test endpoint to verify request ID propagation and typed input validation."""
         return {"echo": payload.message}
+
+    # Mount frontend static build directory if present
+    possible_dist_paths = [
+        Path("/app/frontend/dist"),
+        settings.PROJECT_ROOT / "frontend" / "dist",
+        Path(__file__).resolve().parent.parent.parent / "frontend" / "dist",
+    ]
+    for dist_dir in possible_dist_paths:
+        if dist_dir.is_dir() and (dist_dir / "index.html").exists():
+            app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="frontend")
+            break
 
     return app
 
