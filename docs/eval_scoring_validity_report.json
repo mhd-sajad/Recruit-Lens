@@ -1,10 +1,10 @@
 {
   "metadata": {
     "generated_by": "scripts/evaluate_scoring_validity.py",
-    "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+    "git_commit": "84c6770e1e18625ac8a348ae92d9456ea3b51135",
     "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
   },
-  "timestamp": "2026-10-29T08:34:00Z",
+  "timestamp": "2026-10-29T12:29:20Z",
   "section_e_scoring_validity": {
     "e1_must_have_correlation": {
       "spearman_rho": 0.3567,
@@ -13,7 +13,7 @@
       "xgboost_ndcg10": 0.9406,
       "marginal_ndcg_gain": 0.0725,
       "marginal_rho_gain": 0.0897,
-      "marginal_value_statement": "must_have_coverage alone has strong Spearman correlation (0.3567) with weak labels. The 12-feature monotonic XGBoost model delivers a marginal gain of +0.0725 NDCG@10 and +0.0897 Spearman Rho over must_have_coverage alone by accounting for seniority gaps, years experience, education match, and dense semantic similarity."
+      "marginal_gain_significant": true
     },
     "e2_tier_cv": {
       "strong_fit_precision": 0.6,
@@ -87,21 +87,21 @@
   "section_e4_end_to_end_200_benchmark": {
     "resumes_count": 200,
     "total_chunks": 1528,
-    "total_wall_time_s": 155.14,
+    "total_wall_time_s": 143.81,
     "time_breakdown_s": {
-      "parsing": 0.15,
-      "chunking": 1.62,
-      "embedding": 100.36,
+      "parsing": 0.24,
+      "chunking": 1.38,
+      "embedding": 89.65,
       "retrieval": 0.001,
-      "scoring": 52.79
+      "scoring": 52.36
     },
-    "per_resume_ms": 775.7,
-    "per_chunk_embed_ms": 65.68,
-    "peak_rss_mb": 313.6,
+    "per_resume_ms": 719.0,
+    "per_chunk_embed_ms": 58.67,
+    "peak_rss_mb": 313.8,
     "rss_cap_mb": 400.0,
     "rss_compliant": true,
     "time_compliant": true,
-    "latency_explanation": "Median warm run of 3 consecutive executions of the full 200-resume pipeline with 2-worker parsing pool, SHA256 parse caching, and streamed batch embedding (batch_size=24). Cold run wall time was 265.43s (peak RSS 320.6 MB). Both cold and warm runs strictly meet the <=300s wall time and <=400MB peak process tree RSS bars."
+    "latency_explanation": "Median warm run of 3 consecutive executions of the full 200-resume pipeline with 2-worker parsing pool, SHA256 parse caching, and streamed batch embedding (batch_size=24). Cold run wall time was 289.16s (peak RSS 317.4 MB). Both cold and warm runs strictly meet the <=300s wall time and <=400MB peak process tree RSS bars."
   },
   "parser_impact_comparison": {
     "before_fixes": {
@@ -109,31 +109,38 @@
       "reviewer_fragments_count": 32,
       "reviewer_real_entries_count": 121,
       "noise_attached_rate_percent": 9.15,
-      "years_gap_impact": "Dates polluted by trailing text or school years, causing negative years_gap calculation anomalies",
-      "title_match_impact": "Keyword columns and placeholder strings treated as job titles, producing false matches"
+      "clean_entries_count": 99,
+      "clean_entries_percent": 81.82,
+      "wrong_missing_count": 8,
+      "wrong_missing_percent": 6.61,
+      "recoverable_count": 113,
+      "recoverable_percent": 93.39
     },
     "after_fixes": {
-      "fresh_dev_exact_count_match_resumes": 25,
-      "fresh_dev_exact_count_match_total": 30,
-      "fresh_dev_exact_count_match_percent": 83.33,
-      "fresh_dev_duplicates": 0,
-      "fresh_dev_fragments": 0,
-      "fresh_dev_wrong_missing": 5,
-      "fresh_dev_wrong_missing_percent": 3.7,
-      "fresh_dev_recoverable": 130,
-      "fresh_dev_recoverable_percent": 96.3,
-      "years_gap_impact": "Regex strictly enforces YYYY or MM/YYYY boundaries; inverted dates nullified with date_known=False",
-      "title_match_impact": "Placeholders (Company Name, City, State) sanitized and skills headers excluded from titles"
+      "exact_count_match_resumes": 25,
+      "exact_count_match_total": 30,
+      "exact_count_match_percent": 83.33,
+      "duplicates": 0,
+      "fragments": 0,
+      "wrong_missing": 9,
+      "wrong_missing_percent": 6.67,
+      "recoverable": 130,
+      "recoverable_percent": 96.3,
+      "matched_real_entries": 126,
+      "total_real_entries": 135,
+      "matched_real_percent": 93.33,
+      "spurious_extra_count": 2,
+      "spurious_extra_percent": 1.54
     }
   },
   "section_f1_vocabulary_mismatch": {
     "metadata": {
       "generated_by": "scripts/evaluate_scoring_validity.py",
-      "git_commit": "5186f72b0d4e46c13645b29dae55048598fcd57a",
+      "git_commit": "84c6770e1e18625ac8a348ae92d9456ea3b51135",
       "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
     },
     "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
-    "timestamp": "2026-10-29T08:34:00Z",
+    "timestamp": "2026-10-29T12:29:20Z",
     "candidate_a_synonyms": {
       "exact_matches_without_taxonomy": [
         "docker",
@@ -166,6 +173,15 @@
       "dense_similarity": 0.2327
     },
     "ranking_correct": true,
-    "conclusion": "Exact keyword matching fails on Candidate A (missing K8s/Postgres) and Candidate B (0 matches). The combination of canonical taxonomy alias resolution (mapping K8s -> Kubernetes, Postgres -> PostgreSQL) and dense semantic similarity (0.6865 for A, 0.5842 for B vs 0.2104 for C) successfully bridges the vocabulary mismatch gap."
+    "metrics_summary": {
+      "candidate_a_exact_matches": 2,
+      "candidate_a_taxonomy_matches": 10,
+      "candidate_a_dense_similarity": 0.7484,
+      "candidate_b_exact_matches": 0,
+      "candidate_b_taxonomy_matches": 3,
+      "candidate_b_dense_similarity": 0.5997,
+      "candidate_c_taxonomy_matches": 4,
+      "candidate_c_dense_similarity": 0.2327
+    }
   }
 }

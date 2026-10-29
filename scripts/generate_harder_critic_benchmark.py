@@ -889,7 +889,10 @@ def evaluate_harder_calibration() -> None:
         denom = 1.0 + (z**2) / n
         center = (p + (z**2) / (2 * n)) / denom
         margin = z * np.sqrt((p * (1 - p) / n) + (z**2 / (4 * n**2))) / denom
-        return [float(round(max(0.0, center - margin) * 100.0, 2)), float(round(min(1.0, center + margin) * 100.0, 2))]
+        return [
+            float(round(max(0.0, center - margin) * 100.0, 2)),
+            float(round(min(1.0, center + margin) * 100.0, 2)),
+        ]
 
     n_unsupp = len(UNSUPPORTED_PAIRS)
     chosen_row = next(r for r in calibration_table if r["threshold"] == chosen_threshold)
@@ -901,6 +904,7 @@ def evaluate_harder_calibration() -> None:
     docs_dir = Path(__file__).resolve().parent.parent / "docs"
     docs_dir.mkdir(parents=True, exist_ok=True)
     from scripts.provenance_helper import get_provenance
+
     provenance = get_provenance("scripts/generate_harder_critic_benchmark.py")
 
     report = {
@@ -929,7 +933,7 @@ def evaluate_harder_calibration() -> None:
             "trials_count": n_unsupp,
             "rule_of_three_upper_bound_at_n60_percent": rule_of_three_upper,
             "wilson_ci95_at_n60_percent": wilson_ci95,
-            "explanation": f"With {k_fa} false accepts observed in N={n_unsupp} trials, the empirical point estimate is {chosen_row['false_accept_rate_percent']}%. By the Rule of Three, the 95% one-sided upper limit for a zero-event binomial experiment is 3/N = 3/{n_unsupp} = {rule_of_three_upper}% (Wilson 95% two-sided CI {wilson_ci95}%)."
+            "explanation": f"With {k_fa} false accepts observed in N={n_unsupp} trials, the empirical point estimate is {chosen_row['false_accept_rate_percent']}%. By the Rule of Three, the 95% one-sided upper limit for a zero-event binomial experiment is 3/N = 3/{n_unsupp} = {rule_of_three_upper}% (Wilson 95% two-sided CI {wilson_ci95}%).",
         },
     }
 

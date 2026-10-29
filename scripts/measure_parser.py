@@ -200,10 +200,16 @@ def run_benchmark() -> tuple[float, float, int]:
     )
     print("\n--- DEV SET (TUNED ON) HOLDOUT-30 ENTRY CLASSIFICATION ---")
     print(f"Total Rows: {dev_set_metrics['total_rows']}")
-    print(f"Clean Titles (O): {dev_set_metrics['clean_titles_O']} ({dev_set_metrics['clean_rate_on_real_percent']:.1f}% of real)")
-    print(f"Recoverable (O+C): {dev_set_metrics['clean_titles_O'] + dev_set_metrics['noisy_titles_C']} ({dev_set_metrics['recoverable_rate_on_real_percent']:.1f}% of real)")
+    print(
+        f"Clean Titles (O): {dev_set_metrics['clean_titles_O']} ({dev_set_metrics['clean_rate_on_real_percent']:.1f}% of real)"
+    )
+    print(
+        f"Recoverable (O+C): {dev_set_metrics['clean_titles_O'] + dev_set_metrics['noisy_titles_C']} ({dev_set_metrics['recoverable_rate_on_real_percent']:.1f}% of real)"
+    )
     print(f"Wrong/Missing (W): {dev_set_metrics['wrong_missing_titles_W']} (6.6% of real)")
-    print(f"Fragments (F): {dev_set_metrics['fragments_not_jobs_F']} ({dev_set_metrics['fragment_rate_overall_percent']:.1f}% of rows)")
+    print(
+        f"Fragments (F): {dev_set_metrics['fragments_not_jobs_F']} ({dev_set_metrics['fragment_rate_overall_percent']:.1f}% of rows)"
+    )
     print("==================================================")
 
     # Save metrics to docs/eval_parser_100_report.json for report integrity

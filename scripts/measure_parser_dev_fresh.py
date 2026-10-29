@@ -1,4 +1,5 @@
 """Measure parser performance on DEV set 2 (data/parser_holdout_30_fresh.csv) against reviewer ground truth."""
+
 import csv
 import json
 import sys
@@ -85,15 +86,17 @@ def main() -> None:
         if extracted_count == real_count:
             exact_count_matches += 1
 
-        per_resume_details.append({
-            "resume_id": resume_id,
-            "reviewer_code": code,
-            "reviewer_total_rows": len(code),
-            "reviewer_real_entries": real_count,
-            "parser_extracted_entries": extracted_count,
-            "exact_match": extracted_count == real_count,
-            "extracted_titles": [e.title for e in exps],
-        })
+        per_resume_details.append(
+            {
+                "resume_id": resume_id,
+                "reviewer_code": code,
+                "reviewer_total_rows": len(code),
+                "reviewer_real_entries": real_count,
+                "parser_extracted_entries": extracted_count,
+                "exact_match": extracted_count == real_count,
+                "extracted_titles": [e.title for e in exps],
+            }
+        )
 
     # Evaluate duplicates: check for identical (title, start, end) signatures within a resume
     duplicates_count = 0
@@ -113,7 +116,16 @@ def main() -> None:
     for rid, exps in parsed_entries_by_resume.items():
         for e in exps:
             t = (e.title or "").strip().lower()
-            if any(w in t for w in ["teacher of the year", "pci compliance", "cisco unity", "tracking system", "possesses an additional"]):
+            if any(
+                w in t
+                for w in [
+                    "teacher of the year",
+                    "pci compliance",
+                    "cisco unity",
+                    "tracking system",
+                    "possesses an additional",
+                ]
+            ):
                 fragments_count += 1
 
     # Quality metrics
@@ -164,11 +176,21 @@ def main() -> None:
     print(f"=== DEV SET 2 PARSER EVALUATION COMPLETE ===")
     print(f"Output: {out_path}")
     print(f"Total Extracted Entries: {total_extracted} (Reviewer real: {reviewer_real_entries})")
-    print(f"Exact Count Matches: {exact_count_matches}/30 ({report['metrics']['exact_count_match_pct']}%)")
-    print(f"Duplicates: {duplicates_count} ({duplicate_rate_pct}%) [Target: 0] -> {'PASS' if duplicates_count == 0 else 'FAIL'}")
-    print(f"Fragments: {fragments_count} ({fragment_rate_pct}%) [Target: <5%] -> {'PASS' if fragment_rate_pct < 5.0 else 'FAIL'}")
-    print(f"Wrong/Missing: {wrong_or_missing_count} ({wrong_or_missing_pct}%) [Target: <8%] -> {'PASS' if wrong_or_missing_pct < 8.0 else 'FAIL'}")
-    print(f"Recoverable: {recoverable_rate_pct}% [Target: >=90%] -> {'PASS' if recoverable_rate_pct >= 90.0 else 'FAIL'}")
+    print(
+        f"Exact Count Matches: {exact_count_matches}/30 ({report['metrics']['exact_count_match_pct']}%)"
+    )
+    print(
+        f"Duplicates: {duplicates_count} ({duplicate_rate_pct}%) [Target: 0] -> {'PASS' if duplicates_count == 0 else 'FAIL'}"
+    )
+    print(
+        f"Fragments: {fragments_count} ({fragment_rate_pct}%) [Target: <5%] -> {'PASS' if fragment_rate_pct < 5.0 else 'FAIL'}"
+    )
+    print(
+        f"Wrong/Missing: {wrong_or_missing_count} ({wrong_or_missing_pct}%) [Target: <8%] -> {'PASS' if wrong_or_missing_pct < 8.0 else 'FAIL'}"
+    )
+    print(
+        f"Recoverable: {recoverable_rate_pct}% [Target: >=90%] -> {'PASS' if recoverable_rate_pct >= 90.0 else 'FAIL'}"
+    )
 
 
 if __name__ == "__main__":

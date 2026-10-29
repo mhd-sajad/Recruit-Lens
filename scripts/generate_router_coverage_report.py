@@ -1,4 +1,5 @@
 """Generate per-module router coverage report from coverage.json with audit provenance."""
+
 import json
 import sys
 from pathlib import Path

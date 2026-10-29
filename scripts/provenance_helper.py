@@ -1,4 +1,5 @@
 """Helper to attach standard audit provenance metadata to evaluation reports."""
+
 import hashlib
 import subprocess
 from pathlib import Path

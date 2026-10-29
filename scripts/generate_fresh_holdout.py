@@ -1,4 +1,5 @@
 """Generate parser_holdout_30_fresh.csv from 30 previously-unused resumes."""
+
 import csv
 import hashlib
 import random
@@ -78,26 +79,30 @@ def main() -> None:
         if not experiences:
             # Still write one row with empty fields
             raw_lines = (result.sections.get("experience") or result.raw_text)[:300]
-            rows.append({
-                "resume_id": resume_id,
-                "raw_experience_lines": raw_lines,
-                "extracted_title": "",
-                "extracted_company": "",
-                "start_date": "",
-                "end_date": "",
-            })
+            rows.append(
+                {
+                    "resume_id": resume_id,
+                    "raw_experience_lines": raw_lines,
+                    "extracted_title": "",
+                    "extracted_company": "",
+                    "start_date": "",
+                    "end_date": "",
+                }
+            )
         else:
             for exp in experiences:
                 # exp is a WorkExperienceEntry (Pydantic model)
                 raw_line = (exp.raw_text or "")[:300]
-                rows.append({
-                    "resume_id": resume_id,
-                    "raw_experience_lines": raw_line,
-                    "extracted_title": exp.title or "",
-                    "extracted_company": exp.company or "",
-                    "start_date": exp.start_date or "",
-                    "end_date": exp.end_date or "",
-                })
+                rows.append(
+                    {
+                        "resume_id": resume_id,
+                        "raw_experience_lines": raw_line,
+                        "extracted_title": exp.title or "",
+                        "extracted_company": exp.company or "",
+                        "start_date": exp.start_date or "",
+                        "end_date": exp.end_date or "",
+                    }
+                )
 
     # Write CSV
     fieldnames = [

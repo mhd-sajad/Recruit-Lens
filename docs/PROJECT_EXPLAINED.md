@@ -722,3 +722,35 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
     - Runs 2 & 3 (Warm Parse Cache): **155.14s** median wall time, **313.6 MB** peak tree RSS.
   - **Critic Grounding & Injection Neutralization (`docs/eval_critic_calibration.json`, `docs/eval_injection_live.json`):** Evaluated exact Wilson CI $[0.0\%, 6.02\%]$ for $N=60, k=0$. Live prompt injection suite neutralized 10/10 variants (`model_obeyed: False`, `critic_caught: True`), and sanitizer altered 0 of 200 real chunks.
   - **Full Backend Pytest Suite (`docs/pytest_results.xml`, `docs/coverage.json`):** **140 passed tests** (0 failures, 184.42s) with **82.08% overall backend statement coverage** (3,545 / 4,319 statements).
+
+### Component: Release v0.6.0 - Phase 0 Close-Out & Integrity Resolution (`scripts/make_report.py`, `docs/*.json`)
+- **What it is:** Definitive completion of all Phase 0 integrity requirements, root-cause resolution of router coverage tracing, live LLM adversarial injection evaluation, and strict compliance with Rules 12, 13, and 14 of `.agents/AGENTS.md`.
+- **Why:** Mandated by Phase 0 Close-Out to eliminate any remaining hand-typed explanations, ensure all metrics trace to saved disk files with cryptographic provenance, prove process tree memory stays under 400 MB, and achieve full verification before starting Phase 1 frontend development.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Router Integration Coverage Resolution (`docs/eval_router_modules_coverage.json`):** Configured `.coveragerc` with `concurrency = greenlet, thread` to capture ASGI event loop execution. All individual router modules exceed the 70% bar: `__init__.py` 100.0%, `audit_logs.py` 100.0%, `auth.py` 94.03%, `evaluations.py` 98.45%, `jobs.py` 100.0%, `resumes.py` 97.62%, `schemas.py` 100.0%, `tasks.py` 98.15%. Overall backend coverage reached **89.21%** across 3,853 covered statements.
+  - **Dev Set 2 Ground-Truth Alignment (`docs/eval_parser_dev2_alignment_report.json`):** Verified parser extractions against reviewer ground truth across 171 rows (135 real entries): 126 / 135 matched (93.33%), 0 fragments (0.0%), 0 duplicates (0.0%), 9 missed (6.67%), 2 spurious extra (1.54%), and 130 recoverable (96.30%).
+  - **Embedder Footprint Subprocess Measurement (`docs/eval_embedder_footprint_report.json`):** Measured in isolated subprocesses with `MALLOC_ARENA_MAX=2` reading `/proc/self/status` VmRSS:
+    - MiniLM Quantized: Baseline 13.71 MB, Post-Imports 70.88 MB, Loaded 122.78 MB, Inference 133.20 MB, Latency 3.30 ms/chunk.
+    - BGE-Small Quantized: Baseline 13.80 MB, Post-Imports 70.87 MB, Loaded 140.50 MB, Inference 158.45 MB, Latency 6.12 ms/chunk.
+    - Production choice: MiniLM confirmed per decision rule (BGE did not win both Hit@5 and MRR corpus-wide).
+  - **200-Resume Pipeline Benchmark (`docs/eval_benchmark_200.json`):**
+    - Run 1 (Cold Cache): 289.16s wall time ($\le 300.0$s target), 317.4 MB peak tree RSS ($\le 400.0$ MB target).
+    - Run 2 (Warm Cache): 143.81s wall time, 313.8 MB peak tree RSS.
+    - Run 3 (Warm Cache): 134.11s wall time, 314.1 MB peak tree RSS.
+    - Hand-written commentary removed and replaced with measured cache speedup factor (591.0x).
+  - **Scoring Validity & Grouped CV (`docs/eval_scoring_validity_report.json`):**
+    - `must_have_coverage` alone achieves Spearman rho = 0.3567 and NDCG@10 = 0.8682.
+    - 12-feature monotonic XGBoost model achieves Grouped CV Spearman rho = 0.4463 (+0.0897 marginal gain) and NDCG@10 = 0.9406 (+0.0725 marginal gain).
+    - Strong Fit Precision = 60.0% with 95% Wilson CI [35.75%, 80.18%].
+    - Breakdown across all 11 occupational families measured and verified.
+    - Hand-typed prose replaced with real before/after metrics from the holdout sets.
+  - **Live Adversarial Prompt Injection Suite (`docs/eval_injection_live.json`):**
+    - Tested 10 adversarial variants against real Groq LLM with raw outputs recorded in JSON.
+    - Neutralization rate: **100.0%** (10/10 neutralized). All variants rejected or cleanly encapsulated.
+    - Sanitizer evaluated across 200 real chunks: **0 altered** (target: 0).
+  - **Operational Probes & Security Headers:**
+    - Live FastAPI endpoints `/health`, `/ready` (DB connectivity check), and `/metrics` (process RSS, uptime, config) verified.
+    - Hardened response headers injected: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, and `X-Request-ID`.
+  - **PostgreSQL 18.6 & Alembic Migrations:**
+    - Verified connectivity against local PostgreSQL 18.6 with asyncpg driver.
+    - Executed `alembic upgrade head` under PostgreSQL DDL transaction.

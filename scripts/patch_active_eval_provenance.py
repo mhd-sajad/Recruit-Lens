@@ -1,4 +1,5 @@
 """Attach standard audit provenance to active evaluation reports where missing."""
+
 import json
 import sys
 from pathlib import Path
@@ -17,7 +18,9 @@ def main() -> None:
     if pdev_path.exists():
         with open(pdev_path, encoding="utf-8") as f:
             data = json.load(f)
-        prov = get_provenance("scripts/measure_parser.py", [repo_root / "data" / "parser_holdout_30.csv"])
+        prov = get_provenance(
+            "scripts/measure_parser.py", [repo_root / "data" / "parser_holdout_30.csv"]
+        )
         data["metadata"]["generated_by"] = prov["generated_by"]
         data["metadata"]["git_commit"] = prov["git_commit"]
         data["metadata"]["input_sha256"] = prov["input_sha256"]

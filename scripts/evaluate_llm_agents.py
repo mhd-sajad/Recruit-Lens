@@ -123,9 +123,13 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
         if not first_attempt_pass:
             if is_fb:
                 failure_category = "llm_fallback"
-            elif any("unsupported numerical" in (c.failure_reason or "").lower() for c in initial_checks):
+            elif any(
+                "unsupported numerical" in (c.failure_reason or "").lower() for c in initial_checks
+            ):
                 failure_category = "entity_number_check"
-            elif any("semantic similarity" in (c.failure_reason or "").lower() for c in initial_checks):
+            elif any(
+                "semantic similarity" in (c.failure_reason or "").lower() for c in initial_checks
+            ):
                 failure_category = "similarity_threshold"
             elif any("citation" in (c.failure_reason or "").lower() for c in initial_checks):
                 failure_category = "schema_error"
@@ -183,8 +187,12 @@ async def run_faithfulness_benchmark(num_candidates: int = 40) -> dict:
     failure_counts = {
         "llm_fallback": sum(1 for r in results if r["failure_reason_category"] == "llm_fallback"),
         "schema_error": sum(1 for r in results if r["failure_reason_category"] == "schema_error"),
-        "entity_number_check": sum(1 for r in results if r["failure_reason_category"] == "entity_number_check"),
-        "similarity_threshold": sum(1 for r in results if r["failure_reason_category"] == "similarity_threshold"),
+        "entity_number_check": sum(
+            1 for r in results if r["failure_reason_category"] == "entity_number_check"
+        ),
+        "similarity_threshold": sum(
+            1 for r in results if r["failure_reason_category"] == "similarity_threshold"
+        ),
     }
 
     final_pass_count = pass_count + rewrite_count
