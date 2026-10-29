@@ -17,6 +17,7 @@ async def clean_db() -> AsyncGenerator[None, None]:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield
+    await engine.dispose()
 
 
 @pytest.fixture

@@ -15,7 +15,7 @@ from app.core.models import ContactPII
 # Patterns indicative of prompt injection, role hijacking, or instruction override
 INJECTION_PATTERNS = [
     re.compile(
-        r"(?i)\b(ignore|disregard|forget|override|ignora|ignorer|ignoriere)\s+(all\s+|las\s+|alle\s+|toutes\s+)?(previous|prior|above|former|everything|rules|instrucciones|vorherigen\s+|anweisungen|instructions)\b"
+        r"(?i)\b(ignore|disregard|forget|override|ignora|ignorer|ignoriere)\s+(all\s+|las\s+|alle\s+|toutes\s+)?(previous|prior|above|former|everything|rules|instrucciones|vorherigen)?\s*(instructions|prompts|rules|commands|context|anweisungen|instrucciones)?\b"
     ),
     re.compile(
         r"(?i)\b(system\s+(?:prompt|override|message|command|instruction)|developer\s+mode|dan\s+mode|jailbreak|unrestricted\s+mode)\b"

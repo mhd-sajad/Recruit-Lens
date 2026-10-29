@@ -1,5 +1,7 @@
 """Integration tests for authentication API endpoints, throttling, and refresh token rotation with reuse detection."""
 
+import uuid
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -14,10 +16,11 @@ async def test_auth_login_refresh_rotation_reuse_detection_and_me() -> None:
     """Verify login, token rotation, theft reuse detection, and profile retrieval."""
     await init_db()
 
+    email = f"auth_tester_{uuid.uuid4().hex[:8]}@recruitlens.local"
     # Seed test recruiter user directly (no public signup endpoint)
     async with AsyncSessionLocal() as db:
         user = User(
-            email="auth_tester@recruitlens.local",
+            email=email,
             hashed_password=hash_password("ValidPassword123!"),
             full_name="Auth Tester",
             role="recruiter",
@@ -30,7 +33,7 @@ async def test_auth_login_refresh_rotation_reuse_detection_and_me() -> None:
         res_login = await client.post(
             "/api/v1/auth/login",
             json={
-                "email": "auth_tester@recruitlens.local",
+                "email": email,
                 "password": "ValidPassword123!",
             },
         )
@@ -48,7 +51,7 @@ async def test_auth_login_refresh_rotation_reuse_detection_and_me() -> None:
         )
         assert res_me.status_code == 200
         data_me = res_me.json()
-        assert data_me["email"] == "auth_tester@recruitlens.local"
+        assert data_me["email"] == email
         assert data_me["role"] == "recruiter"
         assert data_me["is_active"] is True
 
@@ -87,9 +90,10 @@ async def test_auth_login_throttling() -> None:
     """Verify login throttling kicks in after repeated failed login attempts."""
     await init_db()
 
+    email = f"throttle_victim_{uuid.uuid4().hex[:8]}@recruitlens.local"
     async with AsyncSessionLocal() as db:
         user = User(
-            email="throttle_victim@recruitlens.local",
+            email=email,
             hashed_password=hash_password("ValidPassword123!"),
             full_name="Throttle Victim",
             role="recruiter",
@@ -103,7 +107,7 @@ async def test_auth_login_throttling() -> None:
             res_bad = await client.post(
                 "/api/v1/auth/login",
                 json={
-                    "email": "throttle_victim@recruitlens.local",
+                    "email": email,
                     "password": "WrongPassword!",
                 },
             )
@@ -113,7 +117,7 @@ async def test_auth_login_throttling() -> None:
         res_throttled = await client.post(
             "/api/v1/auth/login",
             json={
-                "email": "throttle_victim@recruitlens.local",
+                "email": email,
                 "password": "ValidPassword123!",
             },
         )
