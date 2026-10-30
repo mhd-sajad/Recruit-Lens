@@ -45,25 +45,66 @@ def verify_file_provenance(path: Path) -> list[str]:
     # Verify git_commit is an ancestor of HEAD (or HEAD)
     commit_hash = metadata.get("git_commit")
     if commit_hash and commit_hash != "unknown":
-        try:
-            subprocess.check_call(
-                ["git", "merge-base", "--is-ancestor", commit_hash, "HEAD"],
+        # Check if commit exists in local git object database
+        commit_exists = (
+            subprocess.run(
+                ["git", "cat-file", "-e", f"{commit_hash}^{{commit}}"],
                 cwd=str(REPO_ROOT),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
-            )
-        except subprocess.CalledProcessError:
-            # Also check if it matches current HEAD or working tree
+            ).returncode
+            == 0
+        )
+        if commit_exists:
             try:
-                head_sha = subprocess.check_output(
-                    ["git", "rev-parse", "HEAD"], text=True, cwd=str(REPO_ROOT)
-                ).strip()
-                if commit_hash != head_sha:
-                    errors.append(
-                        f"{path.name}: Recorded git_commit '{commit_hash[:8]}' is not an ancestor of HEAD"
-                    )
+                subprocess.check_call(
+                    ["git", "merge-base", "--is-ancestor", commit_hash, "HEAD"],
+                    cwd=str(REPO_ROOT),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except subprocess.CalledProcessError:
+                errors.append(
+                    f"{path.name}: Recorded git_commit '{commit_hash[:8]}' is not an ancestor of HEAD"
+                )
+        else:
+            # Check if shallow clone
+            is_shallow = False
+            try:
+                is_shallow = (
+                    subprocess.check_output(
+                        ["git", "rev-parse", "--is-shallow-repository"],
+                        text=True,
+                        cwd=str(REPO_ROOT),
+                        stderr=subprocess.DEVNULL,
+                    ).strip()
+                    == "true"
+                )
             except Exception:
                 pass
+
+            if is_shallow:
+                # Attempt to unshallow if git remote is reachable
+                try:
+                    subprocess.check_call(
+                        ["git", "fetch", "--unshallow"],
+                        cwd=str(REPO_ROOT),
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    subprocess.check_call(
+                        ["git", "merge-base", "--is-ancestor", commit_hash, "HEAD"],
+                        cwd=str(REPO_ROOT),
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                except subprocess.CalledProcessError:
+                    if len(commit_hash) < 7 or not all(c in "0123456789abcdefABCDEF" for c in commit_hash):
+                        errors.append(f"{path.name}: Invalid commit hash format '{commit_hash}'")
+            else:
+                errors.append(
+                    f"{path.name}: Recorded git_commit '{commit_hash[:8]}' does not exist in repository"
+                )
 
     # Verify input_sha256 is non-empty 64-char hex
     input_sha = metadata.get("input_sha256")

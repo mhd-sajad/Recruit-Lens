@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v3
@@ -81,14 +83,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start Services with Docker Compose
+        env:
+          DEMO_MODE: "true"
+          DEMO_EMAIL: "admin@recruitlens.local"
+          DEMO_PASSWORD: "Admin123!"
         run: |
           docker compose up -d --build
           for i in {1..30}; do
-            if curl -s http://localhost:8000/health | grep -q '"status":"ok"'; then
-              echo "Container is healthy and ready!"
+            if curl -s http://localhost:8000/ready | grep -q '"status":"ready"'; then
+              echo "Container and database are ready!"
               break
             fi
-            echo "Waiting for container..."
+            echo "Waiting for container and database ready..."
             sleep 2
           done
 
