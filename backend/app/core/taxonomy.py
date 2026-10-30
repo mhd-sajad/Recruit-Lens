@@ -16,6 +16,35 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_TAXONOMY_PATH = Path(__file__).resolve().parent.parent / "data" / "skills_taxonomy.json"
 
+# Ambiguity stop-list: generic English nouns/verbs that cause false positive extraction in JDs
+AMBIGUOUS_SKILL_STOPLIST: set[str] = {
+    "vision",
+    "maintenance",
+    "email",
+    "medical",
+    "dental",
+    "impact",
+    "posting",
+    "analyze",
+    "labeling",
+    "ordering",
+    "training",
+    "productivity",
+    "tiktok",
+}
+
+# Programming language context regex for disambiguating "Go"
+GO_CONTEXT_REGEX = re.compile(
+    r"(?:"
+    r"\bgolang\b|"
+    r"\bgo\s+(?:programming|language|developer|engineer|backend|dev|code)\b|"
+    r"\b(?:programming|language|backend|experience\s+with|proficient\s+in|knowledge\s+of|developed\s+in)\s+go\b|"
+    r"\b(?:python|java|c\+\+|rust|ruby|scala|kotlin|typescript|javascript|c#|php)[\s,/]+go\b|"
+    r"\bgo[\s,/]+(?:python|java|c\+\+|rust|ruby|scala|kotlin|typescript|javascript|c#|php)\b"
+    r")",
+    re.IGNORECASE,
+)
+
 
 class SkillTaxonomy:
     """Production skill taxonomy supporting canonical alias resolution and inference."""
@@ -141,6 +170,17 @@ class SkillTaxonomy:
                     continue
 
                 norm_canon = canon.lower()
+                m_lower = matched_text.lower()
+
+                # 1. Ambiguity stop-list filter: reject generic non-technical words
+                if norm_canon in AMBIGUOUS_SKILL_STOPLIST or m_lower in AMBIGUOUS_SKILL_STOPLIST:
+                    continue
+
+                # 2. Context rule for Go programming language
+                if norm_canon == "go" or m_lower == "go":
+                    if not GO_CONTEXT_REGEX.search(text):
+                        continue
+
                 span = match.span()
 
                 if norm_canon not in matched_skills:

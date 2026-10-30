@@ -288,8 +288,9 @@ def calculate_weak_supervision_target(
     score = min(1.0, max(0.15, score))
 
     # Tier assignment with strict must-have override:
-    # Strong Fit requires high must-have coverage and meeting experience bounds
-    if must_cov >= 0.80 and years_gap >= -1.0 and score >= 0.72:
+    # Strong Fit requires 100% must-have coverage (0 missing must-haves) and meeting experience bounds
+    missing_must_cnt = features.missing_must_count.value
+    if must_cov >= 1.0 and missing_must_cnt == 0 and years_gap >= -1.0 and score >= 0.72:
         tier = 3  # Strong Fit
     elif must_cov >= 0.50 and score >= 0.50:
         tier = 2  # Interview

@@ -13,7 +13,9 @@ import re
 import numpy as np
 from pydantic import BaseModel, Field
 
-from app.core.experience_extractor import extract_years_of_experience
+from app.core.experience_extractor import (
+    calculate_total_experience_years,
+)
 from app.core.jd_requirements import JobRequirements
 from app.core.models import ResumeParseResult
 from app.core.skill_extractor import CandidateSkillsResult, extract_skills_from_parsed_resume
@@ -270,22 +272,12 @@ def extract_candidate_features(
     )
 
     # 2. Years Gap Feature
-    cand_total_years = 0.0
-    has_duration = False
-    for exp in parsed_resume.experiences:
-        if exp.duration_months is not None:
-            cand_total_years += exp.duration_months / 12.0
-            has_duration = True
+    cand_total_years, has_duration = calculate_total_experience_years(
+        parsed_resume.experiences,
+        raw_text=parsed_resume.sections.get("experience", "") or parsed_resume.scoring_text,
+    )
 
-    if not has_duration:
-        extracted_yrs = extract_years_of_experience(
-            parsed_resume.sections.get("experience", "") or parsed_resume.scoring_text
-        )
-        if extracted_yrs is not None:
-            cand_total_years = extracted_yrs
-            has_duration = True
-
-    if has_duration and cand_total_years > 0.0:
+    if has_duration and cand_total_years is not None and cand_total_years > 0.0:
         years_gap_val = cand_total_years - job_reqs.min_years_experience
         years_gap_feat = FeatureValue(
             name="years_gap",

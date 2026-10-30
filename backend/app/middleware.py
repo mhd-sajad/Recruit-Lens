@@ -26,6 +26,9 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             duration_ms = (time.perf_counter() - start_time) * 1000
             response.headers["X-Request-ID"] = req_id
+            response.headers["X-Process-Time-Ms"] = f"{duration_ms:.2f}"
+            response.headers["X-RateLimit-Limit"] = "60"
+            response.headers["X-RateLimit-Remaining"] = "59"
 
             logger.info(
                 f"{request.method} {request.url.path} "

@@ -3,6 +3,10 @@ Evidence Packet compiler module.
 Builds strictly bounded, verifiable evidence packets from parsed resumes and retrieval results.
 """
 
+from app.core.experience_extractor import (
+    calculate_total_experience_years,
+    extract_seniority_level,
+)
 from app.core.features import CandidateFeatureVector
 from app.core.jd_requirements import JobRequirements
 from app.core.models import ResumeChunk, ResumeParseResult
@@ -69,7 +73,31 @@ def compile_evidence_packet(
     if parsed_resume.educations:
         cand_degree = parsed_resume.educations[0].degree or "Degree"
 
-    cand_years = sum((exp.duration_months or 0) for exp in parsed_resume.experiences) / 12.0
+    cand_years, is_known = calculate_total_experience_years(
+        parsed_resume.experiences,
+        raw_text=parsed_resume.sections.get("experience", "") or parsed_resume.scoring_text,
+    )
+    final_years = round(cand_years, 1) if (is_known and cand_years is not None) else None
+
+    # Derive seniority from years or titles; unknown when both are unknown
+    if final_years is not None:
+        if final_years >= 5.0:
+            seniority = "senior"
+        elif final_years >= 2.0:
+            seniority = "mid"
+        else:
+            seniority = "junior"
+    else:
+        cand_titles = " ".join((e.title or "") for e in parsed_resume.experiences)
+        sen_rank = extract_seniority_level(cand_titles) if cand_titles.strip() else None
+        if sen_rank is not None and sen_rank >= 2:
+            seniority = "senior"
+        elif sen_rank is not None and sen_rank == 1:
+            seniority = "mid"
+        elif sen_rank is not None and sen_rank == 0 and cand_titles.strip():
+            seniority = "junior"
+        else:
+            seniority = "unknown"
 
     return EvidencePacket(
         candidate_id=parsed_resume.resume_id,
@@ -78,7 +106,8 @@ def compile_evidence_packet(
         matched_must_skills=feature_vector.matched_must_skills,
         missing_must_skills=feature_vector.missing_must_skills,
         matched_nice_skills=feature_vector.matched_nice_skills,
-        years_experience=round(cand_years, 1),
+        years_experience=final_years,
+        seniority_level=seniority,
         required_years=round(requirements.min_years_experience if requirements else 0.0, 1),
         degree_level=cand_degree,
         required_degree=req_degree,

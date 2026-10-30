@@ -15,6 +15,7 @@ import asyncio
 import csv
 import json
 import random
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,51 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (norm_a * norm_b))
 
 
+def check_sentence_matches_inputs(
+    sentence: str,
+    packet: EvidencePacket,
+    cited_chunks_text: str,
+) -> bool:
+    """
+    Verify that every named skill, degree, year, and tier statement in the sentence
+    strictly matches structured input packet fields or cited chunk texts.
+    """
+    s_lower = sentence.lower()
+
+    # 1. Tier statement check:
+    for t in ["Strong Fit", "Interview", "Hold", "Reject"]:
+        if t.lower() in s_lower:
+            if t.lower() != packet.assigned_tier.lower():
+                return False
+
+    # 2. Years of experience check:
+    # If a number is stated before "year" / "years":
+    m_yrs = re.findall(r"(\d+(?:\.\d+)?)\s*years?", sentence, re.IGNORECASE)
+    for y_str in m_yrs:
+        y_val = float(y_str)
+        matched_cand = (
+            packet.years_experience is not None
+            and abs(y_val - packet.years_experience) <= 0.2
+        )
+        matched_req = abs(y_val - packet.required_years) <= 0.2
+        in_chunks = y_str in cited_chunks_text
+        if not (matched_cand or matched_req or in_chunks):
+            return False
+
+    # 3. Education / degree verification:
+    for deg in ["associate", "bachelor", "master", "doctorate", "phd"]:
+        if deg in s_lower:
+            deg_matched = (
+                (packet.degree_level and deg in packet.degree_level.lower())
+                or (packet.required_degree and deg in packet.required_degree.lower())
+                or (deg in cited_chunks_text.lower())
+            )
+            if not deg_matched:
+                return False
+
+    return True
+
+
 async def main():
     repo_root = Path(__file__).resolve().parent.parent
     data_dir = repo_root / "data"
@@ -77,9 +123,19 @@ async def main():
 
     rng = random.Random(42)
     selected_pairs = []
+    target_ids = {"13701259", "25127518", "15145575"}
+
     for t in [3, 2, 1, 0]:
-        selected = rng.sample(by_tier[t], 5)
-        for p in selected:
+        t_pairs = by_tier[t]
+        t_targets = [p for p in t_pairs if p["resume_id"] in target_ids]
+        t_others = [p for p in t_pairs if p["resume_id"] not in target_ids]
+
+        # Prioritize target audit candidates in their respective tiers
+        needed = 5 - len(t_targets)
+        sampled_others = rng.sample(t_others, min(needed, len(t_others))) if needed > 0 else []
+        tier_selected = (t_targets + sampled_others)[:5]
+
+        for p in tier_selected:
             selected_pairs.append((tier_names[t], p))
 
     # Map PDF paths
@@ -147,9 +203,9 @@ async def main():
             requirements=reqs,
             top_k=3,
         )
-        # Ensure packet assigned_tier matches requested tier for audit diversity
-        packet.assigned_tier = tier_name
-        packets.append((tier_name, packet, chunks))
+        # Strict rule: assigned_tier must follow system tier classifier
+        packet.assigned_tier = tier_res.tier
+        packets.append((tier_res.tier, packet, chunks))
 
     print(f"Loaded and verified {len(packets)} candidate evidence packets across 4 tiers.")
 
@@ -164,27 +220,18 @@ async def main():
 
     audit_rows = []
     verdicts_rows = []
+    sentences_rows = []
+    emails_rows = []
     sentence_counter = 1
 
-    # Check if audit CSVs are already generated
-    audit_csv = data_dir / "llm_audit_20.csv"
-    skip_step2 = audit_csv.exists() and len(open(audit_csv).readlines()) >= 21
+    cold_latencies = []
+    cached_latencies = []
+    prompt_tokens_list = []
+    completion_tokens_list = []
+    det_latencies = []
 
-    if skip_step2:
-        print("Audit CSVs already generated. Using latency samples...")
-        cold_latencies = [784.8, 892.4, 715.2, 810.1, 762.5]
-        cached_latencies = [0.42, 0.38, 0.45, 0.39, 0.41]
-        prompt_tokens_list = [1180, 1220, 1150, 1195, 1210]
-        completion_tokens_list = [285, 290, 275, 280, 288]
-        det_latencies = [0.08, 0.07, 0.09, 0.08, 0.08]
-    else:
-        cold_latencies = []
-        cached_latencies = []
-        prompt_tokens_list = []
-        completion_tokens_list = []
-        det_latencies = []
-        for idx, (tier_name, packet, chunks) in enumerate(packets, start=1):
-            chunks_map = {c.chunk_id: c.text for c in packet.retrieved_chunks}
+    for idx, (tier_name, packet, chunks) in enumerate(packets, start=1):
+        chunks_map = {c.chunk_id: c.text for c in packet.retrieved_chunks}
 
         # Measure cold latency
         t0 = time.monotonic()
@@ -238,10 +285,57 @@ async def main():
             }
         )
 
-        # Format verdicts rows
+        # Format emails rows (full body exported)
+        emails_rows.append(
+            {
+                "candidate_id": packet.candidate_id,
+                "tier": packet.assigned_tier,
+                "email_type": "invite",
+                "subject": emails.invite.subject,
+                "body": emails.invite.body,
+            }
+        )
+        emails_rows.append(
+            {
+                "candidate_id": packet.candidate_id,
+                "tier": packet.assigned_tier,
+                "email_type": "hold",
+                "subject": emails.hold.subject,
+                "body": emails.hold.body,
+            }
+        )
+        emails_rows.append(
+            {
+                "candidate_id": packet.candidate_id,
+                "tier": packet.assigned_tier,
+                "email_type": "rejection",
+                "subject": emails.rejection.subject,
+                "body": emails.rejection.body,
+            }
+        )
+
+        # Format verdicts & sentence faithfulness rows
         for s_idx, sentence in enumerate(exp.sentences):
             c_ids = exp.citations[s_idx] if s_idx < len(exp.citations) else []
             s_critique = critique_checks[s_idx] if s_idx < len(critique_checks) else None
+
+            # Get verbatim text of all cited chunks
+            cited_texts = [chunks_map[cid] for cid in c_ids if cid in chunks_map]
+            verbatim_chunk_text = "\n---\n".join(cited_texts) if cited_texts else "NONE"
+
+            # Check if sentence strictly matches structured inputs
+            struct_match = check_sentence_matches_inputs(sentence, packet, verbatim_chunk_text)
+
+            sentences_rows.append(
+                {
+                    "candidate_id": packet.candidate_id,
+                    "sentence_id": f"s_{sentence_counter:03d}",
+                    "sentence_text": sentence,
+                    "cited_chunk_ids": ";".join(c_ids) if c_ids else "NONE",
+                    "cited_chunks_text": verbatim_chunk_text,
+                    "structured_input_matches": "true" if struct_match else "false",
+                }
+            )
 
             if not c_ids:
                 verdicts_rows.append(
@@ -276,45 +370,80 @@ async def main():
                     )
                     sentence_counter += 1
 
-        await asyncio.sleep(1.5)
+        await asyncio.sleep(0.1)
 
-        # Write data/llm_audit_20.csv
-        audit_csv = data_dir / "llm_audit_20.csv"
-        with open(audit_csv, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(
-                f,
-                fieldnames=[
-                    "candidate_id",
-                    "tier",
-                    "reasons",
-                    "interview_questions",
-                    "email_drafts",
-                    "citations",
-                    "cited_chunk_ids",
-                ],
-            )
-            writer.writeheader()
-            writer.writerows(audit_rows)
-        print(f"\nWrote {len(audit_rows)} candidate audit rows to {audit_csv}")
+    # Write data/llm_audit_20.csv
+    audit_csv = data_dir / "llm_audit_20.csv"
+    with open(audit_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "candidate_id",
+                "tier",
+                "reasons",
+                "interview_questions",
+                "email_drafts",
+                "citations",
+                "cited_chunk_ids",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(audit_rows)
+    print(f"\nWrote {len(audit_rows)} candidate audit rows to {audit_csv}")
 
-        # Write data/llm_audit_20_verdicts.csv
-        verdicts_csv = data_dir / "llm_audit_20_verdicts.csv"
-        with open(verdicts_csv, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(
-                f,
-                fieldnames=[
-                    "sentence_id",
-                    "sentence_text",
-                    "cited_chunk_id",
-                    "cited_chunk_text",
-                    "critic_supported",
-                    "critic_similarity",
-                    "reviewer_verdict",
-                ],
-            )
-            writer.writeheader()
-            writer.writerows(verdicts_rows)
-        print(f"Wrote {len(verdicts_rows)} sentence verdict rows to {verdicts_csv}")
+    # Write data/llm_audit_20_verdicts.csv
+    verdicts_csv = data_dir / "llm_audit_20_verdicts.csv"
+    with open(verdicts_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "sentence_id",
+                "sentence_text",
+                "cited_chunk_id",
+                "cited_chunk_text",
+                "critic_supported",
+                "critic_similarity",
+                "reviewer_verdict",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(verdicts_rows)
+    print(f"Wrote {len(verdicts_rows)} sentence verdict rows to {verdicts_csv}")
+
+    # Write data/llm_audit_20_sentences.csv
+    sentences_csv = data_dir / "llm_audit_20_sentences.csv"
+    with open(sentences_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "candidate_id",
+                "sentence_id",
+                "sentence_text",
+                "cited_chunk_ids",
+                "cited_chunks_text",
+                "structured_input_matches",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(sentences_rows)
+    print(f"Wrote {len(sentences_rows)} candidate sentence audit rows to {sentences_csv}")
+
+    # Write data/llm_audit_20_emails.csv
+    emails_csv = data_dir / "llm_audit_20_emails.csv"
+    with open(emails_csv, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "candidate_id",
+                "tier",
+                "email_type",
+                "subject",
+                "body",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(emails_rows)
+    print(f"Wrote {len(emails_rows)} email draft rows to {emails_csv}")
 
     print("\n" + "=" * 70)
     print("STEP 3: CRITIC CALIBRATION BENCHMARK (30 SUPPORTED VS 30 UNSUPPORTED)")

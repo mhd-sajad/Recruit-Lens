@@ -35,10 +35,15 @@ async def generate_candidate_explanation(
         ", ".join(packet.missing_must_skills) if packet.missing_must_skills else "None"
     )
 
+    if packet.years_experience is not None:
+        exp_line = f"Experience: {packet.years_experience:.1f} years (Required: {packet.required_years:.1f} years)"
+    else:
+        exp_line = f"Experience: UNKNOWN (dates unverified in resume) (Required: {packet.required_years:.1f} years)"
+
     prompt = f"""EVALUATION TASK:
 Candidate ID: {packet.candidate_id}
 Assigned Tier: {packet.assigned_tier}
-Experience: {packet.years_experience:.1f} years (Required: {packet.required_years:.1f} years)
+{exp_line}
 Education: {packet.degree_level} (Required: {packet.required_degree})
 Matched Mandatory Skills: {matched_skills_str}
 Missing Mandatory Skills: {missing_skills_str}

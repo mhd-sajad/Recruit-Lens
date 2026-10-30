@@ -7,24 +7,24 @@
     "decision_rule": "Keep XGBoost only if it beats baseline by >= 0.03 NDCG@10 or Spearman Rho"
   },
   "baseline_metrics": {
-    "ndcg@5": 0.9143607409430763,
-    "ndcg@10": 0.9254871405548339,
-    "spearman_rho": 0.35749249424254714,
-    "mae": 0.17362,
-    "rmse": 0.21637999999999996,
-    "ece": 0.11964000000000001
+    "ndcg@5": 0.9282723841994753,
+    "ndcg@10": 0.9371644759924411,
+    "spearman_rho": 0.42974371220801844,
+    "mae": 0.16387999999999997,
+    "rmse": 0.20368,
+    "ece": 0.11535999999999999
   },
   "xgboost_metrics": {
-    "ndcg@5": 0.9302970117346696,
-    "ndcg@10": 0.9406153947805634,
-    "spearman_rho": 0.446338737154921,
-    "mae": 0.14842,
-    "rmse": 0.17112,
-    "ece": 0.01906
+    "ndcg@5": 0.9350049591052038,
+    "ndcg@10": 0.943746267338663,
+    "spearman_rho": 0.5005313549686742,
+    "mae": 0.13756,
+    "rmse": 0.16126000000000001,
+    "ece": 0.02298
   },
   "deltas": {
-    "ndcg_10_delta": 0.0151,
-    "spearman_rho_delta": 0.0888,
-    "mae_delta": -0.0252
+    "ndcg_10_delta": 0.0066,
+    "spearman_rho_delta": 0.0708,
+    "mae_delta": -0.0263
   }
 }

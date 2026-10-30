@@ -31,8 +31,9 @@ class EvidencePacket(BaseModel):
     matched_must_skills: list[str] = Field(default_factory=list)
     missing_must_skills: list[str] = Field(default_factory=list)
     matched_nice_skills: list[str] = Field(default_factory=list)
-    years_experience: float = 0.0
+    years_experience: float | None = None
     required_years: float = 0.0
+    seniority_level: str = "unknown"
     degree_level: str = "Unknown"
     required_degree: str = "Unknown"
     assigned_tier: str = "Review"
@@ -123,7 +124,7 @@ class InterviewQuestion(BaseModel):
 
     question: str = Field(description="The interview question text")
     target_topic: str = Field(description="Specific skill or gap targeted")
-    difficulty: Literal["junior", "mid", "senior"] = Field(
+    difficulty: Literal["junior", "mid", "senior", "unknown"] = Field(
         description="Calibrated technical difficulty level"
     )
     rationale: str = Field(description="Why this question is relevant to this candidate")

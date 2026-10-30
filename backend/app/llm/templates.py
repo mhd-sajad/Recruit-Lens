@@ -21,10 +21,16 @@ def generate_deterministic_explanation(packet: EvidencePacket) -> CandidateExpla
     c1 = packet.retrieved_chunks[0].chunk_id if packet.retrieved_chunks else "c_01"
     c2 = packet.retrieved_chunks[1].chunk_id if len(packet.retrieved_chunks) > 1 else c1
 
-    s1 = (
-        f"Candidate is evaluated as {packet.assigned_tier} with {packet.years_experience:.1f} years of relevant "
-        f"experience compared to {packet.required_years:.1f} years required [{c1}]."
-    )
+    if packet.years_experience is not None:
+        s1 = (
+            f"Candidate is evaluated as {packet.assigned_tier} with {packet.years_experience:.1f} years of relevant "
+            f"experience compared to {packet.required_years:.1f} years required [{c1}]."
+        )
+    else:
+        s1 = (
+            f"Candidate is evaluated as {packet.assigned_tier} with unverified dates of experience "
+            f"compared to {packet.required_years:.1f} years required [{c1}]."
+        )
     cite1 = [c1]
 
     matched_str = (
@@ -62,10 +68,18 @@ def generate_deterministic_questions(packet: EvidencePacket) -> InterviewQuestio
     c1 = packet.retrieved_chunks[0].chunk_id if packet.retrieved_chunks else None
     questions: list[InterviewQuestion] = []
 
-    diff: Literal["junior", "mid", "senior"] = (
-        "senior"
-        if packet.years_experience >= 5.0
-        else ("mid" if packet.years_experience >= 2.0 else "junior")
+    calibrated_diff: Literal["junior", "mid", "senior", "unknown"] = (
+        packet.seniority_level
+        if packet.seniority_level in ("junior", "mid", "senior")
+        else (
+            "senior"
+            if (packet.years_experience is not None and packet.years_experience >= 5.0)
+            else "mid"
+            if (packet.years_experience is not None and packet.years_experience >= 2.0)
+            else "junior"
+            if (packet.years_experience is not None)
+            else "unknown"
+        )
     )
 
     # 1. Probe matched skills
@@ -75,7 +89,7 @@ def generate_deterministic_questions(packet: EvidencePacket) -> InterviewQuestio
             InterviewQuestion(
                 question=f"Can you describe an end-to-end project where you implemented {skill} in a production environment?",
                 target_topic=skill,
-                difficulty=diff,
+                difficulty=calibrated_diff,
                 rationale=f"Candidate lists verified experience with {skill}.",
                 citation=c1,
             )
@@ -86,7 +100,7 @@ def generate_deterministic_questions(packet: EvidencePacket) -> InterviewQuestio
             InterviewQuestion(
                 question=f"What design trade-offs and edge cases did you encounter when scaling systems using {skill2}?",
                 target_topic=skill2,
-                difficulty=diff,
+                difficulty=calibrated_diff,
                 rationale=f"Probing technical depth and architectural complexity in {skill2}.",
                 citation=c1,
             )
@@ -99,18 +113,23 @@ def generate_deterministic_questions(packet: EvidencePacket) -> InterviewQuestio
             InterviewQuestion(
                 question=f"This role requires practical proficiency in {gap}. How would you leverage your existing competencies to ramp up rapidly on {gap}?",
                 target_topic=gap,
-                difficulty="mid",
+                difficulty="mid" if calibrated_diff != "unknown" else "unknown",
                 rationale=f"Requirement deficit: candidate resume does not show explicit evidence for {gap}.",
                 citation=None,
             )
         )
 
     # 3. Overall architecture / domain question
+    if packet.years_experience is not None:
+        q_exp = f"With {packet.years_experience:.1f} years in the field, how do you approach debugging complex regressions and maintaining test reliability?"
+    else:
+        q_exp = "How do you approach debugging complex regressions and maintaining quality in demanding operational environments?"
+
     questions.append(
         InterviewQuestion(
-            question=f"With {packet.years_experience:.1f} years in the field, how do you approach debugging complex regressions and maintaining test reliability?",
+            question=q_exp,
             target_topic="Engineering Practices",
-            difficulty=diff,
+            difficulty=calibrated_diff,
             rationale="Calibrating operational maturity and quality assurance mindset.",
             citation=c1,
         )

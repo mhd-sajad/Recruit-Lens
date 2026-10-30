@@ -202,6 +202,12 @@ async def process_batch_ingestion(task_id: str) -> None:
             ]
 
             # 7. Deterministic Zero-Wait Templates (Marked as "template")
+            cand_years_val = (
+                (features.years_gap.value + job_reqs.min_years_experience)
+                if not features.years_gap.is_missing
+                else None
+            )
+
             ev_packet = EvidencePacket(
                 candidate_id=resume.id,
                 job_id=job.id,
@@ -209,7 +215,7 @@ async def process_batch_ingestion(task_id: str) -> None:
                 matched_must_skills=features.matched_must_skills,
                 missing_must_skills=features.missing_must_skills,
                 matched_nice_skills=features.matched_nice_skills,
-                years_experience=features.years_gap.value + job_reqs.min_years_experience,
+                years_experience=cand_years_val,
                 required_years=job_reqs.min_years_experience,
                 degree_level=(
                     pdf_result.educations[0].degree
@@ -246,8 +252,12 @@ async def process_batch_ingestion(task_id: str) -> None:
                             "matched_nice": features.matched_nice_skills,
                         },
                         "experience": {
-                            "score": max(0.0, 1.0 - max(0.0, -features.years_gap.value) / 5.0),
-                            "years": features.years_gap.value + job_reqs.min_years_experience,
+                            "score": (
+                                max(0.0, 1.0 - max(0.0, -features.years_gap.value) / 5.0)
+                                if not features.years_gap.is_missing
+                                else 0.5
+                            ),
+                            "years": cand_years_val,
                             "required_years": job_reqs.min_years_experience,
                         },
                         "education": {
@@ -392,7 +402,11 @@ async def generate_on_demand_llm_text(evaluation_id: str, user_id: str | None = 
             matched_must_skills=breakdown.get("skills", {}).get("matched_must", []),
             missing_must_skills=breakdown.get("skills", {}).get("missing_must", []),
             matched_nice_skills=breakdown.get("skills", {}).get("matched_nice", []),
-            years_experience=float(breakdown.get("experience", {}).get("years", 0.0)),
+            years_experience=(
+                float(breakdown["experience"]["years"])
+                if breakdown.get("experience", {}).get("years") is not None
+                else None
+            ),
             required_years=float(breakdown.get("experience", {}).get("required_years", 0.0)),
             degree_level=str(breakdown.get("education", {}).get("degree", "Unknown")),
             required_degree=(

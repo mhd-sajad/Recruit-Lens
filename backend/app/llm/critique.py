@@ -162,12 +162,17 @@ def check_explanation_sentences(
             )
 
             if is_tier_stmt:
-                packet_nums = (
-                    f"{packet.years_experience} years {packet.required_years} years "
-                    f"{int(packet.years_experience)} years {int(packet.required_years)} years "
-                    f"{packet.years_experience} {packet.required_years} "
-                    f"{int(packet.years_experience)} {int(packet.required_years)}"
-                )
+                if packet.years_experience is not None:
+                    packet_nums = (
+                        f"{packet.years_experience} years {packet.required_years} years "
+                        f"{int(packet.years_experience)} years {int(packet.required_years)} years "
+                        f"{packet.years_experience} {packet.required_years} "
+                        f"{int(packet.years_experience)} {int(packet.required_years)}"
+                    )
+                else:
+                    packet_nums = (
+                        f"{packet.required_years} years {int(packet.required_years)} years"
+                    )
                 nums_ok, missing_nums = verify_numbers_and_entities(sentence, packet_nums)
                 if nums_ok:
                     checks.append(

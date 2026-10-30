@@ -31,15 +31,18 @@ async def generate_candidate_questions(
     matched_str = ", ".join(packet.matched_must_skills) if packet.matched_must_skills else "None"
     missing_str = ", ".join(packet.missing_must_skills) if packet.missing_must_skills else "None"
 
-    calibrated_level = (
-        "senior"
-        if packet.years_experience >= 5.0
-        else ("mid" if packet.years_experience >= 2.0 else "junior")
-    )
+    calibrated_level = packet.seniority_level or "unknown"
+    if calibrated_level not in ("senior", "mid", "junior", "unknown"):
+        calibrated_level = "unknown"
+
+    if packet.years_experience is not None:
+        exp_desc = f"{packet.years_experience:.1f} years"
+    else:
+        exp_desc = "UNKNOWN (dates unverified)"
 
     prompt = f"""INTERVIEW QUESTION GENERATION TASK:
 Candidate ID: {packet.candidate_id}
-Experience: {packet.years_experience:.1f} years (Calibrated baseline: {calibrated_level})
+Experience: {exp_desc} (Calibrated baseline: {calibrated_level})
 Matched Skills to verify: {matched_str}
 Skill gaps to probe: {missing_str}
 
@@ -50,7 +53,7 @@ INSTRUCTIONS:
 Generate 3 to 5 tailored interview questions calibrated to the candidate's seniority:
 1. Verification Questions: Formulate in-depth questions probing candidate claims in matched skills. Must cite supporting chunk ID [c_XX].
 2. Gap Probing Questions: Formulate scenario-based questions exploring missing or unverified skill areas ({missing_str}).
-3. Calibration: Set difficulty strictly to "junior", "mid", or "senior" based on question complexity.
+3. Calibration: Set difficulty strictly to "junior", "mid", "senior", or "unknown" matching candidate calibrated level ({calibrated_level}).
 
 Return a JSON object matching this schema:
 {{
@@ -58,7 +61,7 @@ Return a JSON object matching this schema:
     {{
       "question": "Question text...",
       "target_topic": "Topic name (e.g. Python, Microservices, Testing)",
-      "difficulty": "junior" | "mid" | "senior",
+      "difficulty": "junior" | "mid" | "senior" | "unknown",
       "rationale": "Why this question tests candidate fit...",
       "citation": "c_01" or null
     }}

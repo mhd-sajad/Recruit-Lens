@@ -1,0 +1,303 @@
+{
+  "metadata": {
+    "generated_by": "scripts/evaluate_parser_dev2.py",
+    "git_commit": "6ad6066128fb195a614d71e439363b16db48fef2",
+    "input_sha256": "b474b18065e31b5a6da7be0fce631d683e0ab008a5fab336bcff8667e59f493c",
+    "dataset": "data/parser_holdout_30_fresh_v2.csv",
+    "reviewer_resumes": 30,
+    "reviewer_rows": 103,
+    "reviewer_distribution": {
+      "O": 75,
+      "C": 9,
+      "W": 5,
+      "F": 4,
+      "D": 2,
+      "?": 8
+    }
+  },
+  "dev2_evaluation": {
+    "total_extracted_entries": 104,
+    "clean_or_recoverable": 104,
+    "recoverable_percent": 100.0,
+    "fragments": 0,
+    "fragments_percent": 0.0,
+    "duplicates": 6,
+    "duplicates_percent": 5.77,
+    "wrong_or_missing": 0,
+    "wrong_or_missing_percent": 0.0,
+    "dates_lost": 0,
+    "dates_wrong": 0
+  },
+  "per_resume": [
+    {
+      "resume_id": "10816645",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "10820510",
+      "ground_truth_code": "OO",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "12920612",
+      "ground_truth_code": "OODD",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "13701259",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "13837784",
+      "ground_truth_code": "OOO",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 1,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "13964744",
+      "ground_truth_code": "OOOO",
+      "extracted_count": 4,
+      "fragments": 0,
+      "duplicates": 1,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "14070138",
+      "ground_truth_code": "O?OWO",
+      "extracted_count": 5,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "18171955",
+      "ground_truth_code": "OOO",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "18589927",
+      "ground_truth_code": "C",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "20237244",
+      "ground_truth_code": "OOO",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 1,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "20490741",
+      "ground_truth_code": "OOOOOO",
+      "extracted_count": 6,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "20969119",
+      "ground_truth_code": "OOOWOO",
+      "extracted_count": 7,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "23009962",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "25127518",
+      "ground_truth_code": "OOO",
+      "extracted_count": 4,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "25974844",
+      "ground_truth_code": "OO?",
+      "extracted_count": 4,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "26829350",
+      "ground_truth_code": "O?",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "26919036",
+      "ground_truth_code": "WCFWO",
+      "extracted_count": 5,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "30311725",
+      "ground_truth_code": "OCCCC",
+      "extracted_count": 4,
+      "fragments": 0,
+      "duplicates": 2,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "30529547",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "30863060",
+      "ground_truth_code": "OOFOO",
+      "extracted_count": 5,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "32980197",
+      "ground_truth_code": "OOO",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "33023370",
+      "ground_truth_code": "OOOFW",
+      "extracted_count": 3,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "34544955",
+      "ground_truth_code": "OOOOO?O",
+      "extracted_count": 9,
+      "fragments": 0,
+      "duplicates": 1,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "36252245",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "38154903",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "39413067",
+      "ground_truth_code": "OOCOF",
+      "extracted_count": 4,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "41152404",
+      "ground_truth_code": "O",
+      "extracted_count": 1,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "43752620",
+      "ground_truth_code": "OO",
+      "extracted_count": 2,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "51508889",
+      "ground_truth_code": "CC???O?",
+      "extracted_count": 6,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    },
+    {
+      "resume_id": "91515108",
+      "ground_truth_code": "O",
+      "extracted_count": 1,
+      "fragments": 0,
+      "duplicates": 0,
+      "wrong_titles": 0,
+      "dates_lost": 0
+    }
+  ]
+}

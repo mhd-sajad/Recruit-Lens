@@ -188,7 +188,8 @@ VALID_SINGLE_WORD_TITLES = {
     "president",
     "partner",
     "founder",
-    "server",
+    "waiter",
+    "waitress",
     "bartender",
     "baker",
     "electrician",
@@ -524,7 +525,7 @@ def clean_header_text(text: str) -> str:
 
 
 def is_bullet_or_description(line: str) -> bool:
-    """Check if a line represents a bullet point or action sentence instead of a job header."""
+    """Check if a line represents a bullet point, tech list, award, or action sentence instead of a job header."""
     strip_pattern = r"^[ •*\-–—·\u2022\u25cf\u25cb\u25aa\t]+|[ •*\-–—·\u2022\u25cf\u25cb\u25aa\t]+$"
     line_clean = re.sub(strip_pattern, "", line)
     if not line_clean:
@@ -539,6 +540,48 @@ def is_bullet_or_description(line: str) -> bool:
         return True
     if re.search(
         r"\b(?:salary:|hours per week:|supervisor:|pay:|hourly rate:)\b", line_clean, re.I
+    ):
+        return True
+    # Award lines and accomplishments
+    if re.search(
+        r"\b(?:award|awarded|employee of the (?:month|quarter|year)|dean'?s list|scholarship|certificate of)\b",
+        line_clean,
+        re.I,
+    ):
+        return True
+    # Environment or technology stack section lines
+    if re.search(
+        r"^(?:environment|tech stack|technologies|tools|hardware|platforms|operating systems)\b",
+        line_clean,
+        re.I,
+    ):
+        return True
+    # Multi-comma technology lists e.g. "Technology, Java, LAN, Director, managing, access, C#, Microsoft"
+    if line_clean.count(",") >= 2 and any(
+        k in line_clean.lower()
+        for k in (
+            "java",
+            "python",
+            "sql",
+            "oracle",
+            "teradata",
+            "lan",
+            "c#",
+            "linux",
+            "microsoft",
+            "access",
+            "html",
+            "css",
+            "aws",
+            "docker",
+        )
+    ):
+        return True
+    # Meeting, duty, or activity descriptions
+    if re.search(
+        r"\b(?:consultant meetings|attended meetings|participated in|responsible for|liaised with|supervised the)\b",
+        line_clean,
+        re.I,
     ):
         return True
     if METRIC_BULLET_REGEX.search(line_clean) and (
@@ -559,10 +602,9 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
     """Clean trailing noise, dates, placeholders, and punctuation from title string."""
     t = ftfy.fix_text(raw_title)
     t = re.sub(r"[Ââ\x80-\x9f\u00a0\u200b]", "", t).strip()
-    # Only strip leading bullet symbols and numbered bullet markers (e.g. "1. " or "• "), NOT numbers like "4/5"
-    t = re.sub(r"^[ •*·–—\-\t]+", "", t).strip()
+    # Strip leading colons, bullets, dashes, tabs, and numbered bullet markers
+    t = re.sub(r"^[: •*·–—\-\t]+", "", t).strip()
     t = re.sub(r"^\d+[\.\)]\s+", "", t).strip()
-    # Only strip single character bullet prefixes (e.g. "a- ") not full words like "Front-"
     t = re.sub(r"^[a-zA-Z][-–—]\s+", "", t).strip()
     t = clean_placeholders(t)
 
@@ -575,9 +617,9 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
     if len(split_fused) > 1 and len(split_fused[0].strip()) >= 3:
         t = split_fused[0].strip()
 
-    # Normalize inverted titles: "DIRECTOR, INDEPENDENT" -> "Independent Director"
+    # Normalize inverted titles: "DIRECTOR, INDEPENDENT" -> "Independent Director", "ACCOUNTANT, SENIOR" -> "Senior Accountant"
     m_inv = re.match(
-        r"^([A-Z\s]+),\s*(INDEPENDENT|SENIOR|ASSOCIATE|ASSISTANT|LEAD)$",
+        r"^([A-Z\s]+),\s*(INDEPENDENT|SENIOR|ASSOCIATE|ASSISTANT|LEAD|PRINCIPAL|STAFF|JUNIOR)$",
         t,
         re.IGNORECASE,
     )
@@ -586,8 +628,8 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
 
     start_d, end_d, is_cur = None, None, False
 
-    if re.search(r"\s+\b(?:current|present)\b$", t, re.IGNORECASE):
-        t = re.sub(r"\s+\b(?:current|present)\b$", "", t, flags=re.IGNORECASE).strip()
+    if re.search(r"\s+\b(?:current|present|now|ongoing)\b$", t, re.IGNORECASE):
+        t = re.sub(r"\s+\b(?:current|present|now|ongoing)\b$", "", t, flags=re.IGNORECASE).strip()
         end_d = "Current"
         is_cur = True
 
@@ -595,7 +637,7 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
     if m_range:
         start_d = m_range.group("start").strip()
         end_d = m_range.group("end").strip()
-        is_cur = bool(re.search(r"current|present", end_d, re.IGNORECASE))
+        is_cur = bool(re.search(r"current|present|now|ongoing", end_d, re.IGNORECASE))
         t = t[: m_range.start()] + " " + t[m_range.end() :]
         t = t.strip()
 
@@ -605,6 +647,19 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
         t = t[: m_trail.start()].strip()
 
     t = clean_placeholders(t)
+    # Strip inline or trailing placeholders like "| City , State" or "- Company Name"
+    t = re.sub(
+        r"(?:[|–-—,/]\s*)?\b(?:company\s*name|city\s*,\s*state|state\s*,\s*city|city\s+state)\b.*$",
+        "",
+        t,
+        flags=re.IGNORECASE,
+    ).strip()
+    t = re.sub(
+        r"^.*?\b(?:company\s*name|city\s*,\s*state)\b\s*[|–-—,/]?\s*",
+        "",
+        t,
+        flags=re.IGNORECASE,
+    ).strip()
     t = re.sub(
         r"\s+\b(?:managed and maintained|managed|maintained|created|developed|operated|assisted|supervised)\s*$",
         "",
@@ -612,6 +667,7 @@ def clean_title_noise(raw_title: str) -> tuple[str, str | None, str | None, bool
         flags=re.IGNORECASE,
     ).strip()
     t = re.sub(r"[:,\-–—/&|\s]+$", "", t).strip()
+    t = re.sub(r"^[:,\-–—/&|\s]+", "", t).strip()
     return t, start_d, end_d, is_cur
 
 
@@ -647,6 +703,13 @@ def is_valid_title(title: str | None) -> bool:
         return False
     if ACTION_VERBS.match(t_clean):
         return False
+    if re.search(
+        r"\b(?:configure|configuring|install|installing|troubleshoot|troubleshooting|implement|implementing|maintain|maintaining)\b",
+        t_lower,
+    ):
+        return False
+    if t_clean.count(",") >= 2:
+        return False
 
     if len(words) == 1:
         clean_w = re.sub(r"[^a-zA-Z]", "", words[0]).lower()
@@ -679,7 +742,7 @@ def is_valid_company(company: str | None, title: str | None) -> bool:
         return False
     # Never store customer lists, duties, or descriptions
     if re.search(
-        r"\b(?:customers?|clients?|responsibilities|duties|provided|managed|support|worked|including)\b",
+        r"\b(?:customers?|clients?|responsibilities|duties|provided|managed|support|worked|including|taxes|security|management|network)\b",
         c_lower,
     ):
         return False
@@ -701,6 +764,10 @@ def is_valid_company(company: str | None, title: str | None) -> bool:
         "none",
         "e6",
         "training",
+        "environment",
+        "network security",
+        "mdm",
+        "taxes",
         "cost schedule analyst",
         "conduct seminars on healthcare reform",
         "every company for which i have served",
@@ -711,18 +778,86 @@ def is_valid_company(company: str | None, title: str | None) -> bool:
         return False
     if ACTION_VERBS.match(c):
         return False
-    has_marker = any(re.search(r"\b" + re.escape(m) + r"\b", c_lower) for m in COMMON_TITLE_MARKERS)
+
     has_comp_suffix = bool(
         re.search(
-            r"\b(?:inc|llc|corp|corporation|ltd|limited|co|company|group|services|bank|solutions|"
-            r"systems|technologies|hospital|clinic|center|firm|agency|studio|university|college|"
-            r"school|partners|labs|store|restaurant|hotel|organization|enterprises|associates)\b",
+            r"\b(?:inc\.?|llc\.?|corp\.?|corporation|ltd\.?|limited|co\.?|company|group|services|bank|solutions|"
+            r"systems|technologies|hospital|clinic|center|centre|firm|agency|studio|university|college|"
+            r"school|partners|labs|store|restaurant|hotel|organization|enterprises|associates|foundation|"
+            r"institute|department|ministry|council|authority|board|pharma|logistics|consulting)\b",
             c_lower,
         )
     )
+
+    # Disallow common skill, domain, or duty phrases when no company suffix is present
+    if any(
+        k in c_lower
+        for k in (
+            "security",
+            "taxes",
+            "management",
+            "network",
+            "reporting",
+            "analysis",
+            "development",
+            "support",
+            "database",
+            "hardware",
+            "software",
+            "operations",
+            "reconciliation",
+        )
+    ):
+        if not has_comp_suffix:
+            return False
+
+    has_marker = any(re.search(r"\b" + re.escape(m) + r"\b", c_lower) for m in COMMON_TITLE_MARKERS)
     if has_marker and not has_comp_suffix:
         return False
+
     return True
+
+
+MONTH_MAP: dict[str, int] = {
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+}
+
+
+def parse_ym(d_str: str | None, is_start: bool = True) -> tuple[int, int] | None:
+    """Parse string into (year, month) tuple. Defaults month to 1 for start, 12 for end if only year."""
+    if not d_str:
+        return None
+    d_clean = d_str.strip().lower()
+    if re.search(r"\b(?:current|present|now|ongoing)\b", d_clean):
+        return (2026, 10)
+    m_yr = re.search(r"\b(19[7-9]\d|20[0-2]\d)\b", d_clean)
+    if not m_yr:
+        return None
+    year = int(m_yr.group(1))
+    m_mo = re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b", d_clean)
+    if m_mo:
+        month = MONTH_MAP.get(m_mo.group(1)[:3], 1 if is_start else 12)
+    else:
+        m_num1 = re.search(r"\b(0?[1-9]|1[0-2])[\/\-](?:19[7-9]\d|20[0-2]\d)\b", d_clean)
+        m_num2 = re.search(r"\b(?:19[7-9]\d|20[0-2]\d)[\/\-](0?[1-9]|1[0-2])\b", d_clean)
+        if m_num1:
+            month = int(m_num1.group(1))
+        elif m_num2:
+            month = int(m_num2.group(1))
+        else:
+            month = 1 if is_start else 12
+    return (year, month)
 
 
 def validate_date_order(
@@ -734,41 +869,8 @@ def validate_date_order(
     if not end_date:
         return start_date, None, True, 1.0
 
-    months = {
-        "jan": 1,
-        "feb": 2,
-        "mar": 3,
-        "apr": 4,
-        "may": 5,
-        "jun": 6,
-        "jul": 7,
-        "aug": 8,
-        "sep": 9,
-        "oct": 10,
-        "nov": 11,
-        "dec": 12,
-    }
-
-    def parse_ym(d_str: str) -> tuple[int, int] | None:
-        d_clean = d_str.strip().lower()
-        if re.search(r"current|present", d_clean):
-            return (2026, 12)
-        m_yr = re.search(r"\b(19[7-9]\d|20[0-2]\d)\b", d_clean)
-        if not m_yr:
-            return None
-        year = int(m_yr.group(1))
-        month = 6
-        m_mo = re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b", d_clean)
-        if m_mo:
-            month = months.get(m_mo.group(1)[:3], 6)
-        else:
-            m_num = re.search(r"\b(0?[1-9]|1[0-2])(?:\/|-)\d{4}\b", d_clean)
-            if m_num:
-                month = int(m_num.group(1))
-        return (year, month)
-
-    p_start = parse_ym(start_date)
-    p_end = parse_ym(end_date)
+    p_start = parse_ym(start_date, is_start=True)
+    p_end = parse_ym(end_date, is_start=False)
     if p_start and p_end and p_end < p_start:
         return None, None, False, 0.5
 
@@ -779,7 +881,7 @@ def deduplicate_experience_entries(
     entries: list[WorkExperienceEntry],
 ) -> list[WorkExperienceEntry]:
     """Deduplicate entries within a resume by normalized title, dates, and raw text.
-    Drops undated entries whose title matches a dated entry.
+    Drops undated entries whose title matches or is contained in another entry.
     """
     if not entries:
         return []
@@ -788,17 +890,32 @@ def deduplicate_experience_entries(
         return re.sub(r"[^a-z0-9]", "", (t or "").lower())
 
     # 1. Identify titles that have dates
-    dated_titles = set()
-    for e in entries:
-        if e.title and (e.start_date or e.end_date):
-            dated_titles.add(norm_t(e.title))
+    dated_entries = [e for e in entries if e.title and (e.start_date or e.end_date)]
+    dated_titles = {norm_t(e.title) for e in dated_entries}
 
-    # 2. Filter out undated duplicates where a dated entry exists
+    # 2. Filter out duplicates:
+    # - exact match to a dated entry when this entry is undated
+    # - title is a substring or sub-phrase of another entry in the same resume when this entry is undated
     filtered = []
     for e in entries:
         nt = norm_t(e.title)
-        if not e.start_date and not e.end_date and nt in dated_titles:
+        if not nt:
             continue
+        is_dated = bool(e.start_date or e.end_date)
+        if not is_dated:
+            if nt in dated_titles:
+                continue
+            # Check if this undated title is a substring or sub-phrase of another entry
+            is_sub = False
+            for other in entries:
+                if other is e:
+                    continue
+                ot = norm_t(other.title)
+                if len(nt) >= 5 and nt in ot:
+                    is_sub = True
+                    break
+            if is_sub:
+                continue
         filtered.append(e)
 
     # 3. Deduplicate exact or near-identical repeats
@@ -823,10 +940,100 @@ def deduplicate_experience_entries(
     return deduped
 
 
+def calculate_total_experience_years(
+    entries: list[WorkExperienceEntry],
+    raw_text: str = "",
+) -> tuple[float | None, bool]:
+    """
+    Calculate total non-overlapping numerical years of experience.
+    1. Collect and merge valid (start_month, end_month) intervals from job entries.
+    2. If no valid intervals exist, fallback to explicit stated experience in raw_text.
+    3. If neither is available, return (None, False) indicating UNKNOWN.
+    Never return 0.0 for unknown.
+    """
+    intervals: list[tuple[int, int]] = []
+    for e in entries:
+        if e.date_known and e.start_date:
+            p_s = parse_ym(e.start_date, is_start=True)
+            if e.is_current:
+                p_e = (2026, 10)
+            elif e.end_date:
+                p_e = parse_ym(e.end_date, is_start=False)
+            else:
+                p_e = (p_s[0], p_s[1] + (e.duration_months or 1) - 1) if p_s else None
+
+            if p_s and p_e and p_e >= p_s:
+                s_idx = p_s[0] * 12 + p_s[1]
+                e_idx = p_e[0] * 12 + p_e[1]
+                intervals.append((s_idx, e_idx))
+
+    if intervals:
+        # Merge overlapping or contiguous date intervals
+        sorted_int = sorted(intervals, key=lambda x: x[0])
+        merged = [sorted_int[0]]
+        for s, e in sorted_int[1:]:
+            last_s, last_e = merged[-1]
+            if s <= last_e + 1:
+                merged[-1] = (last_s, max(last_e, e))
+            else:
+                merged.append((s, e))
+        total_months = sum(e - s + 1 for s, e in merged)
+        total_years = round(total_months / 12.0, 1)
+        if total_years > 0.0:
+            return total_years, True
+
+    # Fallback to duration_months on entries (e.g. mock objects or pre-computed entries without date strings)
+    explicit_months = sum(
+        e.duration_months for e in entries if e.duration_months and e.duration_months > 0
+    )
+    if explicit_months > 0:
+        return round(explicit_months / 12.0, 1), True
+
+    # Fallback to stated years in text
+    if raw_text:
+        num_map = {
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
+            "six": 6,
+            "seven": 7,
+            "eight": 8,
+            "nine": 9,
+            "ten": 10,
+            "eleven": 11,
+            "twelve": 12,
+            "fifteen": 15,
+            "twenty": 20,
+        }
+        # e.g., "nearly six years", "over 10 years", "5+ years of experience"
+        m_stated = re.search(
+            r"\b(?:over|nearly|more\s+than|at\s+least)?\s*(\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)\+?\s*years?(?:\s+of)?(?:\s+(?:relevant|technical|professional|work)?\s*experience)?\b",
+            raw_text,
+            re.IGNORECASE,
+        )
+        if m_stated:
+            val_str = m_stated.group(1).lower()
+            val = float(num_map.get(val_str, val_str))
+            if 0.5 <= val <= 50.0:
+                return round(val, 1), True
+
+        # e.g. "accountant since 2005"
+        m_since = re.search(r"\bsince\s+(19[7-9]\d|20[0-2]\d)\b", raw_text, re.IGNORECASE)
+        if m_since:
+            yr = int(m_since.group(1))
+            val = 2026 - yr
+            if 1 <= val <= 50:
+                return round(float(val), 1), True
+
+    return None, False
+
+
 def extract_structured_experiences(experience_text: str) -> list[WorkExperienceEntry]:
     """
     Decompose unstructured work experience text into structured job entries
-    (title, company, start, end, bullets).
+    (title, company, start, end, duration_months, bullets).
     """
     if not experience_text or not experience_text.strip():
         return []
@@ -856,23 +1063,33 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
             if m:
                 s_d = m.group("start").strip()
                 e_d = m.group("end").strip()
-                is_c = bool(re.search(r"current|present", e_d, re.I))
+                is_c = bool(re.search(r"current|present|now|ongoing", e_d, re.I))
                 pending_date = (s_d, e_d, is_c)
             else:
                 pending_date = (line.strip(), None, False)
             i += 1
             continue
 
-        # Delimiter split for Title - Company (attempt on raw line first to preserve delimiter)
-        delims = [" at ", " @ ", " - ", " – ", " — ", " | ", " , "]
+        # Extract date range from line FIRST to prevent dashes in date ranges from breaking delimiter splits
+        start_d, end_d, is_cur = None, None, False
+        m_range = DATE_RANGE_REGEX.search(line)
+        if m_range:
+            start_d = m_range.group("start").strip()
+            end_d = m_range.group("end").strip()
+            is_cur = bool(re.search(r"current|present|now|ongoing", end_d, re.I))
+            line_working = (line[: m_range.start()] + " " + line[m_range.end() :]).strip()
+        else:
+            line_working = line
+
+        # Delimiters for Title - Company (excluding bare comma which corrupts titles)
+        delims = [" at ", " @ ", " - ", " – ", " — ", " | "]
         found_parts = False
         curr_title = None
         curr_company = None
-        start_d, end_d, is_cur = None, None, False
 
         for d in delims:
-            if d in line:
-                parts = [p.strip() for p in line.split(d) if p.strip()]
+            if d in line_working:
+                parts = [p.strip() for p in line_working.split(d) if p.strip()]
                 if len(parts) >= 2:
                     p1, s1, e1, c1 = clean_title_noise(parts[0])
                     p2, s2, e2, c2 = clean_title_noise(parts[1])
@@ -881,19 +1098,22 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
                     if p1_valid and not p2_valid:
                         curr_title = p1
                         curr_company = p2 if is_valid_company(p2, p1) else None
-                        start_d, end_d, is_cur = s1 or s2, e1 or e2, c1 or c2
+                        if not start_d:
+                            start_d, end_d, is_cur = s1 or s2, e1 or e2, c1 or c2
                         found_parts = True
                         break
                     elif p2_valid and not p1_valid:
                         curr_title = p2
                         curr_company = p1 if is_valid_company(p1, p2) else None
-                        start_d, end_d, is_cur = s2 or s1, e2 or e1, c2 or c1
+                        if not start_d:
+                            start_d, end_d, is_cur = s2 or s1, e2 or e1, c2 or c1
                         found_parts = True
                         break
 
         if not found_parts:
-            h_clean, s_trail, e_trail, cur_trail = clean_title_noise(line)
-            start_d, end_d, is_cur = s_trail, e_trail, cur_trail
+            h_clean, s_trail, e_trail, cur_trail = clean_title_noise(line_working)
+            if not start_d:
+                start_d, end_d, is_cur = s_trail, e_trail, cur_trail
             for d in delims:
                 if d in h_clean:
                     parts = [p.strip() for p in h_clean.split(d) if p.strip()]
@@ -905,13 +1125,15 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
                         if p1_valid and not p2_valid:
                             curr_title = p1
                             curr_company = p2 if is_valid_company(p2, p1) else None
-                            start_d, end_d, is_cur = s1 or s2, e1 or e2, c1 or c2
+                            if not start_d:
+                                start_d, end_d, is_cur = s1 or s2, e1 or e2, c1 or c2
                             found_parts = True
                             break
                         elif p2_valid and not p1_valid:
                             curr_title = p2
                             curr_company = p1 if is_valid_company(p1, p2) else None
-                            start_d, end_d, is_cur = s2 or s1, e2 or e1, c2 or c1
+                            if not start_d:
+                                start_d, end_d, is_cur = s2 or s1, e2 or e1, c2 or c1
                             found_parts = True
                             break
 
@@ -937,7 +1159,7 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
                 if m_next and not start_d:
                     start_d = m_next.group("start").strip()
                     end_d = m_next.group("end").strip()
-                    is_cur = bool(re.search(r"current|present", end_d, re.I))
+                    is_cur = bool(re.search(r"current|present|now|ongoing", end_d, re.I))
                     i = j
                     break
                 elif DATE_ONLY_REGEX.match(next_l) and not start_d:
@@ -946,7 +1168,7 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
                     break
                 if not final_company:
                     c_cand, _, _, _ = clean_title_noise(next_l)
-                    for cd in [" – ", " - ", " — ", " | ", " , "]:
+                    for cd in [" – ", " - ", " — ", " | "]:
                         if cd in c_cand:
                             c_cand = c_cand.split(cd)[0].strip()
                             break
@@ -957,12 +1179,22 @@ def extract_structured_experiences(experience_text: str) -> list[WorkExperienceE
                 j += 1
 
             v_start, v_end, d_known, conf = validate_date_order(start_d, end_d)
+
+            # Compute entry duration in months
+            dur_months = None
+            if d_known and v_start:
+                p_s = parse_ym(v_start, is_start=True)
+                p_e = (2026, 10) if is_cur else (parse_ym(v_end, is_start=False) if v_end else None)
+                if p_s and p_e and p_e >= p_s:
+                    dur_months = (p_e[0] - p_s[0]) * 12 + (p_e[1] - p_s[1]) + 1
+
             entries.append(
                 WorkExperienceEntry(
                     title=curr_title,
                     company=final_company,
                     start_date=v_start,
                     end_date=v_end,
+                    duration_months=dur_months,
                     is_current=is_cur,
                     date_known=d_known,
                     confidence=conf,

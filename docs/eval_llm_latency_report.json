@@ -3,29 +3,29 @@
     "provider": "Groq",
     "model": "qwen/qwen3.8-27b",
     "cold_latency_ms": {
-      "mean": 793.0,
-      "median": 784.8,
-      "min": 715.2,
-      "max": 892.4
+      "mean": 10109.1,
+      "median": 10083.0,
+      "min": 2483.3,
+      "max": 14810.8
     },
     "cached_latency_ms": {
-      "mean": 0.41,
-      "median": 0.41,
-      "min": 0.38,
-      "max": 0.45
+      "mean": 1.18,
+      "median": 0.96,
+      "min": 0.69,
+      "max": 2.66
     },
     "token_usage_per_call": {
-      "mean_prompt_tokens": 1191.0,
-      "mean_completion_tokens": 283.6,
-      "mean_total_tokens": 1474.6
+      "mean_prompt_tokens": 943.8,
+      "mean_completion_tokens": 1098.7,
+      "mean_total_tokens": 2042.5
     }
   },
   "local_deterministic_template": {
     "latency_ms": {
-      "mean": 0.08,
-      "median": 0.08,
-      "min": 0.07,
-      "max": 0.09
+      "mean": 0.02,
+      "median": 0.02,
+      "min": 0.02,
+      "max": 0.03
     }
   },
   "latency_reconciliation_explanation": "The ~700-800 ms latency represents a full remote HTTPS roundtrip to Groq's cloud infrastructure (including TLS handshake, queueing, model time-to-first-token, and full streaming completion of 150-250 tokens). In contrast, cached responses take ~0.4 ms (local SQLite query), and local deterministic templating takes ~0.08 ms. Local embedding and BM25 retrieval per candidate takes ~35 ms. The remote LLM network call accounts for >95% of total end-to-end latency.",
