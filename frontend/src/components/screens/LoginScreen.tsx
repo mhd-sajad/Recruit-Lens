@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Lock, User, AlertCircle, ArrowLeft } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 import { useAuth } from "../../context/AuthContext";
 
 interface LoginScreenProps {
@@ -73,31 +74,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
       <div className="w-full max-w-[420px] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-lg p-7">
         {/* Brand Header */}
-        <div className="flex flex-col items-start gap-1 pb-4">
+        <div className="flex flex-col items-start pb-4">
           <button
             onClick={onNavigateHome || (() => { window.location.pathname = "/"; })}
-            className="flex items-center gap-2 text-left group cursor-pointer focus:outline-none"
+            className="flex items-center text-left group cursor-pointer focus:outline-none"
             aria-label="Recruit Lens Home"
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#818CF8"
-              strokeWidth="2.5"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Recruit Lens
-            </h1>
+            <BrandLogo size="lg" asHeading={true} />
           </button>
-          <span className="font-mono text-[9px] tracking-[0.24em] text-[var(--text-secondary)] uppercase">
-            Explainable Hiring
-          </span>
         </div>
 
         {/* Tab Toggle: Log in / Sign up */}

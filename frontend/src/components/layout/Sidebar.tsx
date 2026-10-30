@@ -15,6 +15,7 @@ import {
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
 import type { AppRoute } from "../../lib/router";
@@ -71,23 +72,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="h-14 px-4 border-b border-[var(--border-default)] flex items-center justify-between">
         <button
           onClick={() => onNavigate("/")}
-          className="flex items-center gap-2 text-left group cursor-pointer focus:outline-none"
+          className="flex items-center text-left group cursor-pointer focus:outline-none"
           aria-label="Recruit Lens Home"
         >
-          <div className="w-6 h-6 rounded bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:border-indigo-500 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-sm tracking-tight text-[var(--text-primary)] leading-tight">
-              Recruit <span className="text-indigo-400 font-extrabold">Lens</span>
-            </span>
-            <span className="text-[8px] font-mono tracking-widest uppercase text-[var(--text-secondary)]">
-              EXPLAINABLE HIRING
-            </span>
-          </div>
+          <BrandLogo size="sm" />
         </button>
       </div>
 

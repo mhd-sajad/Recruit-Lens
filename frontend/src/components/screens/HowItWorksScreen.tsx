@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowLeft, ArrowRight, Shield, Lock, Send, CheckCircle2, EyeOff, SlidersHorizontal, FileText, Search } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 import { useAuth } from "../../context/AuthContext";
 
 interface HowItWorksScreenProps {
@@ -227,14 +228,13 @@ export const HowItWorksScreen: React.FC<HowItWorksScreenProps> = ({ onNavigate }
               Home
             </button>
             <div className="h-4 w-px bg-[var(--border-default)]" />
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base tracking-tight text-[var(--text-primary)]">
-                Recruit <span className="text-indigo-400 font-extrabold">Lens</span>
-              </span>
-              <span className="text-[9px] font-mono tracking-widest uppercase text-[var(--text-secondary)]">
-                EXPLAINABLE HIRING
-              </span>
-            </div>
+            <button
+              onClick={() => onNavigate("/")}
+              className="flex items-center text-left group cursor-pointer focus:outline-none"
+              aria-label="Recruit Lens Home"
+            >
+              <BrandLogo size="md" />
+            </button>
           </div>
 
           <div className="flex items-center gap-3">

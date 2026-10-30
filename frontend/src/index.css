@@ -68,6 +68,21 @@
     --tier-reject-text: #f87171;
     --tier-reject-border: rgba(248, 113, 113, 0.3);
   }
+
+  .rl-logo {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .rl-logo-text {
+    font-family: 'Space Grotesk', Inter, -apple-system, sans-serif;
+    letter-spacing: -0.03em;
+  }
+  .rl-logo-sub {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.24em;
+  }
 }
 
 body {

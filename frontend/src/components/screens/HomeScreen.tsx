@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowRight, CheckCircle2, Shield, Search, FileText, BarChart3, Sliders, Mail, UserCheck, Lock } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 import { useAuth } from "../../context/AuthContext";
 
 interface HomeScreenProps {
@@ -25,23 +26,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
           {/* Logo & Brand */}
           <button
             onClick={() => onNavigate("/")}
-            className="flex items-center gap-2.5 text-left group cursor-pointer focus:outline-none"
+            className="flex items-center text-left group cursor-pointer focus:outline-none"
             aria-label="Recruit Lens Home"
           >
-            <div className="w-8 h-8 rounded-lg bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:border-indigo-500 transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg tracking-tight text-[var(--text-primary)]">
-                Recruit <span className="text-indigo-400 font-extrabold">Lens</span>
-              </span>
-              <span className="text-[9px] font-mono tracking-widest uppercase text-[var(--text-secondary)] -mt-1">
-                EXPLAINABLE HIRING
-              </span>
-            </div>
+            <BrandLogo size="md" />
           </button>
 
           {/* Nav Links & Auth CTA */}

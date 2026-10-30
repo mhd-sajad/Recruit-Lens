@@ -1,5 +1,6 @@
 import React from "react";
 import { ArrowLeft } from "lucide-react";
+import { BrandLogo } from "../common/BrandLogo";
 import type { AppRoute } from "../../lib/router";
 import type { JobItem } from "../../lib/mockData";
 
@@ -86,18 +87,10 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Recruit Lens Wordmark (always links Home "/") */}
         <button
           onClick={() => onNavigate("/")}
-          className="flex items-center gap-2 group cursor-pointer focus:outline-none"
+          className="flex items-center text-left group cursor-pointer focus:outline-none"
           aria-label="Recruit Lens Home"
         >
-          <div className="w-6 h-6 rounded bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:border-indigo-500 transition-colors">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-          </div>
-          <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">
-            Recruit <span className="text-indigo-400 font-extrabold">Lens</span>
-          </span>
+          <BrandLogo size="md" />
         </button>
       </div>
 
