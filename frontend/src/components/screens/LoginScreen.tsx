@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, KeyRound, Mail, AlertCircle, Info } from "lucide-react";
+import { KeyRound, Mail, AlertCircle, Info } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 export const LoginScreen: React.FC = () => {
@@ -7,8 +7,10 @@ export const LoginScreen: React.FC = () => {
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
   const defaultDemoEmail = import.meta.env.VITE_DEMO_EMAIL || "";
 
+  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState(isDemoMode ? defaultDemoEmail : "");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("Lead Admin");
   const [selectedRole, setSelectedRole] = useState<"admin" | "recruiter" | "auditor" | null>(
     isDemoMode ? "admin" : null
   );
@@ -39,6 +41,7 @@ export const LoginScreen: React.FC = () => {
   const handleSelectRole = (r: (typeof demoRoles)[0]) => {
     setSelectedRole(r.id);
     setEmail(r.email);
+    setFullName(r.name);
     setError(null);
   };
 
@@ -64,41 +67,94 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--canvas)]">
-      <div className="w-full max-w-md bg-[var(--surface)] border border-[var(--border-default)] rounded-xl shadow-xl overflow-hidden">
-        {/* Header */}
-        <div className="p-7 text-center border-b border-[var(--border-default)]">
-          <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-white mx-auto shadow-sm mb-3">
-            <Search className="w-5 h-5 stroke-[2.5]" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-canvas)]">
+      <div className="w-full max-w-[440px] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-lg p-7">
+        {/* Brand Header */}
+        <div className="flex flex-col items-start gap-1 pb-4">
+          <div className="flex items-center gap-2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#818CF8"
+              strokeWidth="2.5"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+              Recruit Lens
+            </h1>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-            Recruit Lens
-          </h1>
-          <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Explainable, Evidence-Grounded AI Screening Platform
+          <span className="font-mono text-[9px] tracking-[0.24em] text-[var(--text-secondary)] uppercase">
+            Explainable Hiring
+          </span>
+        </div>
+
+        {/* Tab Toggle: Log in / Sign up */}
+        <div
+          role="tablist"
+          className="flex mt-3 border border-[var(--border-default)] rounded-lg overflow-hidden p-0.5 bg-[var(--bg-subtle)]"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "login"}
+            onClick={() => setActiveTab("login")}
+            className={`flex-1 min-h-[36px] text-xs font-semibold rounded-md transition-colors ${
+              activeTab === "login"
+                ? "bg-[var(--primary-btn)] text-white shadow-xs"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            Log in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "signup"}
+            onClick={() => setActiveTab("signup")}
+            className={`flex-1 min-h-[36px] text-xs font-semibold rounded-md transition-colors ${
+              activeTab === "signup"
+                ? "bg-[var(--primary-btn)] text-white shadow-xs"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            Sign up
+          </button>
+        </div>
+
+        <div className="mt-4">
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">
+            {activeTab === "login" ? "Sign in to your account" : "Create your account"}
+          </h2>
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            After this you will land on Requisitions.
           </p>
         </div>
 
         {/* Role Switcher Chips (Demo Mode Only) */}
         {isDemoMode && (
-          <div className="p-5 border-b border-[var(--border-default)] bg-[var(--subtle)]/50">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] block mb-2">
-              Switch Demo Role:
+          <div className="mt-4 p-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)]/60">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] block mb-2 font-mono">
+              Demo Preset Credentials:
             </span>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {demoRoles.map((r) => (
                 <button
                   key={r.id}
                   type="button"
                   onClick={() => handleSelectRole(r)}
-                  className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
+                  className={`p-1.5 rounded-md text-left border transition-all cursor-pointer ${
                     selectedRole === r.id
                       ? "bg-blue-600 text-white border-blue-500 shadow-xs"
-                      : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border-default)] hover:text-[var(--text-primary)]"
+                      : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-default)] hover:text-[var(--text-primary)]"
                   }`}
                 >
-                  <span className="text-xs font-semibold block">{r.name}</span>
-                  <span className="text-[10px] opacity-80 font-mono block truncate">
+                  <span className="text-[11px] font-semibold block">{r.name}</span>
+                  <span className="text-[9px] opacity-80 font-mono block truncate">
                     {r.id}
                   </span>
                 </button>
@@ -107,31 +163,50 @@ export const LoginScreen: React.FC = () => {
           </div>
         )}
 
-        {/* Demo Credentials Banner (Demo Mode Only) */}
+        {/* Demo Credentials Banner */}
         {isDemoMode && (
-          <div className="mx-5 mt-4 p-3 bg-blue-500/10 border border-blue-500/25 rounded-lg flex items-start gap-2.5 text-xs text-blue-700 dark:text-blue-300">
-            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-            <div className="space-y-1">
+          <div className="mt-3 p-2.5 bg-blue-500/10 border border-blue-500/25 rounded-lg flex items-start gap-2 text-xs text-blue-700 dark:text-blue-300">
+            <Info className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
+            <div className="space-y-0.5 text-[11px]">
               <span className="font-semibold block">Demo Mode Active:</span>
-              <div className="font-mono text-[11px]">
-                Email: <strong>{email || "demo@recruitlens.local"}</strong>
+              <div className="font-mono text-[10px]">
+                Email: <strong>{email || "admin@recruitlens.local"}</strong>
                 <br />
-                Password: <strong>(Configured via DEMO_PASSWORD)</strong>
+                Password: <strong>(From DEMO_PASSWORD env)</strong>
               </div>
             </div>
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
           {error && (
             <div
               role="alert"
               aria-live="assertive"
-              className="p-3 bg-red-500/15 border border-red-500/30 text-red-700 dark:text-red-300 rounded-lg text-xs flex items-center gap-2"
+              className="p-2.5 bg-red-500/15 border border-red-500/30 text-red-700 dark:text-red-300 rounded-lg text-xs flex items-center gap-2"
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {activeTab === "signup" && (
+            <div className="space-y-1">
+              <label
+                htmlFor="login-name-input"
+                className="text-xs font-medium text-[var(--text-secondary)]"
+              >
+                Full Name
+              </label>
+              <input
+                id="login-name-input"
+                type="text"
+                className="w-full text-xs px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Alex Morgan"
+              />
             </div>
           )}
 
@@ -143,15 +218,15 @@ export const LoginScreen: React.FC = () => {
               Email Address
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-[var(--text-secondary)] absolute left-3 top-2.5" />
+              <Mail className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-3 top-2.5" />
               <input
                 id="login-email-input"
                 type="email"
                 required
-                className="w-full text-xs pl-9 pr-3 py-2 bg-[var(--canvas)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs pl-8 pr-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="recruiter@company.com"
+                placeholder="admin@recruitlens.local"
               />
             </div>
           </div>
@@ -164,12 +239,12 @@ export const LoginScreen: React.FC = () => {
               Password
             </label>
             <div className="relative">
-              <KeyRound className="w-4 h-4 text-[var(--text-secondary)] absolute left-3 top-2.5" />
+              <KeyRound className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-3 top-2.5" />
               <input
                 id="login-password-input"
                 type="password"
                 required
-                className="w-full text-xs pl-9 pr-3 py-2 bg-[var(--canvas)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-xs pl-8 pr-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
@@ -180,20 +255,22 @@ export const LoginScreen: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2"
+            className="w-full mt-2 py-2.5 px-4 bg-[var(--primary-btn)] hover:bg-[var(--primary-btn-hover)] disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2 min-h-[40px]"
           >
             {loading ? (
               <span className="inline-flex items-center gap-2">
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Signing in...
               </span>
+            ) : activeTab === "login" ? (
+              "Sign in to Recruiter Portal"
             ) : (
-              "Sign In to Recruiter Portal"
+              "Create account and continue"
             )}
           </button>
 
-          <p className="text-[11px] text-center text-[var(--text-secondary)] pt-2 font-mono">
-            Role-Based Access Control · WCAG 2.2 AA Compliant
+          <p className="font-mono text-[11px] text-center text-[var(--text-secondary)] pt-2 border-t border-[var(--border-default)]">
+            Grounded AI · Cryptographic Hash-Chain Audit · WCAG 2.2 AA
           </p>
         </form>
       </div>

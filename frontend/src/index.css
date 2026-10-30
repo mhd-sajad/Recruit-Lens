@@ -2,14 +2,20 @@
 
 @layer base {
   :root {
-    --bg-canvas: #f8fafc;
+    --bg-canvas: #faf9f5;
     --bg-surface: #ffffff;
     --bg-subtle: #f1f5f9;
-    --border-default: #e2e8f0;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --border-default: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
     --primary-btn: #2563eb;
     --primary-btn-hover: #1d4ed8;
+
+    /* Aliases without bg- prefix for compatibility */
+    --canvas: var(--bg-canvas);
+    --surface: var(--bg-surface);
+    --subtle: var(--bg-subtle);
+    --border: var(--border-default);
 
     /* Semantic Tiers Light (Pass WCAG 2.2 AA Contrast) */
     --tier-fasttrack-bg: #ecfdf5;
@@ -38,6 +44,12 @@
     --text-secondary: #9ca3af;
     --primary-btn: #2563eb;
     --primary-btn-hover: #1d4ed8;
+
+    /* Aliases without bg- prefix for compatibility */
+    --canvas: var(--bg-canvas);
+    --surface: var(--bg-surface);
+    --subtle: var(--bg-subtle);
+    --border: var(--border-default);
 
     /* Semantic Tiers Dark (Pass WCAG 2.2 AA Contrast) */
     --tier-fasttrack-bg: rgba(16, 185, 129, 0.15);

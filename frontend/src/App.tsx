@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { Navbar } from "./components/layout/Navbar";
+import { Sidebar } from "./components/layout/Sidebar";
 import { ToastProvider, useToast } from "./components/common/Toast";
 
 // Screens
@@ -173,7 +173,7 @@ const MainAppContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--canvas)] text-xs text-[var(--text-secondary)]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-canvas)] text-xs text-[var(--text-secondary)]">
         <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2" />
         Initializing Recruit Lens...
       </div>
@@ -185,9 +185,9 @@ const MainAppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] flex flex-col font-sans transition-colors">
-      {/* Global 56px High Navbar */}
-      <Navbar
+    <div className="flex h-screen overflow-hidden bg-[var(--bg-canvas)] text-[var(--text-primary)] font-sans transition-colors">
+      {/* Fixed 240px Left Sidebar */}
+      <Sidebar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         onOpenCreateJob={() => setIsCreateJobOpen(true)}
@@ -201,73 +201,75 @@ const MainAppContent: React.FC = () => {
         }}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        {currentTab === "requisitions" && (
-          <RequisitionsScreen
-            jobs={jobsList}
-            onSelectJob={handleSelectJobFromRequisitions}
-            onCreateJob={() => setIsCreateJobOpen(true)}
-          />
-        )}
+      {/* Scrollable Main Content Area */}
+      <div className="flex-1 overflow-y-auto min-w-0 lg:pt-0 pt-14">
+        <main className="p-6 max-w-[1280px] mx-auto">
+          {currentTab === "requisitions" && (
+            <RequisitionsScreen
+              jobs={jobsList}
+              onSelectJob={handleSelectJobFromRequisitions}
+              onCreateJob={() => setIsCreateJobOpen(true)}
+            />
+          )}
 
-        {currentTab === "candidates" && (
-          <RankedTableScreen
-            job={selectedJob}
-            candidates={candidatesList}
-            onSelectCandidate={handleOpenDossier}
-            onOpenEmail={handleOpenEmailForCandidate}
-            onExportAudit={() => setCurrentTab("audit")}
-            onNavigateRequisitions={() => setCurrentTab("requisitions")}
-          />
-        )}
+          {currentTab === "candidates" && (
+            <RankedTableScreen
+              job={selectedJob}
+              candidates={candidatesList}
+              onSelectCandidate={handleOpenDossier}
+              onOpenEmail={handleOpenEmailForCandidate}
+              onExportAudit={() => setCurrentTab("audit")}
+              onNavigateRequisitions={() => setCurrentTab("requisitions")}
+            />
+          )}
 
-        {currentTab === "dossier" && (
-          <CandidateDossierScreen
-            dossier={dossier}
-            candidatesList={candidatesList}
-            onBack={() => setCurrentTab("candidates")}
-            onNextCandidate={(nextId) => handleOpenDossier(nextId)}
-            onOpenEmail={(candId) => handleOpenEmailForCandidate(candId)}
-          />
-        )}
+          {currentTab === "dossier" && (
+            <CandidateDossierScreen
+              dossier={dossier}
+              candidatesList={candidatesList}
+              onBack={() => setCurrentTab("candidates")}
+              onNextCandidate={(nextId) => handleOpenDossier(nextId)}
+              onOpenEmail={(candId) => handleOpenEmailForCandidate(candId)}
+            />
+          )}
 
-        {currentTab === "pipeline" && (
-          <PipelineBoardScreen
-            candidates={candidatesList}
-            onSelectCandidate={handleOpenDossier}
-            onUpdateCandidateStage={handleUpdateCandidateStage}
-          />
-        )}
+          {currentTab === "pipeline" && (
+            <PipelineBoardScreen
+              candidates={candidatesList}
+              onSelectCandidate={handleOpenDossier}
+              onUpdateCandidateStage={handleUpdateCandidateStage}
+            />
+          )}
 
-        {currentTab === "emails" && (
-          <EmailCenterScreen
-            initialCandidateCode={dossier.candidate.code}
-            onSendSuccess={() => {
-              showToast("Email logged and queued with cryptographic audit hash.", "success");
-            }}
-          />
-        )}
+          {currentTab === "emails" && (
+            <EmailCenterScreen
+              initialCandidateCode={dossier.candidate.code}
+              onSendSuccess={() => {
+                showToast("Email logged and queued with cryptographic audit hash.", "success");
+              }}
+            />
+          )}
 
-        {currentTab === "audit" && <AuditLogScreen />}
+          {currentTab === "audit" && <AuditLogScreen />}
 
-        {currentTab === "analytics" && <AnalyticsScreen />}
+          {currentTab === "analytics" && <AnalyticsScreen />}
 
-        {currentTab === "settings" && <SettingsScreen />}
+          {currentTab === "settings" && <SettingsScreen />}
 
-        {![
-          "requisitions",
-          "candidates",
-          "dossier",
-          "pipeline",
-          "emails",
-          "audit",
-          "analytics",
-          "settings",
-        ].includes(currentTab) && (
-          <NotFoundScreen onHome={() => setCurrentTab("requisitions")} />
-        )}
-      </main>
+          {![
+            "requisitions",
+            "candidates",
+            "dossier",
+            "pipeline",
+            "emails",
+            "audit",
+            "analytics",
+            "settings",
+          ].includes(currentTab) && (
+            <NotFoundScreen onHome={() => setCurrentTab("requisitions")} />
+          )}
+        </main>
+      </div>
 
       {/* Requisition Creator 3-Step Wizard Modal */}
       <JobCreateModal
