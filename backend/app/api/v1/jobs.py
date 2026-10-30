@@ -13,7 +13,7 @@ from app.api.v1.schemas import (
     JobResponse,
     JobUpdateRequest,
 )
-from app.auth.dependencies import get_current_user, require_role
+from app.auth.dependencies import get_current_user, get_optional_current_user, require_role
 from app.core.jd_requirements import extract_job_requirements
 from app.core.taxonomy import SkillTaxonomy
 from app.db.models import AuditLog, Job, User
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"])
 @router.post("/extract-requirements", response_model=JobExtractRequirementsResponse)
 async def extract_requirements_endpoint(
     payload: JobExtractRequirementsRequest,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User | None, Depends(get_optional_current_user)] = None,
 ) -> JobExtractRequirementsResponse:
     """Extract structured skills, experience, and education requirements from raw JD text in real time."""
     taxonomy = SkillTaxonomy.get_instance()

@@ -35,6 +35,8 @@ export interface CandidateItem {
   verified_experience: string; // e.g. "8.5 yrs" or "Dates missing"
   stage: "Screened" | "Interview" | "Technical assessment" | "Offer";
   missing_must_haves: string[];
+  skills?: string[];
+  raw_text?: string;
 }
 
 export interface CitationItem {

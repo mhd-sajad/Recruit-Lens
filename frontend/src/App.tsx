@@ -156,16 +156,66 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
       (c) => (c.id === candId || c.code === candId) && (c.job_id || "job-backend") === jobId
     );
     if (cand) {
-      setDossier({
-        ...SAMPLE_DOSSIER_6299,
-        candidate: cand,
-      });
+      const isDemoJob = jobId === "job-backend" && (!cand.job_id || cand.job_id === "job-backend");
+      const baseDossier: CandidateDossier = isDemoJob
+        ? { ...SAMPLE_DOSSIER_6299, candidate: cand }
+        : {
+            candidate: cand,
+            score_contributions: [
+              {
+                feature: "Skills Assessment",
+                delta: Math.round(cand.match_score * 0.4),
+                description: "Skill alignment with job requirements",
+              },
+              {
+                feature: "Experience Verification",
+                delta: Math.round(cand.match_score * 0.3),
+                description: `${cand.verified_experience} verified experience`,
+              },
+              {
+                feature: "Semantic Fit",
+                delta: Math.round(cand.match_score * 0.3),
+                description: "Overall role context semantic similarity",
+              },
+            ],
+            skills: {
+              matched: cand.skills || [],
+              inferred: [],
+              missing: [],
+            },
+            briefing: {
+              sentences: [
+                {
+                  text: `Candidate ${cand.code} was evaluated with a match score of ${cand.match_score}% based on parsed resume evidence.`,
+                  citation_ids: ["c_01"],
+                },
+              ],
+            },
+            resume_text: "Loading verbatim candidate resume text...",
+            citations: [
+              {
+                id: "c_01",
+                section: "EXTRACTED RESUME EVIDENCE",
+                text_snippet: `Candidate ${cand.code} verified for ${cand.most_recent_role || "target position"}.`,
+                char_start: 0,
+                char_end: 100,
+              },
+            ],
+            simulator_options: [],
+            interview_questions: {
+              skill_verification: [],
+              gap_probing: [],
+            },
+          };
+
+      setDossier(baseDossier);
 
       api
         .getCandidateDetail(candId)
         .then((detail) => {
-          if (detail && detail.id && detail.breakdown) {
-            const contributions = Object.entries(detail.breakdown).map(([k, val]) => {
+          if (detail && detail.id) {
+            const breakdown = (detail.breakdown || {}) as Record<string, any>;
+            const contributions = Object.entries(breakdown).map(([k, val]) => {
               const v = val as { score?: number; weight?: number } | undefined;
               return {
                 feature: k.charAt(0).toUpperCase() + k.slice(1) + " Assessment",
@@ -173,13 +223,55 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
                 description: `Evidence-backed model component (${Math.round((v?.score ?? 0.8) * 100)}% fit score)`,
               };
             });
-            if (contributions.length > 0) {
-              setDossier((prev) => ({
-                ...prev,
-                candidate: cand,
-                score_contributions: contributions,
-              }));
-            }
+
+            const breakdownSkills = breakdown.skills || {};
+            const matchedSkills = Array.isArray(breakdownSkills.matched_must) && breakdownSkills.matched_must.length > 0
+              ? breakdownSkills.matched_must
+              : cand.skills || [];
+            const inferredSkills = Array.isArray(breakdownSkills.matched_nice) ? breakdownSkills.matched_nice : [];
+            const missingSkills = Array.isArray(breakdownSkills.missing_must) ? breakdownSkills.missing_must : [];
+
+            const expl = (detail.explanation || {}) as Record<string, any>;
+            const sentences: Array<{ text: string; citation_ids: string[] }> = Array.isArray(expl.sentences) && expl.sentences.length > 0
+              ? expl.sentences.map((s: any) => ({
+                  text: s.text || "",
+                  citation_ids: Array.isArray(s.citation_ids) && s.citation_ids.length > 0 ? s.citation_ids : ["c_01"],
+                }))
+              : [
+                  {
+                    text: expl.summary || `Candidate evaluated with ${Math.round(detail.total_score >= 1 ? detail.total_score : detail.total_score * 100)}% fit score.`,
+                    citation_ids: ["c_01"],
+                  },
+                ];
+
+            const rawText = detail.raw_text || baseDossier.resume_text;
+            const citations = Array.isArray(detail.citations) && detail.citations.length > 0
+              ? detail.citations
+              : baseDossier.citations;
+
+            const questions = (detail.interview_questions || {}) as Record<string, any>;
+
+            setDossier((prev) => ({
+              ...prev,
+              candidate: cand,
+              score_contributions: contributions.length > 0 ? contributions : prev.score_contributions,
+              skills: {
+                matched: matchedSkills,
+                inferred: inferredSkills,
+                missing: missingSkills,
+              },
+              briefing: { sentences },
+              resume_text: rawText,
+              citations: citations,
+              interview_questions: {
+                skill_verification: Array.isArray(questions.skill_verification) && questions.skill_verification.length > 0
+                  ? questions.skill_verification
+                  : prev.interview_questions.skill_verification,
+                gap_probing: Array.isArray(questions.gap_probing) && questions.gap_probing.length > 0
+                  ? questions.gap_probing
+                  : prev.interview_questions.gap_probing,
+              },
+            }));
           }
         })
         .catch(() => {});

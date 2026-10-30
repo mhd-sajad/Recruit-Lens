@@ -116,6 +116,8 @@ class EvaluationDetailResponse(BaseModel):
     llm_generated: bool
     created_at: datetime
     updated_at: datetime
+    raw_text: str = ""
+    citations: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class StageTransitionRequest(BaseModel):

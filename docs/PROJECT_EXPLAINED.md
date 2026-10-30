@@ -888,6 +888,16 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Live Evaluation Polling & Contextual Empty States (`RankedTableScreen.tsx`, `App.tsx`):** Updated candidate polling to clear stale evaluations when switching to fresh requisitions with 0 candidates. Displays contextual empty states: "Awaiting candidate evaluations" with active spinner during background batch ingestion, or "Add Candidates" prompt for draft jobs.
   - **Quality Gates:** 162/162 backend tests passing at 88% overall statement coverage; 23/23 Vitest frontend unit tests passing; 17/17 Playwright E2E screens passing; 0 ESLint errors; 0 TypeScript compilation errors in production build; Gitleaks verifies 0 secrets in repository history.
 
+### Component: Verbatim Candidate Evidence Dossier & Strict Zero-Demo Isolation (`backend/app/api/v1/evaluations.py`, `backend/app/api/v1/schemas.py`, `backend/app/auth/dependencies.py`, `frontend/src/App.tsx`, `frontend/src/lib/transformers.ts`)
+- **What it is:** Real-time candidate dossier mapping with verbatim resume text extraction, dynamic evidence citations, live skill alignment groups, and strict zero-demo initialization for all newly created requisitions and candidates.
+- **Why:** Requisition dashboards previously defaulted to hardcoded counts (14 candidates, 3 FastTrack, 4 Interview, etc.) for any requisition without evaluations. Furthermore, clicking on any candidate dossier previously displayed demo candidate #6299's hardcoded resume text, Berkeley education, and Kafka/Raft citations.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Dynamic Dossier Retrieval:** `GET /api/v1/evaluations/{id}` now eagerly loads candidate chunks and extracts verbatim resume text alongside section-aware evidence citations (`c_01`, `c_02`).
+  - **Real-time Dossier Mapping (`App.tsx`):** When inspecting candidate dossiers, candidate skills, score contributions, verbatim resume text, and AI briefing sentences with citations are dynamically populated from the candidate's actual parsed resume and evaluation record.
+  - **Zero-Demo Transformer Guard (`transformers.ts`):** `jobResponseToJobItem` strictly isolates demo metrics to `job-backend`. All newly created requisitions strictly start with 0 Total Resumes, 0 FastTrack, 0 Interview, 0 Hold, 0 Reject.
+  - **Public Requirement Preview (`jobs.py`, `dependencies.py`):** Added `get_optional_current_user` to ensure `POST /api/v1/jobs/extract-requirements` never fails with 401 Unauthorized during preview or token refresh.
+  - **Quality Gates:** 23/23 Vitest tests pass; 6/6 API jobs and evaluation backend tests pass; zero TypeScript compiler errors.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide

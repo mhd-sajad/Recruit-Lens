@@ -39,6 +39,7 @@ from app.db.models import (
     InterviewFeedbackRecord,
     Job,
     McpConfirmationToken,
+    Resume,
     User,
 )
 from app.db.session import get_db
@@ -199,7 +200,7 @@ async def get_evaluation_detail(
     """Retrieve comprehensive candidate dossier. Cross-user returns 404."""
     query = (
         select(Evaluation)
-        .options(selectinload(Evaluation.resume))
+        .options(selectinload(Evaluation.resume).selectinload(Resume.chunks))
         .where(Evaluation.id == evaluation_id, Evaluation.user_id == current_user.id)
     )
     result = await db.execute(query)
@@ -209,6 +210,35 @@ async def get_evaluation_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Candidate evaluation '{evaluation_id}' not found",
         )
+
+    raw_text = ""
+    citations: list[dict[str, Any]] = []
+    if ev.resume:
+        raw_text = ev.resume.raw_text or ""
+        if ev.resume.chunks:
+            for c in sorted(ev.resume.chunks, key=lambda ch: ch.chunk_index):
+                citations.append(
+                    {
+                        "id": f"c_{c.chunk_index:02d}",
+                        "section": c.section or "EXPERIENCE",
+                        "text_snippet": c.text,
+                        "char_start": c.char_start,
+                        "char_end": c.char_end,
+                    }
+                )
+
+    if not citations and raw_text:
+        paras = [p.strip() for p in raw_text.split("\n\n") if len(p.strip()) > 30]
+        for idx, p in enumerate(paras[:5]):
+            citations.append(
+                {
+                    "id": f"c_{idx + 1:02d}",
+                    "section": "RESUME EVIDENCE",
+                    "text_snippet": p[:250],
+                    "char_start": 0,
+                    "char_end": len(p[:250]),
+                }
+            )
 
     return EvaluationDetailResponse(
         id=ev.id,
@@ -229,6 +259,8 @@ async def get_evaluation_detail(
         llm_generated=ev.llm_generated,
         created_at=ev.created_at,
         updated_at=ev.updated_at,
+        raw_text=raw_text,
+        citations=citations,
     )
 
 

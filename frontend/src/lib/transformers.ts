@@ -33,13 +33,22 @@ export function jobResponseToJobItem(
         if (topTier !== "FastTrack" && topTier !== "Interview" && topTier !== "Hold") topTier = "Reject";
       }
     });
-  } else {
+  } else if (job.id === "job-backend") {
+    // Only the demo workspace job has initial counts before real evaluations load
     fasttrack = 3;
     interview = 4;
     hold = 4;
     reject = 3;
     maxScore = 95;
     topTier = "FastTrack";
+  } else {
+    // Newly created requisitions start strictly with 0 until candidates are processed
+    fasttrack = 0;
+    interview = 0;
+    hold = 0;
+    reject = 0;
+    maxScore = 0;
+    topTier = "Hold";
   }
 
   const createdDate = new Date(job.created_at);
@@ -53,8 +62,8 @@ export function jobResponseToJobItem(
     department: job.department || "Engineering",
     status: job.status === "active" ? "Active" : job.status === "closed" ? "Closed" : "Draft",
     created_at: `Created ${relativeDate}`,
-    applicants_count: candidatesCount || candidateEvals.length || (job.id.includes("backend") ? 14 : 0),
-    top_score: maxScore || 95,
+    applicants_count: candidatesCount || candidateEvals.length || (job.id === "job-backend" ? 14 : 0),
+    top_score: maxScore,
     top_tier: topTier,
     tier_counts: {
       fasttrack,

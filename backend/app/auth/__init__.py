@@ -1,6 +1,6 @@
 """Authentication and authorization package."""
 
-from app.auth.dependencies import get_current_user, require_role
+from app.auth.dependencies import get_current_user, get_optional_current_user, require_role
 from app.auth.schemas import (
     RefreshTokenRequest,
     TokenResponse,
@@ -23,6 +23,7 @@ from app.auth.security import (
 
 __all__ = [
     "get_current_user",
+    "get_optional_current_user",
     "require_role",
     "UserLoginRequest",
     "TokenResponse",

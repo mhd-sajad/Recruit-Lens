@@ -95,6 +95,14 @@ export interface EvaluationDetailResponse {
   llm_generated: boolean;
   created_at: string;
   updated_at: string;
+  raw_text?: string;
+  citations?: Array<{
+    id: string;
+    section: string;
+    text_snippet: string;
+    char_start: number;
+    char_end: number;
+  }>;
   // UI extended properties
   candidate_id?: string;
   candidate_name?: string;
