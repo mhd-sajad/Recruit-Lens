@@ -9,6 +9,7 @@ import {
   Mail,
   RotateCcw,
   Search,
+  Upload,
 } from "lucide-react";
 import { TierBadge } from "../common/TierBadge";
 import { useAuth } from "../../context/AuthContext";
@@ -21,6 +22,7 @@ interface RankedTableScreenProps {
   onOpenEmail: (candidateId: string) => void;
   onExportAudit: () => void;
   onNavigateRequisitions: () => void;
+  onNavigateAddCandidates?: () => void;
 }
 
 export const RankedTableScreen: React.FC<RankedTableScreenProps> = ({
@@ -30,6 +32,7 @@ export const RankedTableScreen: React.FC<RankedTableScreenProps> = ({
   onOpenEmail,
   onExportAudit,
   onNavigateRequisitions,
+  onNavigateAddCandidates,
 }) => {
   const { isBlindMode } = useAuth();
   const safeCandidates = useMemo(() => (Array.isArray(candidates) ? candidates : []), [candidates]);
@@ -261,22 +264,59 @@ export const RankedTableScreen: React.FC<RankedTableScreenProps> = ({
             {filteredCandidates.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-12 text-center">
-                  <div className="flex flex-col items-center justify-center space-y-2">
-                    <p className="text-sm font-medium text-[var(--text-primary)]">
-                      No candidates match the filter
-                    </p>
-                    <p className="text-xs text-[var(--text-secondary)]">
-                      Try adjusting the tier or must-have coverage criteria.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleResetFilters}
-                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-colors"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Reset filters</span>
-                    </button>
-                  </div>
+                  {safeCandidates.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center space-y-3 max-w-md mx-auto py-6">
+                      <div className="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">
+                          {job.status === "Ingesting"
+                            ? "Awaiting candidate evaluations…"
+                            : "No candidates in this requisition yet"}
+                        </p>
+                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                          {job.status === "Ingesting"
+                            ? "Uploaded resumes are being parsed, indexed, and evaluated by the background scoring pipeline. This page polls and updates automatically."
+                            : "Add candidate CVs to start deterministic pre-screening and semantic ranking."}
+                        </p>
+                      </div>
+                      <div className="pt-2">
+                        {job.status === "Ingesting" ? (
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-indigo-500/10 text-indigo-400 text-xs font-mono">
+                            <span className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                            <span>Processing ingestion batch…</span>
+                          </div>
+                        ) : onNavigateAddCandidates ? (
+                          <button
+                            type="button"
+                            onClick={onNavigateAddCandidates}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-xs transition-colors cursor-pointer"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Add Candidates</span>
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        No candidates match the filter
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        Try adjusting the tier or must-have coverage criteria.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleResetFilters}
+                        className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-md transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reset filters</span>
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ) : (

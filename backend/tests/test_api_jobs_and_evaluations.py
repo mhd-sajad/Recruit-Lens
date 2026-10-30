@@ -58,6 +58,18 @@ async def test_job_crud_and_user_isolation_idor_protection() -> None:
             ),
             "weights": {"skills": 0.5, "experience": 0.3, "education": 0.2},
         }
+
+        # 3.1 Test real-time requirements extraction preview endpoint
+        res_extract = await client.post(
+            "/api/v1/jobs/extract-requirements",
+            json={"raw_text": job_payload["raw_text"]},
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert res_extract.status_code == 200
+        extract_data = res_extract.json()
+        assert "must_have_skills" in extract_data
+        assert "suggested_weights" in extract_data
+        assert extract_data["min_years_experience"] == 5.0
         res_create = await client.post(
             "/api/v1/jobs/",
             json=job_payload,

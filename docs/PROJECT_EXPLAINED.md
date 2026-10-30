@@ -878,6 +878,16 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Supabase & Middleware:** Implemented `backend/tests/test_supabase.py` with mocked/live queries and attached rate-limiting and latency telemetry response headers (`X-Process-Time-Ms`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`).
   - **Quality Gates:** 162/162 backend tests pass (1 skipped), 88% statement coverage. 23/23 Vitest tests pass. 0 lint errors. `scripts/make_report.py` executes cleanly with 100% verified disk citations.
 
+### Component: Dynamic Requisition Requirement Extraction & Background Evaluation Ingestion (`backend/app/api/v1/jobs.py`, `frontend/src/components/screens/CreateRequisitionScreen.tsx`, `frontend/src/components/screens/AddCandidatesScreen.tsx`, `frontend/src/components/screens/RankedTableScreen.tsx`, `frontend/src/App.tsx`)
+- **What it is:** Real-time end-to-end integration connecting custom job requisition descriptions to dynamic requirement extraction, weight auto-balancing, clean candidate CV upload queues, and live background evaluation polling in the candidate ranked table.
+- **Why:** The requisition creation wizard previously displayed hardcoded demo skills in Step 2 regardless of the title or description entered in Step 1, pre-populated fake uploaded files in Step 3, and did not reflect real background indexing and scoring of newly uploaded resumes in the candidate ranking view.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Dynamic Requirement Extraction API (`POST /api/v1/jobs/extract-requirements`):** Exposes an authenticated endpoint parsing arbitrary raw job description text via `extract_job_requirements(raw_text, taxonomy)`. Automatically populates must-have skills, nice-to-have tie-breakers, minimum years of experience, and auto-balances candidate scoring weights to sum to exactly 100%. Tested in `backend/tests/test_api_jobs_and_evaluations.py`.
+  - **Interactive Wizard (`CreateRequisitionScreen.tsx`):** Added `handleProceedToStep2` which queries the extraction endpoint with loading spinner feedback. Introduced an "Auto-balance weights" action to rebalance weights evenly across all requirements. Added custom input for nice-to-have skills, and cleared fake pre-populated files in Step 3 so users start with a clean dropzone.
+  - **Clean Candidate Intake (`AddCandidatesScreen.tsx`):** Removed hardcoded mock resumes from initial state. File staging dropzone now tracks real staged PDF files with remove actions, file hash generation, and instant upload dispatching to `POST /api/v1/resumes/upload/{job_id}`.
+  - **Live Evaluation Polling & Contextual Empty States (`RankedTableScreen.tsx`, `App.tsx`):** Updated candidate polling to clear stale evaluations when switching to fresh requisitions with 0 candidates. Displays contextual empty states: "Awaiting candidate evaluations" with active spinner during background batch ingestion, or "Add Candidates" prompt for draft jobs.
+  - **Quality Gates:** 162/162 backend tests passing at 88% overall statement coverage; 23/23 Vitest frontend unit tests passing; 17/17 Playwright E2E screens passing; 0 ESLint errors; 0 TypeScript compilation errors in production build; Gitleaks verifies 0 secrets in repository history.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide

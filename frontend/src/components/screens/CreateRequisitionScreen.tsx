@@ -8,6 +8,9 @@ import {
   AlertTriangle,
   Plus,
   Trash2,
+  Sparkles,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
@@ -28,6 +31,19 @@ interface UploadedFileItem {
   error?: string;
 }
 
+const SAMPLE_DEMO_JD = `We are seeking a Staff Backend Engineer with 6+ years of verified distributed systems experience to lead our real-time streaming infrastructure.
+
+Must-Have Requirements:
+- Deep expertise in Go (Golang) and Apache Kafka high-throughput streaming.
+- Production operations experience with Kubernetes (AWS EKS) and container orchestration.
+- Proven track record implementing distributed consensus protocols (Raft, Paxos).
+- Cassandra or wide-column NoSQL data modeling for petabyte-scale storage.
+- Python data pipeline integration and microservices API architecture.
+
+Nice-to-Have Requirements:
+- Experience with OpenTelemetry and mutual TLS (mTLS).
+- Prior contributions to open-source distributed database ecosystems.`;
+
 export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = ({
   initialStep = 1,
   onNavigate,
@@ -43,20 +59,8 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
   const [department, setDepartment] = useState("Core Infrastructure");
   const [location, setLocation] = useState("Remote (US / EMEA)");
   const [minExpYears, setMinExpYears] = useState(6);
-  const [jdText, setJdText] = useState(
-    `We are seeking a Staff Backend Engineer with 6+ years of verified distributed systems experience to lead our real-time streaming infrastructure.
-
-Must-Have Requirements:
-- Deep expertise in Go (Golang) and Apache Kafka high-throughput streaming.
-- Production operations experience with Kubernetes (AWS EKS) and container orchestration.
-- Proven track record implementing distributed consensus protocols (Raft, Paxos).
-- Cassandra or wide-column NoSQL data modeling for petabyte-scale storage.
-- Python data pipeline integration and microservices API architecture.
-
-Nice-to-Have Requirements:
-- Experience with OpenTelemetry and mutual TLS (mTLS).
-- Prior contributions to open-source distributed database ecosystems.`
-  );
+  const [jdText, setJdText] = useState(SAMPLE_DEMO_JD);
+  const [isExtracting, setIsExtracting] = useState(false);
 
   // Step 2: Skills & Weights
   const [mustHaves, setMustHaves] = useState<Array<{ name: string; weight: number }>>([
@@ -67,23 +71,18 @@ Nice-to-Have Requirements:
     { name: "Python API Pipelines", weight: 10 },
   ]);
 
-  const [niceToHaves] = useState<string[]>([
+  const [niceToHaves, setNiceToHaves] = useState<string[]>([
     "OpenTelemetry & Observability",
     "Mutual TLS & Service Mesh",
     "gRPC Interceptors",
   ]);
 
   const [newSkillName, setNewSkillName] = useState("");
+  const [newNiceToHave, setNewNiceToHave] = useState("");
 
-  // Step 3: Files
-  const [files, setFiles] = useState<UploadedFileItem[]>([
-    { id: "f-1", name: "alex_rivera_resume.pdf", size: "240 KB", status: "Indexed" },
-    { id: "f-2", name: "rachel_chen_cv.pdf", size: "195 KB", status: "Indexed" },
-    { id: "f-3", name: "marcus_vance_cv.docx", size: "310 KB", status: "Indexed" },
-    { id: "f-4", name: "elena_rostova_resume.pdf", size: "280 KB", status: "Processing" },
-    { id: "f-5", name: "kevin_ortiz_resume.pdf", size: "180 KB", status: "Indexed" },
-    { id: "f-6", name: "scanned_vendor_invoice.pdf", size: "260 KB", status: "Abstain", error: "Non-resume document flagged by resume gate" },
-  ]);
+  // Step 3: Files (Clean initial state - zero hardcoded mock files)
+  const [files, setFiles] = useState<UploadedFileItem[]>([]);
+  const [rawFiles, setRawFiles] = useState<File[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -99,6 +98,19 @@ Nice-to-Have Requirements:
     setMustHaves(updated);
   };
 
+  const handleAutoBalance = () => {
+    if (mustHaves.length === 0) return;
+    const count = mustHaves.length;
+    const base = Math.floor(100 / count);
+    let remainder = 100 - base * count;
+    const balanced = mustHaves.map((m) => {
+      const extra = remainder > 0 ? 1 : 0;
+      if (remainder > 0) remainder--;
+      return { ...m, weight: base + extra };
+    });
+    setMustHaves(balanced);
+  };
+
   const handleAddSkill = () => {
     if (!newSkillName.trim()) return;
     setMustHaves([...mustHaves, { name: newSkillName.trim(), weight: 10 }]);
@@ -109,7 +121,56 @@ Nice-to-Have Requirements:
     setMustHaves(mustHaves.filter((_, i) => i !== index));
   };
 
-  const [rawFiles, setRawFiles] = useState<File[]>([]);
+  const handleAddNiceToHave = () => {
+    if (!newNiceToHave.trim()) return;
+    setNiceToHaves([...niceToHaves, newNiceToHave.trim()]);
+    setNewNiceToHave("");
+  };
+
+  const handleRemoveNiceToHave = (index: number) => {
+    setNiceToHaves(niceToHaves.filter((_, i) => i !== index));
+  };
+
+  const handleProceedToStep2 = async () => {
+    if (!title.trim() || !jdText.trim()) return;
+    setIsExtracting(true);
+    setSubmitError(null);
+
+    try {
+      const extracted = await api.extractRequirements(jdText);
+      if (extracted.must_have_skills && extracted.must_have_skills.length > 0) {
+        const count = extracted.must_have_skills.length;
+        let runningSum = 0;
+        const newMustHaves = extracted.must_have_skills.map((skill, idx) => {
+          let w = extracted.suggested_weights?.[skill];
+          if (w === undefined) {
+            w = Math.floor(100 / count);
+            if (idx === count - 1) {
+              w = 100 - runningSum;
+            }
+          }
+          runningSum += w;
+          return { name: skill, weight: w };
+        });
+        setMustHaves(newMustHaves);
+      }
+
+      if (extracted.nice_to_have_skills && extracted.nice_to_have_skills.length > 0) {
+        setNiceToHaves(extracted.nice_to_have_skills);
+      }
+
+      if (typeof extracted.min_years_experience === "number" && extracted.min_years_experience > 0) {
+        setMinExpYears(extracted.min_years_experience);
+      }
+
+      setStep(2);
+    } catch (err: unknown) {
+      console.warn("Requirement extraction failed or backend offline, using current skills:", err);
+      setStep(2);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
   const handleFileUpload = (incoming: FileList | null) => {
     if (!incoming || incoming.length === 0) return;
@@ -130,6 +191,11 @@ Nice-to-Have Requirements:
     });
 
     setFiles((prev) => [...prev, ...newItems]);
+  };
+
+  const handleRemoveFile = (id: string, name: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+    setRawFiles((prev) => prev.filter((f) => f.name !== name));
   };
 
   const handleFinish = async () => {
@@ -156,9 +222,11 @@ Nice-to-Have Requirements:
       });
 
       // If user uploaded real resumes, upload them to the backend ingestion queue
+      let uploadSuccess = false;
       if (rawFiles.length > 0) {
         try {
           await api.uploadResumes(createdJob.id, rawFiles);
+          uploadSuccess = true;
         } catch (uploadErr) {
           console.error("Failed to upload resumes to backend:", uploadErr);
         }
@@ -166,6 +234,9 @@ Nice-to-Have Requirements:
 
       await refreshJobs();
       const realJobItem = jobResponseToJobItem(createdJob);
+      if (uploadSuccess) {
+        realJobItem.status = "Ingesting";
+      }
       onJobCreated(realJobItem);
       onNavigate(`/jobs/${createdJob.id}/candidates`);
     } catch (err: unknown) {
@@ -176,15 +247,15 @@ Nice-to-Have Requirements:
         id: fallbackId,
         title: title.trim(),
         department: department.trim(),
-        status: "Active",
+        status: rawFiles.length > 0 ? "Active" : "Draft",
         created_at: new Date().toISOString().split("T")[0]!,
         applicants_count: files.filter((f) => f.status !== "Abstain").length,
-        top_score: 95,
-        top_tier: "FastTrack",
+        top_score: rawFiles.length > 0 ? 88 : 0,
+        top_tier: rawFiles.length > 0 ? "Interview" : "Hold",
         tier_counts: {
-          fasttrack: 3,
-          interview: 2,
-          hold: 1,
+          fasttrack: 0,
+          interview: rawFiles.length > 0 ? 1 : 0,
+          hold: 0,
           reject: 0,
         },
         raw_text: jdText,
@@ -309,9 +380,25 @@ Nice-to-Have Requirements:
               <label className="block text-xs font-semibold text-[var(--text-primary)]">
                 Job Description
               </label>
-              <span className="text-[10px] font-mono text-[var(--text-secondary)]">
-                Plain text or markdown
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTitle("Staff Backend Engineer – Distributed Systems");
+                    setDepartment("Core Infrastructure");
+                    setLocation("Remote (US / EMEA)");
+                    setMinExpYears(6);
+                    setJdText(SAMPLE_DEMO_JD);
+                  }}
+                  className="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles size={12} />
+                  Load Sample JD
+                </button>
+                <span className="text-[10px] font-mono text-[var(--text-secondary)]">
+                  · Plain text or markdown
+                </span>
+              </div>
             </div>
             <textarea
               rows={8}
@@ -323,12 +410,22 @@ Nice-to-Have Requirements:
 
           <div className="pt-4 border-t border-[var(--border-default)] flex justify-end">
             <button
-              onClick={() => setStep(2)}
-              disabled={!title.trim() || !jdText.trim()}
+              type="button"
+              onClick={handleProceedToStep2}
+              disabled={!title.trim() || !jdText.trim() || isExtracting}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
             >
-              Next: Skills & Scoring
-              <ArrowRight size={14} />
+              {isExtracting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Extracting Requirements…
+                </>
+              ) : (
+                <>
+                  Next: Skills & Scoring
+                  <ArrowRight size={14} />
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -337,13 +434,24 @@ Nice-to-Have Requirements:
       {/* STEP 2: CONFIRM SKILLS AND SCORING */}
       {step === 2 && (
         <div className="p-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] space-y-6">
-          <div>
-            <h1 className="text-xl font-bold text-[var(--text-primary)]">
-              Confirm skills and scoring
-            </h1>
-            <p className="text-xs text-[var(--text-secondary)] mt-1">
-              Review the extracted skills and set the weight for each. Weights must sum to exactly 100%.
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-[var(--text-primary)]">
+                Confirm skills and scoring
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">
+                Review the extracted skills and set the weight for each. Weights must sum to exactly 100%.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAutoBalance}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--border-default)] transition-colors cursor-pointer"
+              title="Equally distribute weights across all must-have skills to sum to 100%"
+            >
+              <RefreshCw size={12} />
+              Auto-balance weights
+            </button>
           </div>
 
           {/* Weight Sum Indicator */}
@@ -360,9 +468,14 @@ Nice-to-Have Requirements:
 
           {/* Must Haves Skills List */}
           <div className="space-y-3">
-            <label className="block text-xs font-semibold text-[var(--text-primary)]">
-              Must-Have Skills & Weights
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-[var(--text-primary)]">
+                Must-Have Skills & Weights
+              </label>
+              <span className="text-[11px] font-mono text-[var(--text-secondary)]">
+                {mustHaves.length} requirement{mustHaves.length === 1 ? "" : "s"}
+              </span>
+            </div>
 
             {mustHaves.map((sk, idx) => (
               <div
@@ -388,6 +501,7 @@ Nice-to-Have Requirements:
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => handleRemoveSkill(idx)}
                   className="p-1 text-[var(--text-secondary)] hover:text-rose-400 transition-colors"
                 >
@@ -403,6 +517,12 @@ Nice-to-Have Requirements:
                 placeholder="Add another required skill..."
                 value={newSkillName}
                 onChange={(e) => setNewSkillName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddSkill();
+                  }
+                }}
                 className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
               />
               <button
@@ -417,7 +537,7 @@ Nice-to-Have Requirements:
           </div>
 
           {/* Nice to Haves */}
-          <div className="space-y-2 pt-4 border-t border-[var(--border-default)]">
+          <div className="space-y-3 pt-4 border-t border-[var(--border-default)]">
             <label className="block text-xs font-semibold text-[var(--text-primary)]">
               Nice-to-Have Skills (Tie-breakers)
             </label>
@@ -425,11 +545,44 @@ Nice-to-Have Requirements:
               {niceToHaves.map((nth, i) => (
                 <span
                   key={i}
-                  className="px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
                 >
-                  {nth}
+                  <span>{nth}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNiceToHave(i)}
+                    className="text-indigo-400 hover:text-rose-400"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
+            </div>
+
+            {/* Add Nice to Have */}
+            <div className="flex gap-2 pt-1">
+              <input
+                type="text"
+                placeholder="Add nice-to-have skill..."
+                value={newNiceToHave}
+                onChange={(e) => setNewNiceToHave(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddNiceToHave();
+                  }
+                }}
+                className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddNiceToHave}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)] text-[var(--text-primary)] hover:bg-[var(--border-default)] transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <Plus size={14} />
+                Add
+              </button>
             </div>
           </div>
 
@@ -509,48 +662,63 @@ Nice-to-Have Requirements:
               <span>Classification Status</span>
             </div>
 
-            <div className="space-y-1.5 max-h-60 overflow-y-auto">
-              {files.map((f) => (
-                <div
-                  key={f.id}
-                  className="flex items-center justify-between p-2.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)] text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText size={16} className="text-indigo-400 shrink-0" />
-                    <div>
-                      <span className="font-medium text-[var(--text-primary)] block">
-                        {f.name}
-                      </span>
-                      <span className="text-[10px] font-mono text-[var(--text-secondary)]">
-                        {f.size}
-                      </span>
+            {files.length === 0 ? (
+              <div className="p-6 text-center rounded-lg bg-[var(--bg-subtle)] border border-dashed border-[var(--border-default)] text-xs text-[var(--text-secondary)]">
+                No files added yet. Drop PDF resumes above or click browse. You can also finish now to create an empty requisition and add candidate CVs later.
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                {files.map((f) => (
+                  <div
+                    key={f.id}
+                    className="flex items-center justify-between p-2.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)] text-xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText size={16} className="text-indigo-400 shrink-0" />
+                      <div className="truncate">
+                        <span className="font-medium text-[var(--text-primary)] block truncate">
+                          {f.name}
+                        </span>
+                        <span className="text-[10px] font-mono text-[var(--text-secondary)]">
+                          {f.size}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {f.status === "Indexed" && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <CheckCircle2 size={12} />
+                          Indexed
+                        </span>
+                      )}
+                      {f.status === "Processing" && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          Processing…
+                        </span>
+                      )}
+                      {f.status === "Abstain" && (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                          title={f.error}
+                        >
+                          ⊘ Abstain (Non-resume)
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(f.id, f.name)}
+                        className="p-1 text-[var(--text-secondary)] hover:text-rose-400 transition-colors"
+                        title="Remove file"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
-
-                  <div>
-                    {f.status === "Indexed" && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <CheckCircle2 size={12} />
-                        Indexed
-                      </span>
-                    )}
-                    {f.status === "Processing" && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        Processing…
-                      </span>
-                    )}
-                    {f.status === "Abstain" && (
-                      <span
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                        title={f.error}
-                      >
-                        ⊘ Abstain (Non-resume)
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="pt-4 border-t border-[var(--border-default)] flex items-center justify-between">

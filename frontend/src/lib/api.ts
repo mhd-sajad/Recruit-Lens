@@ -14,6 +14,7 @@ import type {
   InterviewFeedbackCreate,
   InterviewFeedbackResponse,
   JobCreateRequest,
+  JobExtractRequirementsResponse,
   JobResponse,
   JobUpdateRequest,
   PipelineAnalyticsResponse,
@@ -123,6 +124,13 @@ export const api = {
     return request<JobResponse>("/api/v1/jobs/", {
       method: "POST",
       body: JSON.stringify(payload),
+    });
+  },
+
+  extractRequirements: async (rawText: string): Promise<JobExtractRequirementsResponse> => {
+    return request<JobExtractRequirementsResponse>("/api/v1/jobs/extract-requirements", {
+      method: "POST",
+      body: JSON.stringify({ raw_text: rawText }),
     });
   },
 

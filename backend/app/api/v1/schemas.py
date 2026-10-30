@@ -17,6 +17,22 @@ class JobCreateRequest(BaseModel):
     weights: dict[str, float] | None = None
 
 
+class JobExtractRequirementsRequest(BaseModel):
+    """Payload to extract requirements from raw job description text."""
+
+    raw_text: str = Field(min_length=10)
+
+
+class JobExtractRequirementsResponse(BaseModel):
+    """Extracted structured skills, experience, and education from a job description."""
+
+    must_have_skills: list[str] = Field(default_factory=list)
+    nice_to_have_skills: list[str] = Field(default_factory=list)
+    min_years_experience: float | None = None
+    min_education_name: str | None = None
+    suggested_weights: dict[str, float] = Field(default_factory=dict)
+
+
 class JobUpdateRequest(BaseModel):
     """Job requisition update payload."""
 
