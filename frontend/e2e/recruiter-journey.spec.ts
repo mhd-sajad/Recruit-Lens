@@ -48,7 +48,9 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     });
 
     // 3. Candidates Ranked Table Screen
-    const candidatesBtn = page.getByRole("button", { name: /View ranked candidates|Candidates/i }).first();
+    // Target the seeded requisition containing evaluated candidates (Staff Backend Engineer)
+    const seededCard = page.locator("div.rounded-xl").filter({ hasText: /Staff Backend Engineer/i }).first();
+    const candidatesBtn = seededCard.getByRole("button", { name: /View ranked candidates/i });
     await expect(candidatesBtn).toBeVisible({ timeout: 15000 });
     await candidatesBtn.click();
 
