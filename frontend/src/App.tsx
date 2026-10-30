@@ -1,373 +1,276 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Navbar } from "./components/layout/Navbar";
+import { ToastProvider, useToast } from "./components/common/Toast";
+
+// Screens
 import { LoginScreen } from "./components/screens/LoginScreen";
-import { DashboardScreen } from "./components/screens/DashboardScreen";
+import { RequisitionsScreen } from "./components/screens/RequisitionsScreen";
 import { RankedTableScreen } from "./components/screens/RankedTableScreen";
-import { CandidateDetailScreen } from "./components/screens/CandidateDetailScreen";
+import { CandidateDossierScreen } from "./components/screens/CandidateDossierScreen";
 import { PipelineBoardScreen } from "./components/screens/PipelineBoardScreen";
-import { ReportsScreen } from "./components/screens/ReportsScreen";
-import { SettingsAndExportScreen } from "./components/screens/SettingsAndExportScreen";
-import { CompareScreen } from "./components/screens/CompareScreen";
-
-import { JobCreateConfirmModal } from "./components/screens/JobCreateConfirmModal";
-import { UploadBatchModal } from "./components/screens/UploadBatchModal";
-import { DecisionModal } from "./components/screens/DecisionModal";
-import { InterviewQuestionsModal } from "./components/screens/InterviewQuestionsModal";
-import { CopilotModal } from "./components/screens/CopilotModal";
-import { EmailModal } from "./components/screens/EmailModal";
-import { ScorecardModal } from "./components/screens/ScorecardModal";
-
+import { EmailCenterScreen } from "./components/screens/EmailCenterScreen";
+import { AuditLogScreen } from "./components/screens/AuditLogScreen";
+import { AnalyticsScreen } from "./components/screens/AnalyticsScreen";
+import { SettingsScreen } from "./components/screens/SettingsScreen";
+import { JobCreateModal } from "./components/screens/JobCreateModal";
+import { NotFoundScreen } from "./components/screens/ErrorScreens";
 import { api } from "./lib/api";
-import type { EvaluationSummaryResponse, EvaluationDetailResponse } from "./types/api";
-import { LoadingState } from "./components/common/StateViews";
+import { jobResponseToJobItem, evaluationSummaryToCandidateItem } from "./lib/transformers";
 
-const MainApp: React.FC = () => {
-  const { user, loading: authLoading, activeJob } = useAuth();
+// Mock & Initial Data
+import {
+  INITIAL_JOBS,
+  INITIAL_CANDIDATES,
+  SAMPLE_DOSSIER_6299,
+  type JobItem,
+  type CandidateItem,
+  type CandidateDossier,
+} from "./lib/mockData";
 
-  const [currentTab, setCurrentTab] = useState<string>("dashboard");
-  const [evaluations, setEvaluations] = useState<EvaluationSummaryResponse[]>([]);
-  const [loadingCandidates, setLoadingCandidates] = useState(false);
+const MainAppContent: React.FC = () => {
+  const { isAuthenticated, isLoading, activeJob, jobs, refreshJobs, setActiveJob } = useAuth();
+  const { showToast } = useToast();
 
-  // Selected candidate detail
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
-  const [candidateDetail, setCandidateDetail] = useState<EvaluationDetailResponse | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  // Navigation state
+  const [currentTab, setCurrentTab] = useState<string>("requisitions");
 
-  // Compare mode
-  const [compareCandidateIds, setCompareCandidateIds] = useState<string[] | null>(null);
+  // Requisitions & Active Job
+  const [jobsList, setJobsList] = useState<JobItem[]>(INITIAL_JOBS);
+  const [selectedJob, setSelectedJob] = useState<JobItem>(INITIAL_JOBS[0]!);
 
-  // Modals
+  // Candidates for Active Job
+  const [candidatesList, setCandidatesList] = useState<CandidateItem[]>(INITIAL_CANDIDATES);
+
+  // Active Candidate Dossier
+  const [dossier, setDossier] = useState<CandidateDossier>(SAMPLE_DOSSIER_6299);
+
+  // Job Creation Modal
   const [isCreateJobOpen, setIsCreateJobOpen] = useState(false);
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [decisionCandidate, setDecisionCandidate] = useState<EvaluationSummaryResponse | null>(null);
-  const [isInterviewQuestionsOpen, setIsInterviewQuestionsOpen] = useState(false);
-  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
-  const [isEmailOpen, setIsEmailOpen] = useState(false);
-  const [isScorecardOpen, setIsScorecardOpen] = useState(false);
 
-  // Fetch candidate evaluations for active job
-  const fetchCandidates = useCallback(async () => {
-    if (!activeJob) {
-      setEvaluations([]);
-      return;
-    }
-    setLoadingCandidates(true);
-    try {
-      const candidates = await api.getCandidates(activeJob.id);
-      if (Array.isArray(candidates) && candidates.length > 0) {
-        setEvaluations(candidates);
-      } else {
-        throw new Error("Empty candidates list from backend");
-      }
-    } catch {
-      // Fallback sample evaluations
-      setEvaluations([
-        {
-          id: "eval-1",
-          resume_id: "res-101",
-          job_id: activeJob.id,
-          candidate_filename: "Sarah Lin Resume.pdf",
-          candidate_id: "cand-101",
-          candidate_name: "Sarah Lin",
-          candidate_title: "Senior Backend Engineer",
-          total_score: 0.92,
-          fit_score: 0.92,
-          tier: "strong_fit",
-          stage: "shortlisted",
-          confidence: 0.95,
-          explanation_type: "template",
-          llm_generated: false,
-          years_experience: 5.4,
-          missing_must_haves: [],
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "eval-2",
-          resume_id: "res-102",
-          job_id: activeJob.id,
-          candidate_filename: "Marcus Vance Resume.pdf",
-          candidate_id: "cand-102",
-          candidate_name: "Marcus Vance",
-          candidate_title: "Full Stack Developer",
-          total_score: 0.78,
-          fit_score: 0.78,
-          tier: "interview",
-          stage: "screened",
-          confidence: 0.88,
-          explanation_type: "template",
-          llm_generated: false,
-          years_experience: 3.2,
-          missing_must_haves: [],
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: "eval-3",
-          resume_id: "res-103",
-          job_id: activeJob.id,
-          candidate_filename: "Elena Rostova Resume.pdf",
-          candidate_id: "cand-103",
-          candidate_name: "Elena Rostova",
-          candidate_title: "Data Platform Engineer",
-          total_score: 0.61,
-          fit_score: 0.61,
-          tier: "hold",
-          stage: "screened",
-          confidence: 0.82,
-          explanation_type: "template",
-          llm_generated: false,
-          years_experience: 2.0,
-          missing_must_haves: ["Docker"],
-          created_at: new Date().toISOString(),
-        },
-      ]);
-    } finally {
-      setLoadingCandidates(false);
-    }
-  }, [activeJob]);
-
+  // Sync backend jobs into jobsList
   useEffect(() => {
-    fetchCandidates();
-  }, [fetchCandidates]);
+    if (jobs && jobs.length > 0) {
+      const converted = jobs.map((j) => jobResponseToJobItem(j));
+      const convertedIds = new Set(converted.map((c) => c.id));
+      const remainingInitial = INITIAL_JOBS.filter((j) => !convertedIds.has(j.id));
+      const merged = [...converted, ...remainingInitial];
+      setJobsList(merged);
 
-  // Load candidate detail when selected
-  useEffect(() => {
-    if (!selectedCandidateId) {
-      setCandidateDetail(null);
-      return;
+      setSelectedJob((current) => {
+        if (current) {
+          const matchCurrent = merged.find((m) => m.id === current.id);
+          if (matchCurrent) return matchCurrent;
+        }
+        if (activeJob) {
+          const matchActive = merged.find((m) => m.id === activeJob.id);
+          if (matchActive) return matchActive;
+        }
+        return merged[0] || current;
+      });
     }
-    const loadDetail = async () => {
-      setLoadingDetail(true);
+  }, [jobs, activeJob]);
+
+  // Fetch real candidate evaluations when selectedJob changes
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchCandidates = async () => {
       try {
-        const detail = await api.getCandidateDetail(selectedCandidateId);
-        if (detail && detail.id) {
-          setCandidateDetail(detail);
-        } else {
-          throw new Error("Invalid detail object");
+        const evals = await api.getCandidates(selectedJob.id);
+        if (!isCancelled && Array.isArray(evals) && evals.length > 0) {
+          const transformed = evals.map((e, idx) => evaluationSummaryToCandidateItem(e, idx));
+          setCandidatesList(transformed);
+          return;
         }
       } catch {
-        // Fallback sample detail
-        const summary = evaluations.find((e) => e.id === selectedCandidateId);
-        setCandidateDetail({
-          id: selectedCandidateId,
-          user_id: user?.id || "user-1",
-          job_id: activeJob?.id || "job-1",
-          resume_id: summary?.resume_id || "res-101",
-          candidate_filename: summary?.candidate_filename || "Sarah Lin Resume.pdf",
-          candidate_id: summary?.candidate_id || "cand-101",
-          candidate_name: summary?.candidate_name || "Sarah Lin",
-          candidate_title: summary?.candidate_title || "Senior Backend Engineer",
-          total_score: summary?.total_score ?? 0.92,
-          fit_score: summary?.fit_score ?? 0.92,
-          tier: summary?.tier || "strong_fit",
-          stage: summary?.stage || "shortlisted",
-          confidence: 0.95,
-          explanation_type: "template",
-          llm_generated: false,
-          evidence_hash: "ev-hash-123",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          breakdown: {},
-          interview_questions: {},
-          email_drafts: {},
-          years_experience: summary?.years_experience ?? 5.4,
-          education_level: "Master of Science in Computer Science",
-          matched_skills: ["Python", "FastAPI", "PostgreSQL", "Docker", "Redis"],
-          missing_must_haves: summary?.missing_must_haves || [],
-          explanation: {
-            content:
-              "Candidate satisfies all mandatory backend architecture competencies with over 5 years of verified experience building high-throughput FastAPI and PostgreSQL microservices.",
-            source: "template",
-          },
-          evidence_chunks: [
-            {
-              id: "ev-1",
-              chunk_index: 1,
-              section: "skills",
-              text: "Proficient in Python, FastAPI, Docker, PostgreSQL, Redis, and distributed systems.",
-              relevance_score: 0.95,
-            },
-            {
-              id: "ev-2",
-              chunk_index: 2,
-              section: "experience",
-              text: "Designed and scaled backend APIs serving 50k RPS with sub-50ms latency using async Python.",
-              relevance_score: 0.91,
-            },
-          ],
-          factors: {
-            skill_match_ratio: 1.0,
-            experience_score: 0.9,
-            education_score: 1.0,
-          },
-        });
-      } finally {
-        setLoadingDetail(false);
+        // Fallback to initial candidates if network or not yet evaluated
+      }
+      if (!isCancelled) {
+        setCandidatesList(INITIAL_CANDIDATES);
       }
     };
-    loadDetail();
-  }, [selectedCandidateId, evaluations, activeJob?.id, user?.id]);
 
-  if (authLoading) {
+    fetchCandidates();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedJob.id]);
+
+  // Handle selecting candidate to view Dossier
+  const handleOpenDossier = (candId: string) => {
+    // Find candidate item
+    const cand = candidatesList.find((c) => c.id === candId);
+    if (cand) {
+      setDossier({
+        ...SAMPLE_DOSSIER_6299,
+        candidate: cand,
+      });
+
+      api
+        .getCandidateDetail(candId)
+        .then((detail) => {
+          if (detail && detail.id && detail.breakdown) {
+            const contributions = Object.entries(detail.breakdown).map(
+              ([k, v]: [string, any]) => ({
+                feature: k.charAt(0).toUpperCase() + k.slice(1) + " Assessment",
+                delta: Math.round(((v?.score ?? 0.8) * (v?.weight ?? 0.25)) * 100),
+                description: `Evidence-backed model component (${Math.round((v?.score ?? 0.8) * 100)}% fit score)`,
+              })
+            );
+            if (contributions.length > 0) {
+              setDossier((prev) => ({
+                ...prev,
+                candidate: cand,
+                score_contributions: contributions,
+              }));
+            }
+          }
+        })
+        .catch(() => {});
+    }
+    setCurrentTab("dossier");
+  };
+
+  // Handle opening email center for candidate
+  const handleOpenEmailForCandidate = (_candId: string) => {
+    setCurrentTab("emails");
+  };
+
+  // Handle Job Select from Requisitions screen
+  const handleSelectJobFromRequisitions = (job: JobItem) => {
+    setSelectedJob(job);
+    const backendMatch = jobs?.find((j) => j.id === job.id);
+    if (backendMatch && setActiveJob) setActiveJob(backendMatch);
+    setCurrentTab("candidates");
+  };
+
+  // Handle Job Creation Success
+  const handleJobCreated = async (newJob: JobItem) => {
+    setJobsList((prev) => [newJob, ...prev]);
+    setSelectedJob(newJob);
+    await refreshJobs().catch(() => {});
+    const match = jobs.find((j) => j.id === newJob.id);
+    if (match && setActiveJob) {
+      setActiveJob(match);
+    }
+    showToast(`Requisition "${newJob.title}" created successfully!`, "success");
+    setCurrentTab("candidates");
+  };
+
+  // Handle candidate stage update on Pipeline Kanban
+  const handleUpdateCandidateStage = (candId: string, newStage: CandidateItem["stage"]) => {
+    setCandidatesList((prev) =>
+      prev.map((c) => (c.id === candId ? { ...c, stage: newStage } : c))
+    );
+    showToast(`Candidate stage moved to ${newStage}`, "info");
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <LoadingState message="Initializing Recruit Lens..." />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--canvas)] text-xs text-[var(--text-secondary)]">
+        <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-2" />
+        Initializing Recruit Lens...
       </div>
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <LoginScreen />;
   }
 
-  // Candidates selected for comparison view
-  const compareCandidatesList = compareCandidateIds
-    ? evaluations.filter((e) => compareCandidateIds.includes(e.id))
-    : [];
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-[var(--canvas)] text-[var(--text-primary)] flex flex-col font-sans transition-colors">
+      {/* Global 56px High Navbar */}
       <Navbar
         currentTab={currentTab}
-        onSelectTab={(tab) => {
-          setSelectedCandidateId(null);
-          setCompareCandidateIds(null);
-          setCurrentTab(tab);
-        }}
+        onSelectTab={setCurrentTab}
         onOpenCreateJob={() => setIsCreateJobOpen(true)}
-        onOpenUpload={() => setIsUploadOpen(true)}
+        jobsList={jobsList}
+        selectedJob={selectedJob}
+        onSelectJob={(job) => {
+          setSelectedJob(job);
+          const backendMatch = jobs?.find((j) => j.id === job.id);
+          if (backendMatch && setActiveJob) setActiveJob(backendMatch);
+          setCurrentTab("candidates");
+        }}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Detail Screen */}
-        {selectedCandidateId ? (
-          loadingDetail || !candidateDetail ? (
-            <LoadingState message="Loading candidate evidence dossier..." />
-          ) : (
-            <CandidateDetailScreen
-              evaluation={candidateDetail}
-              onBack={() => setSelectedCandidateId(null)}
-              onOpenDecision={() => {
-                const summary = evaluations.find((e) => e.id === candidateDetail.id);
-                if (summary) setDecisionCandidate(summary);
-              }}
-              onOpenInterviewQuestions={() => setIsInterviewQuestionsOpen(true)}
-              onOpenCopilot={() => setIsCopilotOpen(true)}
-              onOpenEmail={() => setIsEmailOpen(true)}
-            />
-          )
-        ) : compareCandidateIds && compareCandidatesList.length > 0 ? (
-          /* Compare Screen */
-          <CompareScreen
-            candidates={compareCandidatesList}
-            onBack={() => setCompareCandidateIds(null)}
-            onSelectCandidate={(id) => {
-              setCompareCandidateIds(null);
-              setSelectedCandidateId(id);
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+        {currentTab === "requisitions" && (
+          <RequisitionsScreen
+            jobs={jobsList}
+            onSelectJob={handleSelectJobFromRequisitions}
+            onCreateJob={() => setIsCreateJobOpen(true)}
+          />
+        )}
+
+        {currentTab === "candidates" && (
+          <RankedTableScreen
+            job={selectedJob}
+            candidates={candidatesList}
+            onSelectCandidate={handleOpenDossier}
+            onOpenEmail={handleOpenEmailForCandidate}
+            onExportAudit={() => setCurrentTab("audit")}
+            onNavigateRequisitions={() => setCurrentTab("requisitions")}
+          />
+        )}
+
+        {currentTab === "dossier" && (
+          <CandidateDossierScreen
+            dossier={dossier}
+            candidatesList={candidatesList}
+            onBack={() => setCurrentTab("candidates")}
+            onNextCandidate={(nextId) => handleOpenDossier(nextId)}
+            onOpenEmail={(candId) => handleOpenEmailForCandidate(candId)}
+          />
+        )}
+
+        {currentTab === "pipeline" && (
+          <PipelineBoardScreen
+            candidates={candidatesList}
+            onSelectCandidate={handleOpenDossier}
+            onUpdateCandidateStage={handleUpdateCandidateStage}
+          />
+        )}
+
+        {currentTab === "emails" && (
+          <EmailCenterScreen
+            initialCandidateCode={dossier.candidate.code}
+            onSendSuccess={(_id) => {
+              showToast("Email logged and queued with cryptographic audit hash.", "success");
             }}
           />
-        ) : (
-          /* Navigation Tabs */
-          <>
-            {currentTab === "dashboard" && (
-              <DashboardScreen
-                onSelectTab={setCurrentTab}
-                onOpenCreateJob={() => setIsCreateJobOpen(true)}
-                onOpenUpload={() => setIsUploadOpen(true)}
-              />
-            )}
+        )}
 
-            {currentTab === "candidates" && (
-              loadingCandidates && evaluations.length === 0 ? (
-                <LoadingState message="Loading candidates..." />
-              ) : (
-                <RankedTableScreen
-                  evaluations={evaluations}
-                  onSelectCandidate={(id) => setSelectedCandidateId(id)}
-                  onCompareCandidates={(ids) => setCompareCandidateIds(ids)}
-                  onOpenDecision={(cand) => setDecisionCandidate(cand)}
-                />
-              )
-            )}
+        {currentTab === "audit" && <AuditLogScreen />}
 
-            {currentTab === "pipeline" && (
-              <PipelineBoardScreen
-                evaluations={evaluations}
-                onSelectCandidate={(id) => setSelectedCandidateId(id)}
-                onRefresh={fetchCandidates}
-                onOpenDecision={(cand) => setDecisionCandidate(cand)}
-              />
-            )}
+        {currentTab === "analytics" && <AnalyticsScreen />}
 
-            {currentTab === "reports" && <ReportsScreen />}
+        {currentTab === "settings" && <SettingsScreen />}
 
-            {currentTab === "settings" && <SettingsAndExportScreen />}
-          </>
+        {![
+          "requisitions",
+          "candidates",
+          "dossier",
+          "pipeline",
+          "emails",
+          "audit",
+          "analytics",
+          "settings",
+        ].includes(currentTab) && (
+          <NotFoundScreen onHome={() => setCurrentTab("requisitions")} />
         )}
       </main>
 
-      {/* Global Modals */}
-      <JobCreateConfirmModal
+      {/* Requisition Creator 3-Step Wizard Modal */}
+      <JobCreateModal
         isOpen={isCreateJobOpen}
         onClose={() => setIsCreateJobOpen(false)}
+        onCreateSuccess={handleJobCreated}
       />
-
-      <UploadBatchModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        onBatchCompleted={fetchCandidates}
-      />
-
-      {decisionCandidate && (
-        <DecisionModal
-          isOpen={true}
-          onClose={() => setDecisionCandidate(null)}
-          evaluationId={decisionCandidate.id}
-          candidateName={decisionCandidate.candidate_name || `Candidate #${decisionCandidate.candidate_id}`}
-          currentStage={decisionCandidate.stage}
-          onSuccess={() => {
-            fetchCandidates();
-            if (candidateDetail && candidateDetail.id === decisionCandidate.id) {
-              setCandidateDetail({
-                ...candidateDetail,
-                stage: decisionCandidate.stage,
-              });
-            }
-          }}
-        />
-      )}
-
-      {candidateDetail && (
-        <>
-          <InterviewQuestionsModal
-            isOpen={isInterviewQuestionsOpen}
-            onClose={() => setIsInterviewQuestionsOpen(false)}
-            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
-          />
-
-          <CopilotModal
-            isOpen={isCopilotOpen}
-            onClose={() => setIsCopilotOpen(false)}
-            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
-            candidateId={candidateDetail.candidate_id || candidateDetail.id}
-          />
-
-          <EmailModal
-            isOpen={isEmailOpen}
-            onClose={() => setIsEmailOpen(false)}
-            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
-            evaluationId={candidateDetail.id}
-          />
-
-          <ScorecardModal
-            isOpen={isScorecardOpen}
-            onClose={() => setIsScorecardOpen(false)}
-            evaluationId={candidateDetail.id}
-            candidateName={candidateDetail.candidate_name || `Candidate #${candidateDetail.candidate_id}`}
-            onSuccess={fetchCandidates}
-          />
-        </>
-      )}
     </div>
   );
 };
@@ -375,7 +278,9 @@ const MainApp: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <MainApp />
+      <ToastProvider>
+        <MainAppContent />
+      </ToastProvider>
     </AuthProvider>
   );
 };

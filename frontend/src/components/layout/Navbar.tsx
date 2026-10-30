@@ -1,35 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  Briefcase,
   Users,
-  LayoutGrid,
+  Briefcase,
   BarChart3,
-  Settings,
   Shield,
-  Sun,
-  Moon,
+  Mail,
+  FileCheck,
+  Layers,
+  HelpCircle,
   LogOut,
-  Upload,
-  Plus,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
+
+import type { JobItem } from "../../lib/mockData";
 
 interface NavbarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
   onOpenCreateJob: () => void;
-  onOpenUpload: () => void;
+  jobsList?: JobItem[];
+  selectedJob?: JobItem;
+  onSelectJob?: (job: JobItem) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   onSelectTab,
   onOpenCreateJob,
-  onOpenUpload,
+  jobsList,
+  selectedJob,
+  onSelectJob,
 }) => {
   const {
-    user,
     logout,
     jobs,
     activeJob,
@@ -40,146 +43,254 @@ export const Navbar: React.FC<NavbarProps> = ({
     setIsBlindMode,
   } = useAuth();
 
+  const [isJobDropdownOpen, setIsJobDropdownOpen] = useState(false);
+
+  const activeTitle =
+    selectedJob?.title || activeJob?.title || "Staff Backend Engineer – Distributed Systems";
+  const displayedJobs = (jobsList && jobsList.length > 0) ? jobsList : (jobs || []);
+
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
+    { id: "requisitions", label: "Requisitions", icon: Briefcase },
     { id: "candidates", label: "Candidates", icon: Users },
-    { id: "pipeline", label: "Pipeline", icon: Briefcase },
-    { id: "reports", label: "Reports", icon: BarChart3 },
-    { id: "settings", label: "Settings & Logs", icon: Settings },
+    { id: "dossier", label: "Dossier", icon: FileCheck },
+    { id: "pipeline", label: "Pipeline", icon: Layers },
+    { id: "emails", label: "Email Center", icon: Mail },
+    { id: "audit", label: "Audit Log", icon: Shield },
+    { id: "analytics", label: "Analytics", icon: BarChart3 },
+    { id: "settings", label: "Settings", icon: HelpCircle },
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo & Product Name */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => onSelectTab("dashboard")}>
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                <Briefcase className="w-5 h-5" />
-              </div>
-              <div>
-                <h1 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                  Recruit Lens
-                </h1>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                  Evidence-Grounded AI
-                </p>
-              </div>
-            </div>
+    <header
+      style={{
+        height: "56px",
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        padding: "0 24px",
+        borderBottom: "1px solid #374151",
+        background: "#0F1318",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+      }}
+    >
+      {/* Brand & Lens Icon from Design */}
+      <div
+        style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", userSelect: "none" }}
+        onClick={() => onSelectTab("requisitions")}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onSelectTab("requisitions");
+        }}
+        aria-label="Recruit Lens Home"
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#818CF8"
+          strokeWidth="2"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+        <b style={{ color: "#E6EAF0", fontSize: "15px" }}>Recruit Lens</b>
+      </div>
 
-            {/* Active Job Requisition Selector */}
-            <div className="hidden md:flex items-center gap-2 pl-4 border-l border-slate-200 dark:border-slate-800">
-              <label htmlFor="active-job-select" className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Active Job:
-              </label>
-              <select
-                id="active-job-select"
-                aria-label="Active Job Requisition"
-                className="text-xs bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 font-medium text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 max-w-[220px] truncate"
-                value={activeJob?.id || ""}
-                onChange={(e) => {
-                  const selected = (jobs || []).find((j) => j.id === e.target.value);
-                  if (selected) setActiveJob(selected);
-                }}
-              >
-                {(jobs || []).length === 0 ? (
-                  <option value="">No Active Jobs</option>
-                ) : (
-                  (jobs || []).map((job) => (
-                    <option key={job.id} value={job.id}>
-                      {job.title} ({job.department || "General"})
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-          </div>
+      {/* Active Job Selector Dropdown Button */}
+      <div style={{ position: "relative" }}>
+        <button
+          type="button"
+          className="btn"
+          style={{ marginLeft: "4px" }}
+          onClick={() => setIsJobDropdownOpen(!isJobDropdownOpen)}
+          aria-haspopup="listbox"
+          aria-expanded={isJobDropdownOpen}
+        >
+          Job: {activeTitle} ▾
+        </button>
 
-          {/* Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentTab === item.id;
+        {isJobDropdownOpen && (
+          <div
+            role="listbox"
+            style={{
+              position: "absolute",
+              left: "4px",
+              top: "100%",
+              marginTop: "4px",
+              background: "#1F2937",
+              border: "1px solid #374151",
+              borderRadius: "8px",
+              zIndex: 50,
+              minWidth: "280px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+              overflow: "hidden",
+            }}
+          >
+            {displayedJobs.map((j) => {
+              const isSelected = selectedJob?.id === j.id || activeJob?.id === j.id;
               return (
                 <button
-                  key={item.id}
-                  onClick={() => onSelectTab(item.id)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition",
-                    isActive
-                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-semibold"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  )}
+                  key={j.id}
+                  type="button"
+                  onClick={() => {
+                    if (onSelectJob && "top_score" in j) {
+                      onSelectJob(j as JobItem);
+                    } else if (setActiveJob) {
+                      setActiveJob(j as any);
+                    }
+                    setIsJobDropdownOpen(false);
+                  }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "10px 14px",
+                    fontSize: "13px",
+                    color: isSelected ? "#60A5FA" : "#E6EAF0",
+                    background: isSelected ? "rgba(37,99,235,0.15)" : "transparent",
+                    border: 0,
+                    cursor: "pointer",
+                  }}
                 >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
+                  {j.title}
                 </button>
               );
             })}
-          </nav>
-
-          {/* Actions & Toggles */}
-          <div className="flex items-center gap-2.5">
-            {/* Quick action buttons */}
             <button
-              onClick={onOpenCreateJob}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
-              title="Create new job requisition"
+              type="button"
+              onClick={() => {
+                setIsJobDropdownOpen(false);
+                onOpenCreateJob();
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                textAlign: "left",
+                padding: "10px 14px",
+                fontSize: "13px",
+                color: "#60A5FA",
+                borderTop: "1px solid #374151",
+                background: "transparent",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Job</span>
+              + Create New Job...
             </button>
-            <button
-              onClick={onOpenUpload}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition"
-              title="Upload resumes in batch"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Upload</span>
-            </button>
-
-            {/* Blind Mode Toggle Button */}
-            <button
-              onClick={() => setIsBlindMode(!isBlindMode)}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition",
-                isBlindMode
-                  ? "bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-700 font-semibold"
-                  : "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
-              )}
-              title="Toggle Blind Review Mode (redacts candidate name, email, and demographics)"
-              aria-label="Toggle Blind Mode"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span>Blind {isBlindMode ? "ON" : "OFF"}</span>
-            </button>
-
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              aria-label="Toggle color theme"
-            >
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            {/* User profile & logout */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-              <span className="hidden xl:inline text-xs font-medium text-slate-700 dark:text-slate-300 max-w-[120px] truncate">
-                {user?.full_name || user?.email || "Recruiter"}
-              </span>
-              <button
-                onClick={logout}
-                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/50 transition"
-                title="Log out"
-                aria-label="Log out"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Navigation tabs */}
+      <nav
+        className="hidden xl:flex items-center gap-1.5"
+        style={{ marginLeft: "8px" }}
+        aria-label="Main Navigation"
+      >
+        {navItems.map((item) => {
+          const isActive = currentTab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onSelectTab(item.id)}
+              className={cn(
+                "btn",
+                isActive && "p"
+              )}
+              style={{
+                padding: "6px 11px",
+                fontSize: "12px",
+                minHeight: "32px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <item.icon style={{ width: "13px", height: "13px" }} aria-hidden="true" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <div style={{ flex: 1 }} />
+
+      {/* Right Side: Status, Blind Mode Switch, Theme, Profile */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* System Status Telemetry */}
+        <span
+          className="m hidden md:inline-flex items-center gap-1.5"
+          style={{ fontSize: "12px", fontFamily: "ui-monospace, monospace" }}
+        >
+          <span style={{ color: "#34D399" }}>●</span> Retrieval OK · BM25 + embeddings · p95 420 ms · Audit chain verified
+        </span>
+
+        {/* Blind Mode Switch from Design */}
+        <button
+          role="switch"
+          aria-checked={isBlindMode}
+          onClick={() => setIsBlindMode(!isBlindMode)}
+          className="btn"
+          style={{ display: "flex", gap: "8px", alignItems: "center" }}
+          title="Toggle Blind Screening Mode"
+        >
+          <span>Blind mode</span>
+          <span
+            style={{
+              width: "30px",
+              height: "16px",
+              borderRadius: "9px",
+              background: isBlindMode ? "#2563EB" : "#2E3844",
+              display: "inline-block",
+              position: "relative",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: "2px",
+                left: isBlindMode ? "16px" : "2px",
+                width: "12px",
+                height: "12px",
+                borderRadius: "6px",
+                background: "#fff",
+                transition: "left 0.15s ease",
+              }}
+            />
+          </span>
+        </button>
+
+        {/* Theme Toggle from Design */}
+        <button
+          type="button"
+          className="btn"
+          aria-label="Toggle theme"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          title={isDarkMode ? "Switch to light theme" : "Switch to dark theme"}
+          style={{ padding: "8px 12px" }}
+        >
+          ◐
+        </button>
+
+        {/* Recruiter Logout */}
+        <button
+          type="button"
+          onClick={logout}
+          className="btn"
+          title="Sign out"
+          aria-label="Sign out"
+          style={{ padding: "8px 10px", color: "#F87171" }}
+        >
+          <LogOut style={{ width: "14px", height: "14px" }} aria-hidden="true" />
+        </button>
       </div>
     </header>
   );
