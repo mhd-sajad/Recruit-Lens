@@ -16,12 +16,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   onNavigate,
 }) => {
   // Determine parent info
+  let hasParent = true;
   let parentLabel = "Requisitions";
   let parentPath = "/requisitions";
 
   switch (currentRoute.name) {
     case "requisitions":
-      parentLabel = "Home";
+      hasParent = false;
+      parentLabel = "";
       parentPath = "/";
       break;
     case "requisitions-new":
@@ -56,7 +58,8 @@ export const TopBar: React.FC<TopBarProps> = ({
       parentPath = `/jobs/${currentRoute.jobId}/candidates/${currentRoute.candidateId}`;
       break;
     default:
-      parentLabel = "Home";
+      hasParent = false;
+      parentLabel = "";
       parentPath = "/";
   }
 
@@ -70,19 +73,22 @@ export const TopBar: React.FC<TopBarProps> = ({
     currentRoute.name === "job-audit";
 
   return (
-    <header className="h-14 border-b border-[var(--border-default)] bg-[var(--bg-surface)] px-4 flex items-center justify-between sticky top-0 z-30 select-none">
-      {/* Left: Back Arrow with Parent Page Label */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => onNavigate(parentPath)}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer py-1 px-2 rounded hover:bg-[var(--bg-subtle)]"
-          aria-label={`Back to ${parentLabel}`}
-        >
-          <ArrowLeft size={16} />
-          <span>{parentLabel}</span>
-        </button>
-
-        <div className="h-4 w-px bg-[var(--border-default)] hidden sm:block" />
+    <header className="h-[68px] border-b border-[var(--border-default)] bg-[var(--bg-surface)] px-6 flex items-center justify-between sticky top-0 z-30 select-none">
+      {/* Left: Back Arrow with Parent Page Label + Brand Logo */}
+      <div className="flex items-center gap-3.5">
+        {hasParent && (
+          <>
+            <button
+              onClick={() => onNavigate(parentPath)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer py-1.5 px-2.5 rounded-lg hover:bg-[var(--bg-subtle)]"
+              aria-label={`Back to ${parentLabel}`}
+            >
+              <ArrowLeft size={16} />
+              <span>{parentLabel}</span>
+            </button>
+            <div className="h-5 w-px bg-[var(--border-default)] hidden sm:block" />
+          </>
+        )}
 
         {/* Recruit Lens Wordmark (always links Home "/") */}
         <button

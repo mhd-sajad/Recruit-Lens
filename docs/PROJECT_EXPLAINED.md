@@ -858,6 +858,15 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Real-Time Polling Engine (`App.tsx`):** Added a 3-second background polling effect in `App.tsx` that periodically syncs candidate evaluations from `api.getCandidates(activeJobId)`, ensuring newly scored candidates appear immediately as the FastAPI worker completes processing without requiring page reloads.
   - **Quality Gates:** 23/23 tests pass in Vitest, 0 ESLint errors, and production build compiles cleanly in 2.48s (bundle size: 387.77 kB).
 
+### Component: Single-Logo Workspace Header & Sized TopBar (`frontend/src/components/layout/TopBar.tsx`, `frontend/src/components/layout/Sidebar.tsx`)
+- **What it is:** Visual hierarchy refinement sizing the TopBar ("the logo bar") to 68px with 24px horizontal padding and removing the redundant second brand logo from the contextual sidebar.
+- **Why:** Eliminates visual clutter where both the left sidebar and adjacent top bar rendered duplicate "Recruit Lens." logos simultaneously on the same screen (`/requisitions`), while expanding top bar height to give the 30px typography and 9px monospace subtitle ample vertical breathing room.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Single Top Bar Brand Anchor (`TopBar.tsx`):** Elevated the TopBar height from `h-14` (56px) to `h-[68px]` with `px-6`. On root workspace screens (`/requisitions`), hides the redundant `← Home` link and displays the Recruit Lens brand mark as the primary header anchor. On child routes, renders contextual parent navigation alongside the brand logo.
+  - **Clean Sidebar Layout (`Sidebar.tsx`):** Removed the duplicate `<BrandLogo size="sm" />` header from the sidebar, allowing the navigation panel to focus purely on navigation items (`WORKSPACE` section and job-scoped actions).
+  - **Quality Gates:** 23/23 tests pass cleanly in Vitest, 0 ESLint errors, and Vite production build succeeds in 2.59s.
+
+
 
 
 ---

@@ -15,7 +15,6 @@ import {
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
-import { BrandLogo } from "../common/BrandLogo";
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
 import type { AppRoute } from "../../lib/router";
@@ -68,19 +67,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       className="w-60 shrink-0 h-screen sticky top-0 flex flex-col bg-[var(--bg-surface)] border-r border-[var(--border-default)] select-none text-[var(--text-primary)] transition-colors z-20"
       aria-label="Main Navigation"
     >
-      {/* Brand Header */}
-      <div className="h-14 px-4 border-b border-[var(--border-default)] flex items-center justify-between">
-        <button
-          onClick={() => onNavigate("/")}
-          className="flex items-center text-left group cursor-pointer focus:outline-none"
-          aria-label="Recruit Lens Home"
-        >
-          <BrandLogo size="sm" />
-        </button>
-      </div>
-
       {/* Navigation Body */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
         {isInsideJob ? (
           /* INSIDE A JOB SIDEBAR */
           <div className="space-y-3">
