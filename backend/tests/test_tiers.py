@@ -142,7 +142,6 @@ def test_tier_fixture_1_year_accountant() -> None:
 
     # Experience penalty lowers score below Strong Fit threshold
     assert tier_res.tier in ("Interview", "Hold")
-    assert tier_res.tier != "Strong Fit"
 
 
 def test_tier_fixture_unknown_years_not_behave_like_0_years() -> None:

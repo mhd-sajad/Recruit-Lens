@@ -68,19 +68,22 @@ def generate_deterministic_questions(packet: EvidencePacket) -> InterviewQuestio
     c1 = packet.retrieved_chunks[0].chunk_id if packet.retrieved_chunks else None
     questions: list[InterviewQuestion] = []
 
-    calibrated_diff: Literal["junior", "mid", "senior", "unknown"] = (
-        packet.seniority_level
-        if packet.seniority_level in ("junior", "mid", "senior")
-        else (
-            "senior"
-            if (packet.years_experience is not None and packet.years_experience >= 5.0)
-            else "mid"
-            if (packet.years_experience is not None and packet.years_experience >= 2.0)
-            else "junior"
-            if (packet.years_experience is not None)
-            else "unknown"
-        )
-    )
+    calibrated_diff: Literal["junior", "mid", "senior", "unknown"]
+    if packet.seniority_level == "junior":
+        calibrated_diff = "junior"
+    elif packet.seniority_level == "mid":
+        calibrated_diff = "mid"
+    elif packet.seniority_level == "senior":
+        calibrated_diff = "senior"
+    elif packet.years_experience is not None:
+        if packet.years_experience >= 5.0:
+            calibrated_diff = "senior"
+        elif packet.years_experience >= 2.0:
+            calibrated_diff = "mid"
+        else:
+            calibrated_diff = "junior"
+    else:
+        calibrated_diff = "unknown"
 
     # 1. Probe matched skills
     if packet.matched_must_skills:

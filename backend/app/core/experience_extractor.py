@@ -952,15 +952,16 @@ def calculate_total_experience_years(
     Never return 0.0 for unknown.
     """
     intervals: list[tuple[int, int]] = []
-    for e in entries:
-        if e.date_known and e.start_date:
-            p_s = parse_ym(e.start_date, is_start=True)
-            if e.is_current:
+    for entry in entries:
+        if entry.date_known and entry.start_date:
+            p_s = parse_ym(entry.start_date, is_start=True)
+            p_e: tuple[int, int] | None = None
+            if entry.is_current:
                 p_e = (2026, 10)
-            elif e.end_date:
-                p_e = parse_ym(e.end_date, is_start=False)
-            else:
-                p_e = (p_s[0], p_s[1] + (e.duration_months or 1) - 1) if p_s else None
+            elif entry.end_date:
+                p_e = parse_ym(entry.end_date, is_start=False)
+            elif p_s:
+                p_e = (p_s[0], p_s[1] + (entry.duration_months or 1) - 1)
 
             if p_s and p_e and p_e >= p_s:
                 s_idx = p_s[0] * 12 + p_s[1]
@@ -971,13 +972,13 @@ def calculate_total_experience_years(
         # Merge overlapping or contiguous date intervals
         sorted_int = sorted(intervals, key=lambda x: x[0])
         merged = [sorted_int[0]]
-        for s, e in sorted_int[1:]:
+        for curr_s, curr_e in sorted_int[1:]:
             last_s, last_e = merged[-1]
-            if s <= last_e + 1:
-                merged[-1] = (last_s, max(last_e, e))
+            if curr_s <= last_e + 1:
+                merged[-1] = (last_s, max(last_e, curr_e))
             else:
-                merged.append((s, e))
-        total_months = sum(e - s + 1 for s, e in merged)
+                merged.append((curr_s, curr_e))
+        total_months = sum(e_mo - s_mo + 1 for s_mo, e_mo in merged)
         total_years = round(total_months / 12.0, 1)
         if total_years > 0.0:
             return total_years, True

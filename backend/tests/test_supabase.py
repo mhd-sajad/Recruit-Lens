@@ -18,7 +18,7 @@ from app.db.base import Base
 
 
 @pytest.mark.asyncio
-async def test_supabase_models_schema_validity():
+async def test_supabase_models_schema_validity() -> None:
     """Verify all ORM models registered on metadata have valid table names and columns."""
     tables = Base.metadata.tables
     assert "users" in tables
@@ -30,7 +30,7 @@ async def test_supabase_models_schema_validity():
 
 
 @pytest.mark.asyncio
-async def test_supabase_mocked_query_execution():
+async def test_supabase_mocked_query_execution() -> None:
     """Verify database query execution logic with mocked engine/session."""
     mock_session = AsyncMock(spec=AsyncSession)
     mock_res = MagicMock()
@@ -43,7 +43,7 @@ async def test_supabase_mocked_query_execution():
 
 
 @pytest.mark.asyncio
-async def test_supabase_live_connectivity_or_skip():
+async def test_supabase_live_connectivity_or_skip() -> None:
     """Execute live query against Supabase if configured; safely skip if absent."""
     supabase_url = getattr(settings, "SUPABASE_DATABASE_URL", None)
     if not supabase_url:
