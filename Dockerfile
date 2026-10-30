@@ -56,8 +56,9 @@ COPY --from=frontend-builder /frontend/dist /app/frontend/dist
 COPY scripts /app/scripts
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
-# Set ownership and permissions
-RUN chown -R appuser:appuser /app && \
+# Create data directories and set permissions
+RUN mkdir -p /app/data/resumes_storage /app/data/hf_cache /app/data/temp && \
+    chown -R appuser:appuser /app && \
     chmod +x /app/docker-entrypoint.sh
 
 USER appuser

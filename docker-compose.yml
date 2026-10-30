@@ -19,6 +19,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - appdata:/app/data
 
   db:
     image: postgres:16-alpine
@@ -40,3 +42,4 @@ services:
 
 volumes:
   pgdata:
+  appdata:
