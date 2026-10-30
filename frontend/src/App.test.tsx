@@ -9,6 +9,7 @@ import { LoadingState, EmptyState, ErrorState } from "./components/common/StateV
 describe("App & Login Screen", () => {
   it("renders heading and clean login inputs when demo mode is off", () => {
     localStorage.clear();
+    window.history.pushState({}, "", "/login");
     render(<App />);
     expect(screen.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeInTheDocument();
     expect(screen.queryByText(/Demo Mode Active:/i)).not.toBeInTheDocument();

@@ -1,363 +1,409 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
-  Users,
   Briefcase,
-  BarChart3,
   Shield,
-  Mail,
-  FileCheck,
-  Layers,
   Settings,
+  HelpCircle,
+  Users,
+  UserPlus,
+  Award,
+  Mail,
+  Layers,
+  ArrowLeft,
+  Sun,
+  Moon,
   LogOut,
-  ChevronDown,
-  Plus,
-  X,
-  Menu,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
-
-import type { JobItem } from "../../lib/mockData";
-import type { JobResponse } from "../../types/api";
+import type { AppRoute } from "../../lib/router";
+import type { JobItem, CandidateItem } from "../../lib/mockData";
 
 interface SidebarProps {
-  currentTab: string;
-  onSelectTab: (tab: string) => void;
-  onOpenCreateJob: () => void;
-  jobsList?: JobItem[];
-  selectedJob?: JobItem;
-  onSelectJob?: (job: JobItem) => void;
+  currentRoute: AppRoute;
+  jobsList: JobItem[];
+  selectedJob: JobItem | null;
+  candidatesList: CandidateItem[];
+  onNavigate: (path: string) => void;
 }
 
-const NAV_ITEMS = [
-  { id: "requisitions", label: "Requisitions", icon: Briefcase },
-  { id: "candidates", label: "Candidates", icon: Users },
-  { id: "dossier", label: "Candidate Dossier", icon: FileCheck },
-  { id: "pipeline", label: "Pipeline Board", icon: Layers },
-  { id: "emails", label: "Email Center", icon: Mail },
-  { id: "audit", label: "Audit Log", icon: Shield },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "settings", label: "Settings", icon: Settings },
-] as const;
-
 export const Sidebar: React.FC<SidebarProps> = ({
-  currentTab,
-  onSelectTab,
-  onOpenCreateJob,
+  currentRoute,
   jobsList,
   selectedJob,
-  onSelectJob,
+  candidatesList,
+  onNavigate,
 }) => {
-  const {
-    logout,
-    jobs,
-    activeJob,
-    setActiveJob,
-    isDarkMode,
-    setIsDarkMode,
-    isBlindMode,
-    setIsBlindMode,
-  } = useAuth();
+  const { user, isDarkMode, setIsDarkMode, logout } = useAuth();
 
-  const [isJobDropdownOpen, setIsJobDropdownOpen] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const sidebarRef = useRef<HTMLElement>(null);
+  const isInsideJob =
+    currentRoute.name === "job-dashboard" ||
+    currentRoute.name === "job-candidates" ||
+    currentRoute.name === "job-candidates-add" ||
+    currentRoute.name === "job-candidate-dossier" ||
+    currentRoute.name === "job-candidate-email" ||
+    currentRoute.name === "job-pipeline" ||
+    currentRoute.name === "job-audit";
 
-  const activeTitle =
-    selectedJob?.title || activeJob?.title || "Select a Job";
-  const displayedJobs =
-    jobsList && jobsList.length > 0 ? jobsList : jobs || [];
+  const currentJobId = isInsideJob && "jobId" in currentRoute ? currentRoute.jobId : selectedJob?.id || "job-backend";
+  const activeJob = jobsList.find((j) => j.id === currentJobId) || selectedJob || jobsList[0];
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsJobDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  // Candidates scoped to activeJob
+  const jobCandidates = candidatesList.filter(
+    (c) => (c.job_id || "job-backend") === (activeJob?.id || "job-backend")
+  );
+  const topCandidate = jobCandidates[0];
 
-  // Close mobile sidebar on Escape
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsMobileOpen(false);
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
+  const emailCandidateId =
+    currentRoute.name === "job-candidate-email"
+      ? currentRoute.candidateId
+      : currentRoute.name === "job-candidate-dossier"
+      ? currentRoute.candidateId
+      : topCandidate?.id || "cand-6299";
 
-  const handleNavSelect = (tab: string) => {
-    onSelectTab(tab);
-    setIsMobileOpen(false);
-  };
-
-  const sidebarContent = (
-    <nav
-      ref={sidebarRef}
-      className={cn(
-        "flex flex-col h-full",
-        "bg-[var(--bg-surface)] border-r border-[var(--border-default)]"
-      )}
+  return (
+    <aside
+      className="w-60 shrink-0 h-screen sticky top-0 flex flex-col bg-[var(--bg-surface)] border-r border-[var(--border-default)] select-none text-[var(--text-primary)] transition-colors z-20"
       aria-label="Main Navigation"
     >
-      {/* Brand */}
-      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-[var(--border-default)]">
+      {/* Brand Header */}
+      <div className="h-14 px-4 border-b border-[var(--border-default)] flex items-center justify-between">
         <button
-          type="button"
-          onClick={() => handleNavSelect("requisitions")}
-          className="flex items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md"
+          onClick={() => onNavigate("/")}
+          className="flex items-center gap-2 text-left group cursor-pointer focus:outline-none"
           aria-label="Recruit Lens Home"
         >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#818CF8"
-            strokeWidth="2"
-            aria-hidden="true"
-            className="shrink-0"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-          <span className="font-bold text-[15px] text-[var(--text-primary)]">
-            Recruit Lens
-          </span>
-        </button>
-
-        {/* Mobile close button */}
-        <button
-          type="button"
-          onClick={() => setIsMobileOpen(false)}
-          className="ml-auto lg:hidden p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md"
-          aria-label="Close sidebar"
-        >
-          <X className="w-4 h-4" />
+          <div className="w-6 h-6 rounded bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:border-indigo-500 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M21 21l-4.3-4.3" />
+            </svg>
+          </div>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm tracking-tight text-[var(--text-primary)] leading-tight">
+              Recruit <span className="text-indigo-400 font-extrabold">Lens</span>
+            </span>
+            <span className="text-[8px] font-mono tracking-widest uppercase text-[var(--text-secondary)]">
+              EXPLAINABLE HIRING
+            </span>
+          </div>
         </button>
       </div>
 
-      {/* Job Selector */}
-      <div className="px-3 py-3 border-b border-[var(--border-default)]" ref={dropdownRef}>
-        <button
-          type="button"
-          onClick={() => setIsJobDropdownOpen(!isJobDropdownOpen)}
-          aria-haspopup="listbox"
-          aria-expanded={isJobDropdownOpen}
-          aria-label="Select active job"
-          className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-subtle)] hover:bg-[var(--border-default)]/40 border border-[var(--border-default)] rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <span className="truncate text-left">{activeTitle}</span>
-          <ChevronDown
-            className={cn("w-3.5 h-3.5 shrink-0 text-[var(--text-secondary)] transition-transform", {
-              "rotate-180": isJobDropdownOpen,
-            })}
-            aria-hidden="true"
-          />
-        </button>
+      {/* Navigation Body */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+        {isInsideJob ? (
+          /* INSIDE A JOB SIDEBAR */
+          <div className="space-y-3">
+            {/* Top link: ← Back to Requisitions */}
+            <button
+              onClick={() => onNavigate("/requisitions")}
+              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-indigo-400 hover:bg-indigo-500/10 transition-colors cursor-pointer text-left"
+            >
+              <ArrowLeft size={14} />
+              <span>Back to Requisitions</span>
+            </button>
 
-        {isJobDropdownOpen && (
-          <div
-            role="listbox"
-            aria-label="Jobs list"
-            className="mt-1 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg shadow-lg z-50 overflow-hidden"
-          >
-            {displayedJobs.map((j) => {
-              const isSelected =
-                selectedJob?.id === j.id || activeJob?.id === j.id;
-              return (
-                <button
-                  key={j.id}
-                  type="button"
-                  role="option"
-                  aria-selected={isSelected}
-                  onClick={() => {
-                    if (onSelectJob && "top_score" in j) {
-                      onSelectJob(j as JobItem);
-                    } else if (setActiveJob) {
-                      setActiveJob(j as unknown as JobResponse);
-                    }
-                    setIsJobDropdownOpen(false);
-                  }}
+            {/* Active Job Heading Card */}
+            {activeJob && (
+              <div className="px-2.5 py-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)]">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--text-secondary)] block mb-0.5">
+                  JOB WORKSPACE
+                </span>
+                <span className="text-[11px] font-mono font-bold text-indigo-300 block">
+                  {activeJob.id.toUpperCase().replace("JOB-", "REQ-")}
+                </span>
+                <span className="text-xs font-semibold text-[var(--text-primary)] line-clamp-2 leading-tight">
+                  {activeJob.title}
+                </span>
+              </div>
+            )}
+
+            {/* Job Nav Links */}
+            <nav className="space-y-0.5" aria-label="Job Navigation">
+              {/* 1. Job Dashboard */}
+              <button
+                onClick={() => onNavigate(`/jobs/${currentJobId}`)}
+                aria-current={currentRoute.name === "job-dashboard" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-dashboard"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <LayoutDashboard size={15} />
+                <span>Job Dashboard</span>
+              </button>
+
+              {/* 2. Ranked Candidates */}
+              <button
+                onClick={() => onNavigate(`/jobs/${currentJobId}/candidates`)}
+                aria-current={currentRoute.name === "job-candidates" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-candidates"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Users size={15} />
+                  <span>Ranked Candidates</span>
+                </div>
+                <span
                   className={cn(
-                    "w-full text-left px-3 py-2 text-xs transition-colors",
-                    isSelected
-                      ? "text-blue-600 dark:text-blue-400 bg-blue-500/10 font-semibold"
-                      : "text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                    "px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
+                    currentRoute.name === "job-candidates"
+                      ? "bg-white/20 text-white"
+                      : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-default)]"
                   )}
                 >
-                  {j.title}
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => {
-                setIsJobDropdownOpen(false);
-                onOpenCreateJob();
-              }}
-              className="w-full text-left px-3 py-2 text-xs font-semibold text-blue-600 dark:text-blue-400 border-t border-[var(--border-default)] hover:bg-[var(--bg-subtle)] transition-colors flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-              Create New Job...
-            </button>
+                  {jobCandidates.length || activeJob?.applicants_count || 0}
+                </span>
+              </button>
+
+              {/* 3. Add Candidates */}
+              <button
+                onClick={() => onNavigate(`/jobs/${currentJobId}/candidates/add`)}
+                aria-current={currentRoute.name === "job-candidates-add" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-candidates-add"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <UserPlus size={15} />
+                <span>Add Candidates</span>
+              </button>
+
+              {/* 4. Top Candidate */}
+              <button
+                onClick={() => {
+                  if (topCandidate) {
+                    onNavigate(`/jobs/${currentJobId}/candidates/${topCandidate.id}`);
+                  } else {
+                    onNavigate(`/jobs/${currentJobId}/candidates`);
+                  }
+                }}
+                aria-current={
+                  currentRoute.name === "job-candidate-dossier" &&
+                  topCandidate &&
+                  currentRoute.candidateId === topCandidate.id
+                    ? "page"
+                    : undefined
+                }
+                className={cn(
+                  "w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-candidate-dossier" &&
+                    topCandidate &&
+                    currentRoute.candidateId === topCandidate.id
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Award size={15} />
+                  <span>Top Candidate</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  #1 Top
+                </span>
+              </button>
+
+              {/* 5. Email Center */}
+              <button
+                onClick={() => onNavigate(`/jobs/${currentJobId}/candidates/${emailCandidateId}/email`)}
+                aria-current={currentRoute.name === "job-candidate-email" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-candidate-email"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <Mail size={15} />
+                <span>Email Center</span>
+              </button>
+
+              {/* 6. Hiring Pipeline */}
+              <button
+                onClick={() => onNavigate(`/jobs/${currentJobId}/pipeline`)}
+                aria-current={currentRoute.name === "job-pipeline" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-pipeline"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <Layers size={15} />
+                <span>Hiring Pipeline</span>
+              </button>
+
+              {/* 7. Job Audit Log */}
+              <button
+                onClick={() => onNavigate(`/jobs/${currentJobId}/audit`)}
+                aria-current={currentRoute.name === "job-audit" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "job-audit"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <Shield size={15} />
+                <span>Job Audit Log</span>
+              </button>
+            </nav>
+          </div>
+        ) : (
+          /* OUTSIDE A JOB SIDEBAR (Requisitions, All-jobs Audit, Settings) */
+          <div className="space-y-3">
+            <div className="px-2 pt-1">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-[var(--text-secondary)]">
+                WORKSPACE
+              </span>
+            </div>
+
+            <nav className="space-y-0.5" aria-label="Workspace Navigation">
+              {/* 1. Requisitions */}
+              <button
+                onClick={() => onNavigate("/requisitions")}
+                aria-current={currentRoute.name === "requisitions" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "requisitions"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Briefcase size={15} />
+                  <span>Requisitions</span>
+                </div>
+                <span
+                  className={cn(
+                    "px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold",
+                    currentRoute.name === "requisitions"
+                      ? "bg-white/20 text-white"
+                      : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-default)]"
+                  )}
+                >
+                  {jobsList.length}
+                </span>
+              </button>
+
+              {/* 2. Audit Log (All Jobs) */}
+              <button
+                onClick={() => onNavigate("/audit")}
+                aria-current={currentRoute.name === "audit" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "audit"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <Shield size={15} />
+                <span>Audit Log</span>
+              </button>
+
+              {/* 3. Settings */}
+              <button
+                onClick={() => onNavigate("/settings")}
+                aria-current={currentRoute.name === "settings" ? "page" : undefined}
+                className={cn(
+                  "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer",
+                  currentRoute.name === "settings"
+                    ? "bg-indigo-600 text-white font-semibold shadow-xs"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
+                )}
+              >
+                <Settings size={15} />
+                <span>Settings</span>
+              </button>
+            </nav>
           </div>
         )}
       </div>
 
-      {/* Nav Items */}
-      <div className="flex-1 overflow-y-auto py-2 px-2">
-        {NAV_ITEMS.map((item) => {
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleNavSelect(item.id)}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all mb-0.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                isActive
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
-              )}
-            >
-              <item.icon
-                className={cn("w-4 h-4 shrink-0", isActive ? "text-white" : "text-[var(--text-secondary)]")}
-                aria-hidden="true"
-              />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Bottom Block */}
+      <div className="p-3 border-t border-[var(--border-default)] space-y-2 bg-[var(--bg-surface)]">
+        {/* How it Works link */}
+        <button
+          onClick={() => onNavigate("/how-it-works")}
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer text-left"
+        >
+          <HelpCircle size={15} />
+          <span>How it Works</span>
+        </button>
 
-      {/* Bottom: status, blind mode, theme, logout */}
-      <div className="border-t border-[var(--border-default)] px-3 py-3 space-y-2">
-        {/* System status */}
-        <div className="flex items-center gap-2 px-2 py-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
-          <span className="text-[11px] text-[var(--text-secondary)] font-mono truncate">
-            Retrieval OK
-          </span>
+        {/* If inside job, also show Settings in bottom block */}
+        {isInsideJob && (
+          <button
+            onClick={() => onNavigate("/settings")}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer text-left"
+          >
+            <Settings size={15} />
+            <span>Settings</span>
+          </button>
+        )}
+
+        {/* Recruiter Profile */}
+        <div className="p-2 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)] flex items-center justify-between">
+          <div className="flex flex-col min-w-0 pr-1">
+            <span className="text-[10px] font-mono text-indigo-400 font-semibold uppercase tracking-wider">
+              Recruiter
+            </span>
+            <span className="text-xs font-medium text-[var(--text-primary)] truncate" title={user?.email || "admin@recruitlens.local"}>
+              {user?.email || "admin@recruitlens.local"}
+            </span>
+          </div>
+          <button
+            onClick={logout}
+            className="p-1 rounded text-[var(--text-secondary)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+            title="Sign out"
+            aria-label="Sign out"
+          >
+            <LogOut size={14} />
+          </button>
         </div>
 
-        {/* Blind Mode */}
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isBlindMode}
-          onClick={() => setIsBlindMode(!isBlindMode)}
-          className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          aria-label="Toggle Blind Screening Mode"
-        >
-          <span className="text-xs text-[var(--text-primary)]">Blind Mode</span>
-          <span
-            aria-hidden="true"
+        {/* Theme Toggle: Light / Dark */}
+        <div className="flex border border-[var(--border-default)] rounded-lg p-0.5 bg-[var(--bg-subtle)]">
+          <button
+            type="button"
+            onClick={() => setIsDarkMode(false)}
             className={cn(
-              "relative inline-flex h-4 w-7 rounded-full transition-colors",
-              isBlindMode ? "bg-blue-600" : "bg-[var(--border-default)]"
+              "flex-1 flex items-center justify-center gap-1.5 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer",
+              !isDarkMode
+                ? "bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-xs font-semibold"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             )}
+            aria-label="Switch to Light Theme"
           >
-            <span
-              className={cn(
-                "absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all",
-                isBlindMode ? "left-3.5" : "left-0.5"
-              )}
-            />
-          </span>
-        </button>
-
-        {/* Theme toggle */}
-        <button
-          type="button"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          aria-label={isDarkMode ? "Switch to light theme" : "Switch to dark theme"}
-          className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-[var(--bg-subtle)] transition-colors text-xs text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <span>{isDarkMode ? "Dark Mode" : "Light Mode"}</span>
-          <span aria-hidden="true" className="text-base leading-none">
-            {isDarkMode ? "🌙" : "☀️"}
-          </span>
-        </button>
-
-        {/* Logout */}
-        <button
-          type="button"
-          onClick={logout}
-          aria-label="Sign out"
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors text-xs text-red-500 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-        >
-          <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" />
-          <span>Sign Out</span>
-        </button>
-      </div>
-    </nav>
-  );
-
-  return (
-    <>
-      {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center gap-3 px-4 bg-[var(--bg-surface)] border-b border-[var(--border-default)]">
-        <button
-          type="button"
-          onClick={() => setIsMobileOpen(true)}
-          aria-label="Open navigation menu"
-          className="p-2 rounded-md text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onSelectTab("requisitions")}
-          className="flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-md"
-          aria-label="Recruit Lens Home"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#818CF8"
-            strokeWidth="2"
-            aria-hidden="true"
+            <Sun size={12} />
+            <span>Light</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsDarkMode(true)}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-1 text-[11px] font-medium rounded-md transition-colors cursor-pointer",
+              isDarkMode
+                ? "bg-indigo-600 text-white shadow-xs font-semibold"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            )}
+            aria-label="Switch to Dark Theme"
           >
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4.3-4.3" />
-          </svg>
-          <span className="font-bold text-sm text-[var(--text-primary)]">
-            Recruit Lens
-          </span>
-        </button>
-      </div>
-
-      {/* Mobile drawer overlay */}
-      {isMobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-50 flex"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation sidebar"
-        >
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setIsMobileOpen(false)}
-            aria-hidden="true"
-          />
-          {/* Drawer */}
-          <div className="relative z-10 w-60 h-full">{sidebarContent}</div>
+            <Moon size={12} />
+            <span>Dark</span>
+          </button>
         </div>
-      )}
-
-      {/* Desktop sidebar (always visible) */}
-      <aside className="hidden lg:flex flex-col w-60 shrink-0 h-screen sticky top-0">
-        {sidebarContent}
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 };

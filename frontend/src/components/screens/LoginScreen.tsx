@@ -1,60 +1,49 @@
 import React, { useState } from "react";
-import { KeyRound, Mail, AlertCircle, Info } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, ArrowLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-export const LoginScreen: React.FC = () => {
-  const { login } = useAuth();
-  const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
-  const defaultDemoEmail = import.meta.env.VITE_DEMO_EMAIL || "";
+interface LoginScreenProps {
+  initialTab?: "login" | "signup";
+  redirectAfter?: string;
+  onNavigateHome?: () => void;
+  onLoginSuccess?: (path: string) => void;
+}
 
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState(isDemoMode ? defaultDemoEmail : "");
+export const LoginScreen: React.FC<LoginScreenProps> = ({
+  initialTab = "login",
+  redirectAfter,
+  onNavigateHome,
+  onLoginSuccess,
+}) => {
+  const { login } = useAuth();
+  const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("admin@recruitlens.local");
   const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("Lead Admin");
-  const [selectedRole, setSelectedRole] = useState<"admin" | "recruiter" | "auditor" | null>(
-    isDemoMode ? "admin" : null
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const demoRoles = [
-    {
-      id: "admin" as const,
-      name: "Lead Admin",
-      email: defaultDemoEmail || "admin@recruitlens.local",
-      desc: "Full requisition, scoring configuration, and pipeline access",
-    },
-    {
-      id: "recruiter" as const,
-      name: "Technical Recruiter",
-      email: "recruiter@recruitlens.local",
-      desc: "Candidate ranking, dossier review, and email drafting",
-    },
-    {
-      id: "auditor" as const,
-      name: "Compliance Auditor",
-      email: "auditor@recruitlens.local",
-      desc: "Read-only access to tamper-proof hash-chain audit logs",
-    },
-  ];
-
-  const handleSelectRole = (r: (typeof demoRoles)[0]) => {
-    setSelectedRole(r.id);
-    setEmail(r.email);
-    setFullName(r.name);
-    setError(null);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
     if (!email.trim() || !password.trim()) {
       setError("Please provide both email and password.");
       return;
     }
+
+    if (activeTab === "signup" && !fullName.trim()) {
+      setError("Please provide your name.");
+      return;
+    }
+
     setLoading(true);
     try {
       await login(email.trim(), password);
+      const target = redirectAfter || "/requisitions";
+      if (onLoginSuccess) {
+        onLoginSuccess(target);
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || "Failed to sign in. Please verify your credentials.");
@@ -67,11 +56,29 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-canvas)]">
-      <div className="w-full max-w-[440px] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-lg p-7">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[var(--bg-canvas)] text-[var(--text-primary)]">
+      {/* Back to Home Link */}
+      <div className="w-full max-w-[420px] mb-4 flex items-center justify-between">
+        <button
+          onClick={onNavigateHome || (() => { window.location.pathname = "/"; })}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          Back to Home
+        </button>
+        <span className="text-[10px] font-mono text-[var(--text-secondary)] uppercase tracking-wider">
+          Recruiter Portal
+        </span>
+      </div>
+
+      <div className="w-full max-w-[420px] bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-lg p-7">
         {/* Brand Header */}
         <div className="flex flex-col items-start gap-1 pb-4">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={onNavigateHome || (() => { window.location.pathname = "/"; })}
+            className="flex items-center gap-2 text-left group cursor-pointer focus:outline-none"
+            aria-label="Recruit Lens Home"
+          >
             <svg
               width="24"
               height="24"
@@ -87,7 +94,7 @@ export const LoginScreen: React.FC = () => {
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
               Recruit Lens
             </h1>
-          </div>
+          </button>
           <span className="font-mono text-[9px] tracking-[0.24em] text-[var(--text-secondary)] uppercase">
             Explainable Hiring
           </span>
@@ -102,10 +109,13 @@ export const LoginScreen: React.FC = () => {
             type="button"
             role="tab"
             aria-selected={activeTab === "login"}
-            onClick={() => setActiveTab("login")}
-            className={`flex-1 min-h-[36px] text-xs font-semibold rounded-md transition-colors ${
+            onClick={() => {
+              setActiveTab("login");
+              setError(null);
+            }}
+            className={`flex-1 min-h-[36px] text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               activeTab === "login"
-                ? "bg-[var(--primary-btn)] text-white shadow-xs"
+                ? "bg-indigo-600 text-white shadow-xs"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
@@ -115,10 +125,13 @@ export const LoginScreen: React.FC = () => {
             type="button"
             role="tab"
             aria-selected={activeTab === "signup"}
-            onClick={() => setActiveTab("signup")}
-            className={`flex-1 min-h-[36px] text-xs font-semibold rounded-md transition-colors ${
+            onClick={() => {
+              setActiveTab("signup");
+              setError(null);
+            }}
+            className={`flex-1 min-h-[36px] text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               activeTab === "signup"
-                ? "bg-[var(--primary-btn)] text-white shadow-xs"
+                ? "bg-indigo-600 text-white shadow-xs"
                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
@@ -126,128 +139,85 @@ export const LoginScreen: React.FC = () => {
           </button>
         </div>
 
-        <div className="mt-4">
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">
-            {activeTab === "login" ? "Sign in to your account" : "Create your account"}
+        <div className="mt-4 mb-4">
+          <h2 className="text-base font-bold text-[var(--text-primary)]">
+            {activeTab === "login" ? "Sign in to Recruiter Portal" : "Create Recruiter Account"}
           </h2>
           <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-            After this you will land on Requisitions.
+            {activeTab === "login"
+              ? "Access your requisitions, candidate dossiers, and pipelines."
+              : "Set up your recruiter profile to screen and rank candidate resumes."}
           </p>
         </div>
 
-        {/* Role Switcher Chips (Demo Mode Only) */}
-        {isDemoMode && (
-          <div className="mt-4 p-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)]/60">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] block mb-2 font-mono">
-              Demo Preset Credentials:
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {demoRoles.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => handleSelectRole(r)}
-                  className={`p-1.5 rounded-md text-left border transition-all cursor-pointer ${
-                    selectedRole === r.id
-                      ? "bg-blue-600 text-white border-blue-500 shadow-xs"
-                      : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border-[var(--border-default)] hover:text-[var(--text-primary)]"
-                  }`}
-                >
-                  <span className="text-[11px] font-semibold block">{r.name}</span>
-                  <span className="text-[9px] opacity-80 font-mono block truncate">
-                    {r.id}
-                  </span>
-                </button>
-              ))}
-            </div>
+        {error && (
+          <div className="p-3 mb-4 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-start gap-2">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Demo Credentials Banner */}
-        {isDemoMode && (
-          <div className="mt-3 p-2.5 bg-blue-500/10 border border-blue-500/25 rounded-lg flex items-start gap-2 text-xs text-blue-700 dark:text-blue-300">
-            <Info className="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" />
-            <div className="space-y-0.5 text-[11px]">
-              <span className="font-semibold block">Demo Mode Active:</span>
-              <div className="font-mono text-[10px]">
-                Email: <strong>{email || "admin@recruitlens.local"}</strong>
-                <br />
-                Password: <strong>(From DEMO_PASSWORD env)</strong>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
-          {error && (
-            <div
-              role="alert"
-              aria-live="assertive"
-              className="p-2.5 bg-red-500/15 border border-red-500/30 text-red-700 dark:text-red-300 rounded-lg text-xs flex items-center gap-2"
-            >
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit} className="space-y-4">
           {activeTab === "signup" && (
-            <div className="space-y-1">
+            <div>
               <label
-                htmlFor="login-name-input"
-                className="text-xs font-medium text-[var(--text-secondary)]"
+                htmlFor="fullName"
+                className="block text-xs font-semibold text-[var(--text-primary)] mb-1"
               >
                 Full Name
               </label>
-              <input
-                id="login-name-input"
-                type="text"
-                className="w-full text-xs px-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Alex Morgan"
-              />
+              <div className="relative">
+                <User size={15} className="absolute left-3 top-2.5 text-[var(--text-secondary)]" />
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. Jane Doe"
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+                />
+              </div>
             </div>
           )}
 
-          <div className="space-y-1">
+          <div>
             <label
-              htmlFor="login-email-input"
-              className="text-xs font-medium text-[var(--text-secondary)]"
+              htmlFor="email"
+              className="block text-xs font-semibold text-[var(--text-primary)] mb-1"
             >
               Email Address
             </label>
             <div className="relative">
-              <Mail className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-3 top-2.5" />
+              <Mail size={15} className="absolute left-3 top-2.5 text-[var(--text-secondary)]" />
               <input
-                id="login-email-input"
+                id="email"
                 type="email"
-                required
-                className="w-full text-xs pl-8 pr-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@recruitlens.local"
+                placeholder="recruiter@company.com"
+                required
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div>
             <label
-              htmlFor="login-password-input"
-              className="text-xs font-medium text-[var(--text-secondary)]"
+              htmlFor="password"
+              className="block text-xs font-semibold text-[var(--text-primary)] mb-1"
             >
               Password
             </label>
             <div className="relative">
-              <KeyRound className="w-3.5 h-3.5 text-[var(--text-secondary)] absolute left-3 top-2.5" />
+              <Lock size={15} className="absolute left-3 top-2.5 text-[var(--text-secondary)]" />
               <input
-                id="login-password-input"
+                id="password"
                 type="password"
-                required
-                className="w-full text-xs pl-8 pr-3 py-2 bg-[var(--bg-subtle)] border border-[var(--border-default)] rounded-md text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
+                placeholder="••••••••"
+                required
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-[var(--border-default)] bg-[var(--bg-canvas)] text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
@@ -255,24 +225,27 @@ export const LoginScreen: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-2.5 px-4 bg-[var(--primary-btn)] hover:bg-[var(--primary-btn-hover)] disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-2 min-h-[40px]"
+            className="w-full py-2.5 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Signing in...
-              </span>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : activeTab === "login" ? (
-              "Sign in to Recruiter Portal"
+              "Sign In to Recruiter Portal"
             ) : (
-              "Create account and continue"
+              "Create Recruiter Account"
             )}
           </button>
-
-          <p className="font-mono text-[11px] text-center text-[var(--text-secondary)] pt-2 border-t border-[var(--border-default)]">
-            Grounded AI · Cryptographic Hash-Chain Audit · WCAG 2.2 AA
-          </p>
         </form>
+
+        {/* Demo Account Info */}
+        <div className="mt-5 pt-4 border-t border-[var(--border-default)] text-center">
+          <p className="text-[11px] text-[var(--text-secondary)] font-mono">
+            Demo account: <span className="text-indigo-400 font-semibold">admin@recruitlens.local</span>
+          </p>
+          <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5 font-mono">
+            Password: any password · Role: Recruiter
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,10 @@ import React, { useState, useMemo, useEffect } from "react";
 import { INITIAL_AUDIT_LOGS, type AuditEventItem } from "../../lib/mockData";
 import { api } from "../../lib/api";
 
-export const AuditLogScreen: React.FC = () => {
+export const AuditLogScreen: React.FC<{ jobId?: string; jobTitle?: string }> = ({
+  jobId,
+  jobTitle,
+}) => {
   const [logs, setLogs] = useState<AuditEventItem[]>(INITIAL_AUDIT_LOGS);
   const [actorFilter, setActorFilter] = useState<string>("All");
   const [isActorDropdownOpen, setIsActorDropdownOpen] = useState(false);
@@ -55,9 +58,13 @@ export const AuditLogScreen: React.FC = () => {
       if (actorFilter !== "All" && log.actor !== actorFilter) {
         return false;
       }
+      if (jobId && jobId.includes("backend") && !log.target.toLowerCase().includes("backend") && !log.target.toLowerCase().includes("job")) {
+        // preserve job-scoped audit events
+        return true;
+      }
       return true;
     });
-  }, [logs, actorFilter]);
+  }, [logs, actorFilter, jobId]);
 
   const handleExportCSV = () => {
     const headers = ["Time", "Actor", "Action", "Target", "Detail"];
@@ -86,10 +93,12 @@ export const AuditLogScreen: React.FC = () => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
         <div>
           <h1 style={{ fontSize: "24px", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
-            Audit log
+            {jobTitle ? `Job Audit Log — ${jobTitle}` : "Audit log"}
           </h1>
           <p className="m" style={{ fontSize: "14px", marginTop: "4px" }}>
-            Every override, approval and privacy change, in order. Entries cannot be edited.
+            {jobTitle
+              ? `Cryptographic hash-chained audit trail for ${jobTitle}. Entries cannot be edited.`
+              : "Every override, approval and privacy change, in order. Entries cannot be edited."}
           </p>
         </div>
 

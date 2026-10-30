@@ -23,6 +23,7 @@ export interface JobItem {
 
 export interface CandidateItem {
   id: string;
+  job_id?: string;
   code: string; // e.g. "6299" -> "Candidate #6299"
   name: string;
   email: string;
@@ -172,6 +173,7 @@ export const INITIAL_JOBS: JobItem[] = [
 export const MOCK_CANDIDATES: CandidateItem[] = [
   {
     id: "cand-6299",
+    job_id: "job-backend",
     code: "6299",
     name: "Alex Rivera",
     email: "alex.rivera@engineering.io",
@@ -186,6 +188,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-8412",
+    job_id: "job-backend",
     code: "8412",
     name: "Elena Rostova",
     email: "elena.rostova@cloudscale.net",
@@ -200,6 +203,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-7721",
+    job_id: "job-backend",
     code: "7721",
     name: "Marcus Vance",
     email: "mvance@distributed.org",
@@ -214,6 +218,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-5304",
+    job_id: "job-backend",
     code: "5304",
     name: "Priya Sharma",
     email: "psharma@techsystems.co",
@@ -228,6 +233,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-9102",
+    job_id: "job-backend",
     code: "9102",
     name: "Devon Clark",
     email: "dclark@cloudbackend.dev",
@@ -242,6 +248,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-4431",
+    job_id: "job-backend",
     code: "4431",
     name: "Hannah Schmidt",
     email: "hannah.s@inframesh.eu",
@@ -256,6 +263,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-3290",
+    job_id: "job-backend",
     code: "3290",
     name: "Tariq Mansoor",
     email: "tmansoor@cloudnet.org",
@@ -270,6 +278,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-1845",
+    job_id: "job-backend",
     code: "1845",
     name: "Rachel Chen",
     email: "rchen@dataflow.tech",
@@ -284,6 +293,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-2981",
+    job_id: "job-backend",
     code: "2981",
     name: "Jordan Miller",
     email: "jmiller@asyncapi.io",
@@ -298,6 +308,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-6619",
+    job_id: "job-backend",
     code: "6619",
     name: "Siddharth Nair",
     email: "snair@microservices.in",
@@ -312,6 +323,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-7110",
+    job_id: "job-backend",
     code: "7110",
     name: "Chloe Dubois",
     email: "cdubois@queuesystems.ca",
@@ -326,6 +338,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-9832",
+    job_id: "job-backend",
     code: "9832",
     name: "Kevin Ortiz",
     email: "kortiz@devbootcamp.io",
@@ -340,6 +353,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-1209",
+    job_id: "job-backend",
     code: "1209",
     name: "Amina Al-Hassan",
     email: "amina.h@webapps.net",
@@ -354,6 +368,7 @@ export const MOCK_CANDIDATES: CandidateItem[] = [
   },
   {
     id: "cand-5541",
+    job_id: "job-backend",
     code: "5541",
     name: "Lucas Pereira",
     email: "lpereira@scripting.org",
@@ -695,3 +710,56 @@ export const INITIAL_AUDIT_LOGS: AuditEventItem[] = [
 // Convenient aliases
 export const INITIAL_CANDIDATES = MOCK_CANDIDATES;
 export const SAMPLE_DOSSIER_6299 = FULL_DOSSIER_CANDIDATE;
+
+export const MOCK_ML_CANDIDATES: CandidateItem[] = [
+  {
+    id: "cand-ml-1",
+    job_id: "job-ml",
+    code: "4190",
+    name: "Dr. Marcus Vance",
+    email: "marcus.vance@vectorflow.ai",
+    location: "Seattle, WA",
+    most_recent_role: "Staff Machine Learning Scientist",
+    match_score: 82,
+    tier: "Interview",
+    must_have_coverage: "6 / 6",
+    verified_experience: "7.0 yrs",
+    stage: "Screened",
+    missing_must_haves: [],
+  },
+  {
+    id: "cand-ml-2",
+    job_id: "job-ml",
+    code: "7741",
+    name: "Siddharth Rao",
+    email: "sid.rao@tensorlab.io",
+    location: "New York, NY",
+    most_recent_role: "Senior NLP Research Engineer",
+    match_score: 79,
+    tier: "Interview",
+    must_have_coverage: "5 / 6",
+    verified_experience: "5.5 yrs",
+    stage: "Interview",
+    missing_must_haves: ["ONNX Runtime"],
+  },
+];
+
+export const ALL_MOCK_CANDIDATES: CandidateItem[] = [
+  ...MOCK_CANDIDATES,
+  ...MOCK_ML_CANDIDATES,
+];
+
+export function getCandidatesForJob(jobId: string, customList?: CandidateItem[]): CandidateItem[] {
+  const pool = customList && customList.length > 0 ? customList : ALL_MOCK_CANDIDATES;
+  return pool.filter((c) => (c.job_id || "job-backend") === jobId);
+}
+
+export function getCandidateById(candidateId: string, jobId?: string, customList?: CandidateItem[]): CandidateItem | undefined {
+  const pool = customList && customList.length > 0 ? customList : ALL_MOCK_CANDIDATES;
+  const found = pool.find((c) => c.id === candidateId || c.code === candidateId);
+  if (!found) return undefined;
+  if (jobId && found.job_id && found.job_id !== jobId) {
+    return undefined; // candidate belongs to another job!
+  }
+  return found;
+}
