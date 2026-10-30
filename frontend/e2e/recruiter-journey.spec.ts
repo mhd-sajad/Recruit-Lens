@@ -14,7 +14,11 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     page.on("pageerror", (err) => console.log("BROWSER ERROR:", err.message));
 
     // 1. Visit App & Login Screen
-    await page.goto("/login");
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeVisible();
+
+    // Navigate to Login Screen
+    await page.getByRole("button", { name: "Log in" }).click();
     await expect(page.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeVisible();
 
     // Capture Screen 1: Login Screen
