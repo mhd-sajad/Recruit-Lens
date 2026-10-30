@@ -1,7 +1,7 @@
 # RECRUIT LENS — FINAL RELEASE AUDIT REPORT (v1.0.1)
 
-**Generated:** 2026-10-30 04:04:19 UTC
-**Git Commit:** `1aab793d8aa1395b10888c1c0afe8c8cbc085acf`
+**Generated:** 2026-10-30 04:20:04 UTC
+**Git Commit:** `2e47e87eaf4a2a2c48cb6930898f26ffa650fae7`
 **Verification Script:** `scripts/generate_final_report.py`
 **Report Integrity Standard:** All figures read strictly from verified disk artifacts; zero hand-typed numbers.
 
@@ -43,7 +43,9 @@ Recorded directly from the official GitHub Actions API (`docs/ci_runs.json`):
 | **Phase 3 Release** | `feat/phase-3-deploy-document-release` | `2832f75` | `40889617369` | completed | **success** |
 | **Release v1.0.0** | `main` | `2832f75` | `40890124145` | completed | **success** |
 | **Pre-v1.0.1 Main Fix** | `main` | `1aab793` | `40993653840` | completed | **failure** (ESLint hook order) |
-| **Final Verification** | `fix/final-verification-v1.0.1` | HEAD | Pending Push | in_progress | TBD |
+| **Fix Branch v1.0.1 (Attempt 1)** | `fix/final-verification-v1.0.1` | `ca57f25` | `41001107517` | completed | **failure** (shallow clone checkout depth in provenance check) |
+| **Fix Branch v1.0.1 (Attempt 2)** | `fix/final-verification-v1.0.1` | `2e47e87` | `41001525587` | completed | **success** (all 4 jobs green) |
+| **Release v1.0.1** | `main` | `2e47e87` | `41001866260` | completed | **success** (all 4 jobs green) |
 
 ---
 
