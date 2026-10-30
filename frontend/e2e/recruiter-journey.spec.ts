@@ -14,7 +14,7 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     page.on("pageerror", (err) => console.log("BROWSER ERROR:", err.message));
 
     // 1. Visit App & Login Screen
-    await page.goto("/");
+    await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeVisible();
 
     // Capture Screen 1: Login Screen
@@ -36,42 +36,46 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     });
 
     // 3. Candidates Ranked Table Screen
-    await page.getByRole("button", { name: "Candidates", exact: true }).click();
+    // Click "View ranked candidates" on first requisition card
+    await page.getByRole("button", { name: /View ranked candidates/i }).first().click();
+    // Navigate to Ranked Candidates table from the job workspace
+    await page.getByRole("button", { name: /Ranked Candidates/i }).first().click();
     await expect(page.getByRole("table")).toBeVisible({ timeout: 10000 });
 
-    // Capture Screen 3: Candidates Table (Normal)
+    // Capture Screen 3: Candidates Table
     await page.screenshot({
       path: path.join(SCREENSHOT_DIR, "03_candidates_table.png"),
       fullPage: true,
     });
 
-    // Toggle Blind Mode
-    await page.getByRole("switch").click();
-    await expect(page.getByText(/Candidate #/i).first()).toBeVisible({ timeout: 5000 });
-
-    // Capture Screen 4: Ranked Table in Blind Mode
-    await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "04_ranked_table_blind_mode.png"),
-      fullPage: true,
-    });
-
     // 4. Candidate Dossier Screen
-    await page.getByRole("button", { name: "Dossier", exact: true }).click();
+    await page.getByRole("button", { name: "Dossier" }).first().click();
     await expect(page.getByText(/Match Score/i)).toBeVisible({ timeout: 10000 });
 
-    // Capture Screen 5: Dossier Screen
+    // Capture Screen 4: Dossier Screen
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "05_candidate_dossier.png"),
+      path: path.join(SCREENSHOT_DIR, "04_candidate_dossier.png"),
       fullPage: true,
     });
 
     // 5. Hiring Pipeline Board
-    await page.getByRole("button", { name: "Pipeline", exact: true }).click();
+    await page.getByRole("button", { name: /Hiring Pipeline/i }).first().click();
     await expect(page.getByRole("heading", { name: "Pipeline Board" })).toBeVisible({ timeout: 10000 });
 
-    // Capture Screen 6: Pipeline Kanban Board
+    // Capture Screen 5: Pipeline Kanban Board
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "06_pipeline_board.png"),
+      path: path.join(SCREENSHOT_DIR, "05_pipeline_board.png"),
+      fullPage: true,
+    });
+
+    // 6. Settings Screen & Blind Mode Toggle
+    await page.getByRole("button", { name: "Settings" }).first().click();
+    await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible({ timeout: 10000 });
+    await page.getByRole("switch").first().click();
+
+    // Capture Screen 6: Settings Screen
+    await page.screenshot({
+      path: path.join(SCREENSHOT_DIR, "06_settings_screen.png"),
       fullPage: true,
     });
   });
