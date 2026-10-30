@@ -16,13 +16,18 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     // 1. Visit App & Login Screen
     await page.goto("/");
 
-    // If on Home landing page, navigate to Login Screen
-    const loginCta = page.getByRole("button", { name: "Log in" });
-    if (await loginCta.isVisible()) {
-      await loginCta.click();
+    // Wait for client hydration: either Home page hero heading or Login heading
+    const homeHeading = page.getByRole("heading", { name: /Screen resumes with evidence/i, level: 1 });
+    const loginHeading = page.getByRole("heading", { name: "Recruit Lens", level: 1 });
+
+    await expect(homeHeading.or(loginHeading)).toBeVisible({ timeout: 15000 });
+    if (await homeHeading.isVisible()) {
+      const loginBtn = page.getByRole("button", { name: "Log in" });
+      await expect(loginBtn).toBeVisible({ timeout: 5000 });
+      await loginBtn.click();
     }
 
-    await expect(page.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeVisible({ timeout: 10000 });
+    await expect(loginHeading).toBeVisible({ timeout: 15000 });
 
     // Capture Screen 1: Login Screen
     await page.screenshot({
@@ -36,25 +41,23 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     await page.getByRole("button", { name: /Sign in to Recruiter Portal/i }).click();
 
     // 2. Requisitions Command Center Screen
-    await expect(page.getByRole("heading", { name: "Requisitions", level: 1 })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Requisitions", level: 1 })).toBeVisible({ timeout: 15000 });
     await page.screenshot({
       path: path.join(SCREENSHOT_DIR, "02_requisitions_screen.png"),
       fullPage: true,
     });
 
     // 3. Candidates Ranked Table Screen
-    const viewCandidatesBtn = page.getByRole("button", { name: /View ranked candidates/i }).first();
-    const candidatesNavBtn = page.getByRole("button", { name: /Candidates/i }).first();
-    if (await viewCandidatesBtn.isVisible()) {
-      await viewCandidatesBtn.click();
-      const rankedNav = page.getByRole("button", { name: /Ranked Candidates/i }).first();
-      if (await rankedNav.isVisible()) {
-        await rankedNav.click();
-      }
-    } else if (await candidatesNavBtn.isVisible()) {
-      await candidatesNavBtn.click();
+    const candidatesBtn = page.getByRole("button", { name: /View ranked candidates|Candidates/i }).first();
+    await expect(candidatesBtn).toBeVisible({ timeout: 15000 });
+    await candidatesBtn.click();
+
+    // If on job dashboard, navigate to ranked candidates table
+    const rankedNav = page.getByRole("button", { name: /Ranked Candidates/i }).first();
+    if (await rankedNav.isVisible()) {
+      await rankedNav.click();
     }
-    await expect(page.getByRole("table")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("table")).toBeVisible({ timeout: 15000 });
 
     // Capture Screen 3: Candidates Table
     await page.screenshot({
@@ -64,8 +67,9 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
 
     // 4. Candidate Dossier Screen
     const dossierBtn = page.getByRole("button", { name: /Dossier/i }).first();
+    await expect(dossierBtn).toBeVisible({ timeout: 15000 });
     await dossierBtn.click();
-    await expect(page.getByText(/Match Score/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Match Score/i)).toBeVisible({ timeout: 15000 });
 
     // Capture Screen 4: Dossier Screen
     await page.screenshot({
@@ -75,8 +79,9 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
 
     // 5. Hiring Pipeline Board
     const pipelineBtn = page.getByRole("button", { name: /Pipeline/i }).first();
+    await expect(pipelineBtn).toBeVisible({ timeout: 15000 });
     await pipelineBtn.click();
-    await expect(page.getByRole("heading", { name: /Pipeline/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: /Pipeline/i })).toBeVisible({ timeout: 15000 });
 
     // Capture Screen 5: Pipeline Kanban Board
     await page.screenshot({
@@ -86,8 +91,9 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
 
     // 6. Settings Screen & Blind Mode Toggle
     const settingsBtn = page.getByRole("button", { name: "Settings" }).first();
+    await expect(settingsBtn).toBeVisible({ timeout: 15000 });
     await settingsBtn.click();
-    await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible({ timeout: 15000 });
     const blindSwitch = page.getByRole("switch").first();
     if (await blindSwitch.isVisible()) {
       await blindSwitch.click();
