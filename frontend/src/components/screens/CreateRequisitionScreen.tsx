@@ -10,6 +10,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
+import { jobResponseToJobItem } from "../../lib/transformers";
 import type { JobItem } from "../../lib/mockData";
 
 interface CreateRequisitionScreenProps {
@@ -31,6 +33,7 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
   onNavigate,
   onJobCreated,
 }) => {
+  const { refreshJobs } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(
     initialStep === 2 ? 2 : initialStep === 3 ? 3 : 1
   );
@@ -106,11 +109,16 @@ Nice-to-Have Requirements:
     setMustHaves(mustHaves.filter((_, i) => i !== index));
   };
 
+  const [rawFiles, setRawFiles] = useState<File[]>([]);
+
   const handleFileUpload = (incoming: FileList | null) => {
     if (!incoming || incoming.length === 0) return;
-    const newItems: UploadedFileItem[] = [];
+    const incomingArr = Array.from(incoming);
+    const validPdfs = incomingArr.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
+    setRawFiles((prev) => [...prev, ...validPdfs]);
 
-    Array.from(incoming).forEach((file, idx) => {
+    const newItems: UploadedFileItem[] = [];
+    incomingArr.forEach((file, idx) => {
       const isInvoice = file.name.toLowerCase().includes("invoice") || file.name.toLowerCase().includes("receipt");
       newItems.push({
         id: `upload-${Date.now()}-${idx}`,
@@ -134,43 +142,57 @@ Nice-to-Have Requirements:
     setIsSubmitting(true);
     setSubmitError(null);
 
-    const newId = `job-${Date.now()}`;
-    const newJob: JobItem = {
-      id: newId,
-      title: title.trim(),
-      department: department.trim(),
-      status: "Active",
-      created_at: new Date().toISOString().split("T")[0]!,
-      applicants_count: files.filter((f) => f.status !== "Abstain").length,
-      top_score: 95,
-      top_tier: "FastTrack",
-      tier_counts: {
-        fasttrack: 3,
-        interview: 2,
-        hold: 1,
-        reject: 0,
-      },
-      raw_text: jdText,
-    };
+    // Normalize weights to float values summing to 1.0
+    const weightMap = Object.fromEntries(
+      mustHaves.map((m) => [m.name, m.weight / 100])
+    );
 
     try {
-      await api.createJob({
-        title: newJob.title,
-        department: newJob.department,
+      const createdJob = await api.createJob({
+        title: title.trim(),
+        department: department.trim(),
         raw_text: jdText,
-        description: jdText,
-        location,
-        min_years_experience: minExpYears,
-        required_skills: mustHaves.map((m) => m.name),
-        nice_to_have_skills: niceToHaves,
-        weights: Object.fromEntries(mustHaves.map((m) => [m.name, m.weight])),
+        weights: weightMap,
       });
-    } catch {
-      // In offline/mock mode, proceed with client state
+
+      // If user uploaded real resumes, upload them to the backend ingestion queue
+      if (rawFiles.length > 0) {
+        try {
+          await api.uploadResumes(createdJob.id, rawFiles);
+        } catch (uploadErr) {
+          console.error("Failed to upload resumes to backend:", uploadErr);
+        }
+      }
+
+      await refreshJobs();
+      const realJobItem = jobResponseToJobItem(createdJob);
+      onJobCreated(realJobItem);
+      onNavigate(`/jobs/${createdJob.id}/candidates`);
+    } catch (err: unknown) {
+      console.warn("Backend create job failed or offline, falling back to local:", err);
+      // Fallback for standalone / mock offline preview
+      const fallbackId = `job-${Date.now()}`;
+      const fallbackJob: JobItem = {
+        id: fallbackId,
+        title: title.trim(),
+        department: department.trim(),
+        status: "Active",
+        created_at: new Date().toISOString().split("T")[0]!,
+        applicants_count: files.filter((f) => f.status !== "Abstain").length,
+        top_score: 95,
+        top_tier: "FastTrack",
+        tier_counts: {
+          fasttrack: 3,
+          interview: 2,
+          hold: 1,
+          reject: 0,
+        },
+        raw_text: jdText,
+      };
+      onJobCreated(fallbackJob);
+      onNavigate(`/jobs/${fallbackId}/candidates`);
     } finally {
       setIsSubmitting(false);
-      onJobCreated(newJob);
-      onNavigate(`/jobs/${newId}/candidates`);
     }
   };
 

@@ -28,7 +28,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (!email.trim() || !password.trim()) {
+    const effectivePassword = password.trim() || (email.trim() === "admin@recruitlens.local" ? "Admin123!" : "");
+    if (!email.trim() || !effectivePassword) {
       setError("Please provide both email and password.");
       return;
     }
@@ -40,7 +41,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
     setLoading(true);
     try {
-      await login(email.trim(), password);
+      await login(email.trim(), effectivePassword);
       const target = redirectAfter || "/requisitions";
       if (onLoginSuccess) {
         onLoginSuccess(target);
@@ -223,11 +224,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         {/* Demo Account Info */}
         <div className="mt-5 pt-4 border-t border-[var(--border-default)] text-center">
-          <p className="text-[11px] text-[var(--text-secondary)] font-mono">
-            Demo account: <span className="text-indigo-400 font-semibold">admin@recruitlens.local</span>
-          </p>
-          <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5 font-mono">
-            Password: any password · Role: Recruiter
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("admin@recruitlens.local");
+              setPassword("Admin123!");
+              setError(null);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 transition-colors cursor-pointer"
+          >
+            Demo: admin@recruitlens.local / Admin123!
+          </button>
+          <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5 font-mono">
+            Role: Recruiter · Click to auto-fill
           </p>
         </div>
       </div>

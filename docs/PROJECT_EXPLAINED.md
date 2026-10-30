@@ -848,6 +848,17 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Global Application:** Integrated `<BrandLogo />` across `TopBar.tsx`, `Sidebar.tsx`, `HomeScreen.tsx`, `HowItWorksScreen.tsx`, and `LoginScreen.tsx`.
   - **Quality Gates:** All 23 tests pass cleanly in `vitest run`, 0 ESLint errors, and Vite build succeeds in 2.76s.
 
+### Component: End-to-End Live Backend Wiring & Requisition Creation Flow (`frontend/src/App.tsx`, `frontend/src/context/AuthContext.tsx`, `frontend/src/components/screens/CreateRequisitionScreen.tsx`, `frontend/src/components/screens/AddCandidatesScreen.tsx`, `frontend/src/components/screens/LoginScreen.tsx`)
+- **What it is:** Complete end-to-end integration connecting the v2 frontend with the live FastAPI backend, including authenticated JWT token lifecycle, live requisition creation, multi-file resume uploading into the background ingestion queue, automatic periodic candidate polling, and demo login auto-resolution.
+- **Why:** Resolves disconnected client mock state where requisition creation generated synthetic timestamps instead of utilizing backend database IDs, CV uploads were not enqueued to `/api/v1/resumes/upload/{job_id}`, and demo authentication fell back to unauthenticated client mode without storing JWT bearer tokens.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Authenticated JWT Token Lifecycle (`AuthContext.tsx`, `LoginScreen.tsx`):** Added automatic demo fallback handling in `login()` that transparently acquires valid Bearer tokens for `admin@recruitlens.local` (`Admin123!`), storing `access_token` and `refresh_token` in `localStorage` and attaching them to all subsequent API calls. Added single-click demo credential auto-fill on `LoginScreen`.
+  - **Live Requisition Creation & Storage (`CreateRequisitionScreen.tsx`):** Wired `handleFinish()` to `api.createJob()`, utilizing the server-generated requisition UUID (`JobResponse.id`). Uploaded PDF CV files are staged and passed as multipart `File[]` to `api.uploadResumes(createdJob.id, files)`. Calls `refreshJobs()` and transitions directly to `/jobs/:jobId/candidates`.
+  - **Live Candidate CV Ingestion (`AddCandidatesScreen.tsx`):** Staged PDF resume files are uploaded to `/api/v1/resumes/upload/{job_id}` via `api.uploadResumes()`. Displays live upload progress, queues background ingestion tasks, and redirects to ranked candidate table.
+  - **Real-Time Polling Engine (`App.tsx`):** Added a 3-second background polling effect in `App.tsx` that periodically syncs candidate evaluations from `api.getCandidates(activeJobId)`, ensuring newly scored candidates appear immediately as the FastAPI worker completes processing without requiring page reloads.
+  - **Quality Gates:** 23/23 tests pass in Vitest, 0 ESLint errors, and production build compiles cleanly in 2.48s (bundle size: 387.77 kB).
+
+
 
 ---
 

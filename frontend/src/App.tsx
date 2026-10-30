@@ -96,29 +96,35 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
     }
   }, [currentActiveJob, jobs, activeJob, setActiveJob]);
 
-  // Fetch real evaluations when active job changes
+  // Fetch real evaluations when active job changes, polling every 3s to reflect background ingestion
   useEffect(() => {
     if (!currentActiveJob) return;
     let isCancelled = false;
 
-    api
-      .getCandidates(currentActiveJob.id)
-      .then((evals) => {
-        if (!isCancelled && Array.isArray(evals) && evals.length > 0) {
-          const transformed = evals.map((e, idx) => {
-            const item = evaluationSummaryToCandidateItem(e, idx);
-            return { ...item, job_id: currentActiveJob.id };
-          });
-          setCandidatesList((prev) => {
-            const other = prev.filter((c) => (c.job_id || "job-backend") !== currentActiveJob.id);
-            return [...transformed, ...other];
-          });
-        }
-      })
-      .catch(() => {});
+    const fetchCandidates = () => {
+      api
+        .getCandidates(currentActiveJob.id)
+        .then((evals) => {
+          if (!isCancelled && Array.isArray(evals) && evals.length > 0) {
+            const transformed = evals.map((e, idx) => {
+              const item = evaluationSummaryToCandidateItem(e, idx);
+              return { ...item, job_id: currentActiveJob.id };
+            });
+            setCandidatesList((prev) => {
+              const other = prev.filter((c) => (c.job_id || "job-backend") !== currentActiveJob.id);
+              return [...transformed, ...other];
+            });
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchCandidates();
+    const pollTimer = setInterval(fetchCandidates, 3000);
 
     return () => {
       isCancelled = true;
+      clearInterval(pollTimer);
     };
   }, [currentActiveJob]);
 

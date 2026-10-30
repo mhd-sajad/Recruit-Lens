@@ -7,7 +7,9 @@ import {
   ArrowLeft,
   ArrowRight,
   ShieldAlert,
+  Loader2,
 } from "lucide-react";
+import { api } from "../../lib/api";
 import type { JobItem } from "../../lib/mockData";
 
 interface AddCandidatesScreenProps {
@@ -62,16 +64,24 @@ export const AddCandidatesScreen: React.FC<AddCandidatesScreenProps> = ({
     },
   ]);
 
+  const [stagedFiles, setStagedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+
   const handleDrop = (incoming: FileList | null) => {
     if (!incoming || incoming.length === 0) return;
 
+    const incomingArr = Array.from(incoming);
+    const validPdfs = incomingArr.filter((f) => f.name.toLowerCase().endsWith(".pdf"));
+    setStagedFiles((prev) => [...prev, ...validPdfs]);
+
     const newItems: CVFileItem[] = [];
-    Array.from(incoming).forEach((f, idx) => {
+    incomingArr.forEach((f, idx) => {
       const lower = f.name.toLowerCase();
       const isInvoice = lower.includes("invoice") || lower.includes("receipt") || lower.includes("billing");
       const isDuplicate = KNOWN_HASHES.has(f.name);
 
-      let status: CVFileItem["status"] = "Completed";
+      let status: CVFileItem["status"] = "Queued";
       let error: string | undefined = undefined;
 
       if (isDuplicate) {
@@ -80,6 +90,8 @@ export const AddCandidatesScreen: React.FC<AddCandidatesScreenProps> = ({
       } else if (isInvoice) {
         status = "Abstained";
         error = "Non-resume detected by intake classifier. Document will not be ranked.";
+      } else if (f.name.toLowerCase().endsWith(".pdf")) {
+        status = "Completed";
       }
 
       newItems.push({
@@ -93,6 +105,33 @@ export const AddCandidatesScreen: React.FC<AddCandidatesScreenProps> = ({
     });
 
     setFiles((prev) => [...newItems, ...prev]);
+  };
+
+  const handleUploadToBackend = async () => {
+    if (stagedFiles.length === 0) {
+      if (onUploadSuccess) onUploadSuccess();
+      onNavigate(`/jobs/${job.id}/candidates`);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadMessage(null);
+    try {
+      const res = await api.uploadResumes(job.id, stagedFiles);
+      const taskId = (res.task_id || res.id || "batch").slice(0, 8);
+      setUploadMessage(
+        `✓ Queued ${stagedFiles.length} resumes for processing (Task: ${taskId}). Redirecting to candidate table...`
+      );
+      if (onUploadSuccess) onUploadSuccess();
+      setTimeout(() => {
+        onNavigate(`/jobs/${job.id}/candidates`);
+      }, 1200);
+    } catch (err: unknown) {
+      console.warn("Upload failed or backend offline:", err);
+      setUploadMessage("Failed to upload resumes to backend. Please check network connection.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const completedCount = files.filter((f) => f.status === "Completed").length;
@@ -120,16 +159,34 @@ export const AddCandidatesScreen: React.FC<AddCandidatesScreenProps> = ({
         </div>
 
         <button
-          onClick={() => {
-            if (onUploadSuccess) onUploadSuccess();
-            onNavigate(`/jobs/${job.id}/candidates`);
-          }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors cursor-pointer"
+          onClick={handleUploadToBackend}
+          disabled={isUploading}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
         >
-          View Ranked Candidates
-          <ArrowRight size={14} />
+          {isUploading ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span>Uploading & Queuing...</span>
+            </>
+          ) : stagedFiles.length > 0 ? (
+            <>
+              <span>Upload & Index {stagedFiles.length} CVs</span>
+              <ArrowRight size={14} />
+            </>
+          ) : (
+            <>
+              <span>View Ranked Candidates</span>
+              <ArrowRight size={14} />
+            </>
+          )}
         </button>
       </div>
+
+      {uploadMessage && (
+        <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 font-mono">
+          {uploadMessage}
+        </div>
+      )}
 
       {/* Upload Drop Zone */}
       <div
