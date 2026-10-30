@@ -95,8 +95,31 @@ class WeightedBaselineScorer:
     """
 
     def __init__(self, weights: dict[str, float] | None = None) -> None:
-        self.weights = weights or dict(DEFAULT_BASELINE_WEIGHTS)
-        total_w = sum(self.weights.values())
+        if weights and any(k in DEFAULT_BASELINE_WEIGHTS for k in weights):
+            self.weights = {
+                k: float(v) for k, v in weights.items() if k in DEFAULT_BASELINE_WEIGHTS
+            }
+        elif weights and any(
+            k in ("skills", "experience", "education", "semantic") for k in weights
+        ):
+            w_sk = float(weights.get("skills", 0.4))
+            w_exp = float(weights.get("experience", 0.3))
+            w_edu = float(weights.get("education", 0.15))
+            w_sem = float(weights.get("semantic", 0.15))
+            self.weights = {
+                "must_have_coverage": w_sk * 0.8,
+                "nice_to_have_coverage": w_sk * 0.2,
+                "years_gap_norm": w_exp * 0.6,
+                "title_match": w_exp * 0.25,
+                "seniority_gap_norm": w_exp * 0.15,
+                "education_match": w_edu,
+                "dense_similarity": w_sem * 0.7,
+                "skill_recency": w_sem * 0.3,
+            }
+        else:
+            self.weights = dict(DEFAULT_BASELINE_WEIGHTS)
+
+        total_w = sum(self.weights.values()) or 1.0
         # Ensure weights normalize to 1.0
         self.weights = {k: v / total_w for k, v in self.weights.items()}
 

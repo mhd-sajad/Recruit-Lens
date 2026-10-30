@@ -101,32 +101,34 @@ export function evaluationSummaryToCandidateItem(
   // Deterministic 4-digit code
   const code = e.id ? e.id.replace(/-/g, "").slice(-4).toUpperCase() : `${6200 + index}`;
 
-  const defaultTitles = [
-    "Staff Backend Architect",
-    "Senior Distributed Systems Engineer",
-    "Cloud Infrastructure Engineer",
-    "Principal Data Platform Lead",
-    "Senior Microservices Engineer",
-    "Backend Platform Specialist",
-  ];
+  // Role title (only use demo title on demo workspace job)
+  const roleTitle = e.candidate_title || (e.job_id === "job-backend" ? "Staff Backend Architect" : "Applicant");
 
-  const roleTitle = e.candidate_title || defaultTitles[index % defaultTitles.length] || "Backend Engineer";
+  // Candidate Name (only use demo name on demo workspace job)
+  const candidateName = e.candidate_name || (e.job_id === "job-backend" ? "Alex Rivera" : `Candidate #${code}`);
+
+  // Must-have coverage (use real evaluated coverage, fallback to demo on demo job)
+  const coverage = e.must_have_coverage || (e.job_id === "job-backend" ? (tier === "FastTrack" ? "7 / 7" : "4 / 7") : "Pending");
+
+  // Verified Experience
+  const expStr = e.years_experience !== null && e.years_experience !== undefined && e.years_experience > 0
+    ? `${e.years_experience.toFixed(1)} yrs`
+    : (e.job_id === "job-backend" ? "8.5 yrs" : "Dates missing");
 
   return {
     id: e.id,
+    job_id: e.job_id,
     code,
-    name: e.candidate_name || `Alex Rivera`,
+    name: candidateName,
     email: `cand-${code.toLowerCase()}@recruitlens.io`,
-    location: "San Francisco, CA (Remote)",
+    location: "Location verified from CV",
     most_recent_role: roleTitle, // Zero company name!
     match_score: score,
     tier,
-    must_have_coverage: tier === "FastTrack" ? "7 / 7" : tier === "Interview" ? "6 / 7" : "4 / 7",
-    verified_experience:
-      e.years_experience !== null && e.years_experience !== undefined && e.years_experience > 0
-        ? `${e.years_experience.toFixed(1)} yrs`
-        : "8.5 yrs",
+    must_have_coverage: coverage,
+    verified_experience: expStr,
     stage,
-    missing_must_haves: e.missing_must_haves || (tier === "Reject" ? ["Cassandra", "Raft"] : []),
+    skills: e.matched_skills || [],
+    missing_must_haves: e.missing_must_haves || (e.job_id === "job-backend" && tier === "Reject" ? ["Cassandra", "Raft"] : []),
   };
 }

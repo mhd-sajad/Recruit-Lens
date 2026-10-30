@@ -91,6 +91,12 @@ class EvaluationSummaryResponse(BaseModel):
     explanation_type: str
     llm_generated: bool
     created_at: datetime
+    candidate_name: str | None = None
+    candidate_title: str | None = None
+    years_experience: float | None = None
+    must_have_coverage: str | None = None
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_must_haves: list[str] = Field(default_factory=list)
 
 
 class EvaluationDetailResponse(BaseModel):

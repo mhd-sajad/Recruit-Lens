@@ -101,22 +101,65 @@ async def list_evaluations_for_job(
     result = await db.execute(query)
     evaluations = result.scalars().all()
 
-    return [
-        EvaluationSummaryResponse(
-            id=ev.id,
-            resume_id=ev.resume_id,
-            job_id=ev.job_id,
-            candidate_filename=ev.resume.filename if ev.resume else "Unknown",
-            total_score=ev.total_score,
-            tier=ev.tier,
-            confidence=ev.confidence,
-            stage=ev.stage,
-            explanation_type=ev.explanation_type,
-            llm_generated=ev.llm_generated,
-            created_at=ev.created_at,
+    import re
+
+    summary_list: list[EvaluationSummaryResponse] = []
+    for ev in evaluations:
+        breakdown = ev.breakdown_json or {}
+        skills_data = breakdown.get("skills", {})
+        exp_data = breakdown.get("experience", {})
+        matched = skills_data.get("matched_must", [])
+        missing = skills_data.get("missing_must", [])
+
+        # Calculate real must-have coverage string
+        total_must_req = len(matched) + len(missing)
+        coverage_str = f"{len(matched)} / {total_must_req}" if total_must_req > 0 else None
+
+        # Experience duration
+        cand_years = exp_data.get("years")
+
+        # Extract name and title
+        filename = ev.resume.filename if ev.resume else ""
+        raw_name = None
+        raw_title = None
+        if ev.resume and ev.resume.parse_result_json:
+            raw_name = ev.resume.parse_result_json.get("name")
+            raw_title = ev.resume.parse_result_json.get("title")
+
+        if not raw_name and filename:
+            clean = filename.rsplit(".", 1)[0]
+            clean = re.sub(
+                r"\b(cv|resume|ai_engineer|backend|dev|senior|staff)\b",
+                "",
+                clean,
+                flags=re.IGNORECASE,
+            )
+            clean = re.sub(r"[\(_\-\d\)]+", " ", clean).strip()
+            raw_name = clean.title() if clean else "Applicant"
+
+        summary_list.append(
+            EvaluationSummaryResponse(
+                id=ev.id,
+                resume_id=ev.resume_id,
+                job_id=ev.job_id,
+                candidate_filename=filename or "Unknown",
+                total_score=ev.total_score,
+                tier=ev.tier,
+                confidence=ev.confidence,
+                stage=ev.stage,
+                explanation_type=ev.explanation_type,
+                llm_generated=ev.llm_generated,
+                created_at=ev.created_at,
+                candidate_name=raw_name,
+                candidate_title=raw_title,
+                years_experience=float(cand_years) if cand_years is not None else None,
+                must_have_coverage=coverage_str,
+                matched_skills=matched,
+                missing_must_haves=missing,
+            )
         )
-        for ev in evaluations
-    ]
+
+    return summary_list
 
 
 @router.get("/reports/analytics", response_model=PipelineAnalyticsResponse)

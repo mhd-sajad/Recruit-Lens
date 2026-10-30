@@ -142,6 +142,8 @@ export interface EvaluationSummaryResponse {
   candidate_title?: string;
   fit_score?: number;
   years_experience?: number | null;
+  must_have_coverage?: string;
+  matched_skills?: string[];
   missing_must_haves?: string[];
 }
 

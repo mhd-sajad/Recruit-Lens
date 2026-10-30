@@ -898,6 +898,15 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Public Requirement Preview (`jobs.py`, `dependencies.py`):** Added `get_optional_current_user` to ensure `POST /api/v1/jobs/extract-requirements` never fails with 401 Unauthorized during preview or token refresh.
   - **Quality Gates:** 23/23 Vitest tests pass; 6/6 API jobs and evaluation backend tests pass; zero TypeScript compiler errors.
 
+### Component: Candidate Ranking Table Identity & Real Coverage Binding (`backend/app/api/v1/evaluations.py`, `backend/app/api/v1/schemas.py`, `backend/app/core/scoring.py`, `frontend/src/lib/transformers.ts`, `frontend/src/types/api.ts`)
+- **What it is:** Real-time candidate identity resolution, dynamic must-have coverage calculation, and robust baseline feature scoring for newly ingested resumes.
+- **Why:** The ranked candidates table previously displayed "Alex Rivera", hardcoded role titles ("Staff Backend Architect", "Senior Distributed Systems Engineer"), hardcoded experience ("8.5 yrs"), and hardcoded must-have coverage ("4 / 7") for newly uploaded candidates. Additionally, skill weight maps passed from the wizard caused baseline scorers to zero out feature contributions.
+- **Key Empirical Verifications & Gate Resolutions:**
+  - **Dynamic Candidate Summary:** `GET /api/v1/evaluations/job/{id}` now dynamically resolves candidate names from parsed resumes or filenames, extracts actual experience, and computes exact must-have coverage ratios (e.g. `14 / 19`).
+  - **Zero-Demo Transformer Strictness:** `evaluationSummaryToCandidateItem` completely eliminates fallback to `"Alex Rivera"`, `"Staff Backend Architect"`, and `"4 / 7"` on real jobs. Real candidate names and actual coverage metrics are bound directly to the ranked table.
+  - **Scorer Feature Weight Defense:** `WeightedBaselineScorer` safely validates input weights against baseline feature names and four-pillar architecture, falling back to calibrated default weights rather than zeroing out features when passed individual skill-weight maps.
+  - **Quality Gates:** 23/23 Vitest tests pass; 2/2 API jobs and evaluations backend tests pass; zero TypeScript compiler errors.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide
