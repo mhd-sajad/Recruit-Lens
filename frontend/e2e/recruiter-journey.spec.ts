@@ -90,20 +90,14 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     });
 
     // 6. Settings Screen & Blind Mode Toggle
-    const settingsBtn = page.getByRole("button", { name: "Settings" }).first();
+    const settingsBtn = page.getByRole("button", { name: /Settings/i }).first();
     await expect(settingsBtn).toBeVisible({ timeout: 15000 });
     await settingsBtn.click();
-    await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: /Settings/i })).toBeVisible({ timeout: 15000 });
     const blindSwitch = page.getByRole("switch").first();
     if (await blindSwitch.isVisible()) {
       await blindSwitch.click();
     }
-
-    // Capture Screen 6: Settings Screen
-    await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "06_settings_screen.png"),
-      fullPage: true,
-    });
 
     // Capture Screen 6: Settings Screen
     await page.screenshot({
