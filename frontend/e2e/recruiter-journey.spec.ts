@@ -15,7 +15,7 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
 
     // 1. Visit App & Login Screen
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Screen resumes with evidence/i, level: 1 })).toBeVisible();
 
     // Navigate to Login Screen
     await page.getByRole("button", { name: "Log in" }).click();
@@ -30,7 +30,7 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     // Fill credentials and authenticate
     await page.getByLabel(/Email Address/i).fill(process.env.DEMO_EMAIL || "admin@recruitlens.local");
     await page.getByLabel(/Password/i).fill(process.env.DEMO_PASSWORD || "Admin123!");
-    await page.getByRole("button", { name: /Sign In to Recruiter Portal/i }).click();
+    await page.getByRole("button", { name: /Sign in to Recruiter Portal/i }).click();
 
     // 2. Requisitions Command Center Screen
     await expect(page.getByRole("heading", { name: "Requisitions", level: 1 })).toBeVisible({ timeout: 10000 });
