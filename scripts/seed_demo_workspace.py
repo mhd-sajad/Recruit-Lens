@@ -21,6 +21,8 @@ backend_path = Path(__file__).resolve().parent.parent / "backend"
 if str(backend_path) not in sys.path:
     sys.path.insert(0, str(backend_path))
 
+from sqlalchemy import select
+
 from app.auth.security import hash_password
 from app.db.base import Base
 from app.db.models import (
