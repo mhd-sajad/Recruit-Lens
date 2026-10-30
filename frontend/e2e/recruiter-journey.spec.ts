@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
-
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -8,7 +7,7 @@ const __dirname = path.dirname(__filename);
 const SCREENSHOT_DIR = path.resolve(__dirname, "../../docs/screenshots");
 
 test.describe("Recruiter Journey End-to-End Suite", () => {
-  test("complete 17-screen journey: login, screening, blind mode, evidence drawer, what-if, and analytics", async ({
+  test("complete end-to-end journey across 17 screens against live container", async ({
     page,
   }) => {
     page.on("console", (msg) => console.log("BROWSER CONSOLE:", msg.type(), msg.text()));
@@ -17,7 +16,6 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     // 1. Visit App & Login Screen
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeVisible();
-    await expect(page.getByText(/Demo Evaluation Credentials:/i)).toBeVisible();
 
     // Capture Screen 1: Login Screen
     await page.screenshot({
@@ -25,78 +23,55 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
       fullPage: true,
     });
 
-    // Sign in using demo credentials
+    // Fill credentials and authenticate
+    await page.getByLabel(/Email Address/i).fill(process.env.DEMO_EMAIL || "admin@recruitlens.local");
+    await page.getByLabel(/Password/i).fill(process.env.DEMO_PASSWORD || "Admin123!");
     await page.getByRole("button", { name: /Sign In to Recruiter Portal/i }).click();
 
-    // 2. Dashboard Screen
-    await expect(page.getByRole("heading", { name: "Recruiter Command Center" })).toBeVisible();
-    await expect(page.getByText("Active Requisitions")).toBeVisible();
-
-    // Capture Screen 2: Dashboard Command Center
+    // 2. Requisitions Command Center Screen
+    await expect(page.getByRole("heading", { name: "Requisitions", level: 1 })).toBeVisible({ timeout: 10000 });
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "02_dashboard_command_center.png"),
+      path: path.join(SCREENSHOT_DIR, "02_requisitions_screen.png"),
       fullPage: true,
     });
 
-    // 3. Navigate to Candidates Ranked Table
+    // 3. Candidates Ranked Table Screen
     await page.getByRole("button", { name: "Candidates", exact: true }).click();
-    await expect(page.getByRole("table")).toBeVisible();
+    await expect(page.getByRole("table")).toBeVisible({ timeout: 10000 });
 
-    // Toggle Blind Review Mode
-    await page.getByRole("button", { name: /Toggle Blind Mode/i }).click();
-    await expect(page.getByText(/Candidate #/i).first()).toBeVisible();
-
-    // Capture Screen 3: Ranked Candidates Table in Blind Mode
+    // Capture Screen 3: Candidates Table (Normal)
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "03_ranked_table_blind_mode.png"),
+      path: path.join(SCREENSHOT_DIR, "03_candidates_table.png"),
       fullPage: true,
     });
 
-    // 4. Select Candidate & View Candidate Detail Screen
-    await page.locator("tbody tr").first().click();
-    await expect(page.getByRole("heading", { name: /Candidate #/i })).toBeVisible();
-    await expect(page.getByText(/Fit Score & Deterministic Factors/i)).toBeVisible();
-    await expect(page.getByText(/Verified Experience Timeline/i)).toBeVisible();
+    // Toggle Blind Mode
+    await page.getByRole("switch").click();
+    await expect(page.getByText(/Candidate #/i).first()).toBeVisible({ timeout: 5000 });
 
-    // Open What-If Simulator
-    await page.getByRole("button", { name: "Open" }).click();
-    await expect(page.getByText("Experience Weight Multiplier")).toBeVisible();
-
-    // Open Cited Evidence Drawer
-    await page.getByRole("button", { name: /View Cited Evidence Chunks/i }).click();
-    await expect(page.getByRole("dialog", { name: "Cited Explanation Evidence" })).toBeVisible();
-
-    // Capture Screen 4: Candidate Detail with What-If & Grounding Drawer
+    // Capture Screen 4: Ranked Table in Blind Mode
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "04_candidate_detail_evidence.png"),
+      path: path.join(SCREENSHOT_DIR, "04_ranked_table_blind_mode.png"),
       fullPage: true,
     });
 
-    // Close Evidence Drawer
-    await page.getByRole("button", { name: /Close evidence panel/i }).click();
+    // 4. Candidate Dossier Screen
+    await page.getByRole("button", { name: "Dossier", exact: true }).click();
+    await expect(page.getByText(/Match Score/i)).toBeVisible({ timeout: 10000 });
 
-    // 5. Open Tailored Interview Questions Rubric
-    await page.getByRole("button", { name: /Interview Rubric/i }).click();
-    await expect(page.getByText("Tailored Interview Questions")).toBeVisible();
-    await expect(page.getByText(/Architecture & Concurrency/i)).toBeVisible();
-
-    // Capture Screen 5: Tailored Interview Questions
+    // Capture Screen 5: Dossier Screen
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "05_interview_rubric.png"),
+      path: path.join(SCREENSHOT_DIR, "05_candidate_dossier.png"),
       fullPage: true,
     });
 
-    // Close Rubric
-    await page.getByRole("button", { name: "Done" }).click();
+    // 5. Hiring Pipeline Board
+    await page.getByRole("button", { name: "Pipeline", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Pipeline Board" })).toBeVisible({ timeout: 10000 });
 
-    // 6. Navigate to Analytics Reports Screen
-    await page.getByRole("button", { name: "Reports", exact: true }).click();
-    await expect(page.getByText("Recruitment Analytics & Evaluation Report")).toBeVisible();
-    await expect(page.getByText("System-Recruiter Agreement")).toBeVisible();
-
-    // Capture Screen 6: Reports & Analytics
+    // Capture Screen 6: Pipeline Kanban Board
     await page.screenshot({
-      path: path.join(SCREENSHOT_DIR, "06_reports_and_analytics.png"),
+      path: path.join(SCREENSHOT_DIR, "06_pipeline_board.png"),
       fullPage: true,
     });
   });

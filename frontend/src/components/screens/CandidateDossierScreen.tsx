@@ -34,6 +34,20 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
   onOpenEmail,
 }) => {
   const { isBlindMode } = useAuth();
+
+  // Active citation pill state & scrolling
+  const [activeCitationId, setActiveCitationId] = useState<string | null>("c_01");
+  const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState<string>("");
+  const evidenceContainerRef = useRef<HTMLDivElement>(null);
+  const citationElementsRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // What-if simulator state
+  const [simAddCassandra, setSimAddCassandra] = useState(false);
+  const [simAddYearExp, setSimAddYearExp] = useState(false);
+
+  // Responsive tabs for mobile/tablet
+  const [activeTab, setActiveTab] = useState<"score" | "evidence" | "prep">("evidence");
+
   if (!dossier || !dossier.candidate) {
     return (
       <div className="p-8 text-center text-xs text-[var(--text-secondary)]">
@@ -54,19 +68,6 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
           citation_id: s.citation_ids[0] ?? "c_01",
         }))
       : [];
-
-  // Active citation pill state & scrolling
-  const [activeCitationId, setActiveCitationId] = useState<string | null>("c_01");
-  const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState<string>("");
-  const evidenceContainerRef = useRef<HTMLDivElement>(null);
-  const citationElementsRef = useRef<Map<string, HTMLElement>>(new Map());
-
-  // What-if simulator state
-  const [simAddCassandra, setSimAddCassandra] = useState(false);
-  const [simAddYearExp, setSimAddYearExp] = useState(false);
-
-  // Responsive tabs for mobile/tablet
-  const [activeTab, setActiveTab] = useState<"score" | "evidence" | "prep">("evidence");
 
   // Candidate rank in list
   const currentIndex = candidatesList.findIndex((c) => c.id === candidate.id);

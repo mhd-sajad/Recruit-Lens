@@ -14,6 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 import { cn } from "../../lib/utils";
 
 import type { JobItem } from "../../lib/mockData";
+import type { JobResponse } from "../../types/api";
 
 interface NavbarProps {
   currentTab: string;
@@ -141,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     if (onSelectJob && "top_score" in j) {
                       onSelectJob(j as JobItem);
                     } else if (setActiveJob) {
-                      setActiveJob(j as any);
+                      setActiveJob(j as unknown as JobResponse);
                     }
                     setIsJobDropdownOpen(false);
                   }}

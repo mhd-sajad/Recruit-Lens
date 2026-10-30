@@ -42,6 +42,35 @@ def verify_file_provenance(path: Path) -> list[str]:
         if not script_file.exists():
             errors.append(f"{path.name}: Generator script '{gen_script}' does not exist on disk")
 
+    # Verify git_commit is an ancestor of HEAD (or HEAD)
+    commit_hash = metadata.get("git_commit")
+    if commit_hash and commit_hash != "unknown":
+        try:
+            subprocess.check_call(
+                ["git", "merge-base", "--is-ancestor", commit_hash, "HEAD"],
+                cwd=str(REPO_ROOT),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            # Also check if it matches current HEAD or working tree
+            try:
+                head_sha = subprocess.check_output(
+                    ["git", "rev-parse", "HEAD"], text=True, cwd=str(REPO_ROOT)
+                ).strip()
+                if commit_hash != head_sha:
+                    errors.append(
+                        f"{path.name}: Recorded git_commit '{commit_hash[:8]}' is not an ancestor of HEAD"
+                    )
+            except Exception:
+                pass
+
+    # Verify input_sha256 is non-empty 64-char hex
+    input_sha = metadata.get("input_sha256")
+    if input_sha:
+        if len(input_sha) != 64 or not all(c in "0123456789abcdefABCDEF" for c in input_sha):
+            errors.append(f"{path.name}: Malformed input_sha256 '{input_sha}'")
+
     return errors
 
 

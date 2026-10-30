@@ -32,7 +32,7 @@ export const RankedTableScreen: React.FC<RankedTableScreenProps> = ({
   onNavigateRequisitions,
 }) => {
   const { isBlindMode } = useAuth();
-  const safeCandidates = Array.isArray(candidates) ? candidates : [];
+  const safeCandidates = useMemo(() => (Array.isArray(candidates) ? candidates : []), [candidates]);
   const [showInfoBanner, setShowInfoBanner] = useState(true);
   const [tierFilter, setTierFilter] = useState<string>("All");
   const [coverageFilter, setCoverageFilter] = useState<string>("All");
@@ -73,7 +73,7 @@ export const RankedTableScreen: React.FC<RankedTableScreenProps> = ({
         return true;
       })
       .sort((a, b) => b.match_score - a.match_score);
-  }, [candidates, tierFilter, coverageFilter, searchQuery, isBlindMode]);
+  }, [safeCandidates, tierFilter, coverageFilter, searchQuery, isBlindMode]);
 
   const handleResetFilters = () => {
     setTierFilter("All");

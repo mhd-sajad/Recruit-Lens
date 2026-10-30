@@ -1,8 +1,8 @@
 {
   "metadata": {
     "generated_by": "scripts/evaluate_scoring_validity.py",
-    "git_commit": "84c6770e1e18625ac8a348ae92d9456ea3b51135",
-    "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1",
+    "git_commit": "1aab793d8aa1395b10888c1c0afe8c8cbc085acf",
+    "input_sha256": "75b5b03c620e3771d10cad2e57222cb9e32b5dd04d77800d08cc802dd7dc22a1",
     "resumes_count": 200,
     "total_chunks": 1528,
     "runs_count": 3,
@@ -10,30 +10,30 @@
   },
   "stages": {
     "parse": {
-      "duration_seconds": 0.24,
-      "candidates_per_second": 833.33
+      "duration_seconds": 0.22,
+      "candidates_per_second": 909.09
     },
     "chunk": {
-      "duration_seconds": 1.38,
-      "candidates_per_second": 144.93
+      "duration_seconds": 1.41,
+      "candidates_per_second": 141.84
     },
     "embed": {
-      "duration_seconds": 89.65,
-      "candidates_per_second": 2.23,
-      "chunks_per_second": 17.04
+      "duration_seconds": 81.84,
+      "candidates_per_second": 2.44,
+      "chunks_per_second": 18.67
     },
     "retrieve": {
       "duration_seconds": 0.001,
       "candidates_per_second": 200000.0
     },
     "score": {
-      "duration_seconds": 52.36,
-      "candidates_per_second": 3.82
+      "duration_seconds": 53.54,
+      "candidates_per_second": 3.74
     }
   },
-  "total_wall_time_seconds": 143.81,
-  "total_throughput_candidates_per_sec": 1.39,
-  "peak_rss_mb": 313.8,
+  "total_wall_time_seconds": 137.18,
+  "total_throughput_candidates_per_sec": 1.46,
+  "peak_rss_mb": 288.3,
   "rss_compliant": true,
   "time_compliant": true,
   "run_1_cold": {
@@ -41,23 +41,23 @@
     "cache_state": "cold",
     "stages": {
       "parse": {
-        "duration_seconds": 141.85
+        "duration_seconds": 79.49
       },
       "chunk": {
-        "duration_seconds": 1.48
+        "duration_seconds": 1.76
       },
       "embed": {
-        "duration_seconds": 93.09
+        "duration_seconds": 80.77
       },
       "retrieve": {
         "duration_seconds": 0.001
       },
       "score": {
-        "duration_seconds": 52.57
+        "duration_seconds": 54.06
       }
     },
-    "total_wall_time_seconds": 289.16,
-    "peak_rss_mb": 317.4
+    "total_wall_time_seconds": 216.27,
+    "peak_rss_mb": 286.0
   },
   "runs_warm": [
     {
@@ -65,46 +65,46 @@
       "cache_state": "warm",
       "stages": {
         "parse": {
-          "duration_seconds": 0.24
+          "duration_seconds": 0.22
         },
         "chunk": {
-          "duration_seconds": 1.38
+          "duration_seconds": 1.41
         },
         "embed": {
-          "duration_seconds": 89.65
+          "duration_seconds": 81.84
         },
         "retrieve": {
           "duration_seconds": 0.001
         },
         "score": {
-          "duration_seconds": 52.36
+          "duration_seconds": 53.54
         }
       },
-      "total_wall_time_seconds": 143.81,
-      "peak_rss_mb": 313.8
+      "total_wall_time_seconds": 137.18,
+      "peak_rss_mb": 288.3
     },
     {
       "run_index": 3,
       "cache_state": "warm",
       "stages": {
         "parse": {
-          "duration_seconds": 0.13
+          "duration_seconds": 0.14
         },
         "chunk": {
-          "duration_seconds": 1.42
+          "duration_seconds": 1.4
         },
         "embed": {
-          "duration_seconds": 86.45
+          "duration_seconds": 77.27
         },
         "retrieve": {
           "duration_seconds": 0.001
         },
         "score": {
-          "duration_seconds": 45.96
+          "duration_seconds": 56.2
         }
       },
-      "total_wall_time_seconds": 134.11,
-      "peak_rss_mb": 314.1
+      "total_wall_time_seconds": 135.21,
+      "peak_rss_mb": 288.7
     }
   ],
   "runs": [
@@ -113,76 +113,76 @@
       "cache_state": "cold",
       "stages": {
         "parse": {
-          "duration_seconds": 141.85
+          "duration_seconds": 79.49
         },
         "chunk": {
-          "duration_seconds": 1.48
+          "duration_seconds": 1.76
         },
         "embed": {
-          "duration_seconds": 93.09
+          "duration_seconds": 80.77
         },
         "retrieve": {
           "duration_seconds": 0.001
         },
         "score": {
-          "duration_seconds": 52.57
+          "duration_seconds": 54.06
         }
       },
-      "total_wall_time_seconds": 289.16,
-      "peak_rss_mb": 317.4
+      "total_wall_time_seconds": 216.27,
+      "peak_rss_mb": 286.0
     },
     {
       "run_index": 2,
       "cache_state": "warm",
       "stages": {
         "parse": {
-          "duration_seconds": 0.24
+          "duration_seconds": 0.22
         },
         "chunk": {
-          "duration_seconds": 1.38
+          "duration_seconds": 1.41
         },
         "embed": {
-          "duration_seconds": 89.65
+          "duration_seconds": 81.84
         },
         "retrieve": {
           "duration_seconds": 0.001
         },
         "score": {
-          "duration_seconds": 52.36
+          "duration_seconds": 53.54
         }
       },
-      "total_wall_time_seconds": 143.81,
-      "peak_rss_mb": 313.8
+      "total_wall_time_seconds": 137.18,
+      "peak_rss_mb": 288.3
     },
     {
       "run_index": 3,
       "cache_state": "warm",
       "stages": {
         "parse": {
-          "duration_seconds": 0.13
+          "duration_seconds": 0.14
         },
         "chunk": {
-          "duration_seconds": 1.42
+          "duration_seconds": 1.4
         },
         "embed": {
-          "duration_seconds": 86.45
+          "duration_seconds": 77.27
         },
         "retrieve": {
           "duration_seconds": 0.001
         },
         "score": {
-          "duration_seconds": 45.96
+          "duration_seconds": 56.2
         }
       },
-      "total_wall_time_seconds": 134.11,
-      "peak_rss_mb": 314.1
+      "total_wall_time_seconds": 135.21,
+      "peak_rss_mb": 288.7
     }
   ],
   "explanation_variance": {
-    "cold_wall_time_seconds": 289.16,
-    "warm_median_wall_time_seconds": 143.81,
-    "cold_peak_rss_mb": 317.4,
-    "warm_peak_rss_mb": 313.8,
-    "cache_parse_speedup_factor": 591.0
+    "cold_wall_time_seconds": 216.27,
+    "warm_median_wall_time_seconds": 137.18,
+    "cold_peak_rss_mb": 286.0,
+    "warm_peak_rss_mb": 288.3,
+    "cache_parse_speedup_factor": 361.3
   }
 }

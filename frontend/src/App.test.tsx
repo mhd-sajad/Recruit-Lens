@@ -7,17 +7,11 @@ import { Drawer } from "./components/common/Drawer";
 import { LoadingState, EmptyState, ErrorState } from "./components/common/StateViews";
 
 describe("App & Login Screen", () => {
-  it("renders heading and demo credentials banner when logged out", () => {
+  it("renders heading and clean login inputs when demo mode is off", () => {
     localStorage.clear();
     render(<App />);
     expect(screen.getByRole("heading", { name: "Recruit Lens", level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/Demo Evaluation Credentials:/i)).toBeInTheDocument();
-    expect(screen.getByText(/admin@recruitlens.local/i)).toBeInTheDocument();
-  });
-
-  it("renders accessible email and password inputs with labels", () => {
-    localStorage.clear();
-    render(<App />);
+    expect(screen.queryByText(/Demo Mode Active:/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/Email Address/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Password/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Sign In to Recruiter Portal/i })).toBeInTheDocument();

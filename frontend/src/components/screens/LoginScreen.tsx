@@ -4,9 +4,14 @@ import { useAuth } from "../../context/AuthContext";
 
 export const LoginScreen: React.FC = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState("admin@recruitlens.local");
-  const [password, setPassword] = useState("Admin123!");
-  const [selectedRole, setSelectedRole] = useState<"admin" | "recruiter" | "auditor">("admin");
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === "true";
+  const defaultDemoEmail = import.meta.env.VITE_DEMO_EMAIL || "";
+
+  const [email, setEmail] = useState(isDemoMode ? defaultDemoEmail : "");
+  const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"admin" | "recruiter" | "auditor" | null>(
+    isDemoMode ? "admin" : null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,7 +19,7 @@ export const LoginScreen: React.FC = () => {
     {
       id: "admin" as const,
       name: "Lead Admin",
-      email: "admin@recruitlens.local",
+      email: defaultDemoEmail || "admin@recruitlens.local",
       desc: "Full requisition, scoring configuration, and pipeline access",
     },
     {
@@ -34,7 +39,6 @@ export const LoginScreen: React.FC = () => {
   const handleSelectRole = (r: (typeof demoRoles)[0]) => {
     setSelectedRole(r.id);
     setEmail(r.email);
-    setPassword("Admin123!");
     setError(null);
   };
 
@@ -75,44 +79,48 @@ export const LoginScreen: React.FC = () => {
           </p>
         </div>
 
-        {/* Role Switcher Chips */}
-        <div className="p-5 border-b border-[var(--border-default)] bg-[var(--subtle)]/50">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] block mb-2">
-            Switch Demo Role:
-          </span>
-          <div className="grid grid-cols-3 gap-2">
-            {demoRoles.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => handleSelectRole(r)}
-                className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
-                  selectedRole === r.id
-                    ? "bg-blue-600 text-white border-blue-500 shadow-xs"
-                    : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border-default)] hover:text-[var(--text-primary)]"
-                }`}
-              >
-                <span className="text-xs font-semibold block">{r.name}</span>
-                <span className="text-[10px] opacity-80 font-mono block truncate">
-                  {r.id}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Demo Credentials Banner */}
-        <div className="mx-5 mt-4 p-3 bg-blue-500/10 border border-blue-500/25 rounded-lg flex items-start gap-2.5 text-xs text-blue-700 dark:text-blue-300">
-          <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <span className="font-semibold block">Demo Evaluation Credentials:</span>
-            <div className="font-mono text-[11px]">
-              Email: <strong>{email}</strong>
-              <br />
-              Password: <strong>Admin123!</strong>
+        {/* Role Switcher Chips (Demo Mode Only) */}
+        {isDemoMode && (
+          <div className="p-5 border-b border-[var(--border-default)] bg-[var(--subtle)]/50">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)] block mb-2">
+              Switch Demo Role:
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              {demoRoles.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => handleSelectRole(r)}
+                  className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
+                    selectedRole === r.id
+                      ? "bg-blue-600 text-white border-blue-500 shadow-xs"
+                      : "bg-[var(--surface)] text-[var(--text-secondary)] border-[var(--border-default)] hover:text-[var(--text-primary)]"
+                  }`}
+                >
+                  <span className="text-xs font-semibold block">{r.name}</span>
+                  <span className="text-[10px] opacity-80 font-mono block truncate">
+                    {r.id}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Demo Credentials Banner (Demo Mode Only) */}
+        {isDemoMode && (
+          <div className="mx-5 mt-4 p-3 bg-blue-500/10 border border-blue-500/25 rounded-lg flex items-start gap-2.5 text-xs text-blue-700 dark:text-blue-300">
+            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-semibold block">Demo Mode Active:</span>
+              <div className="font-mono text-[11px]">
+                Email: <strong>{email || "demo@recruitlens.local"}</strong>
+                <br />
+                Password: <strong>(Configured via DEMO_PASSWORD)</strong>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">

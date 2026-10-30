@@ -3,7 +3,7 @@
 Seed script for Recruit Lens Demo Workspace.
 
 Creates:
-1. Demo Recruiter Admin Account (admin@recruitlens.local / Admin123!)
+1. Demo Recruiter Admin Account (configured via DEMO_EMAIL and DEMO_PASSWORD env vars)
 2. Realistic active Job Requisitions with extracted requirements
 3. Synthetic candidate evaluations across tiers (FastTrack, Review, Hold, Reject)
 4. Grounded evidence chunks and interview scorecards
@@ -12,6 +12,7 @@ Strictly synthetic data: zero candidate PII and zero real resumes.
 
 import asyncio
 from datetime import UTC, datetime
+import os
 from pathlib import Path
 import sys
 
@@ -40,18 +41,22 @@ async def seed() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
-        # 1. Create or retrieve demo admin user
-        admin_email = "admin@recruitlens.local"
+        # 1. Create or retrieve demo admin user from env vars
+        admin_email = os.environ.get("DEMO_EMAIL", "admin@recruitlens.local")
+        admin_password = os.environ.get("DEMO_PASSWORD")
+        if not admin_password:
+            raise ValueError("DEMO_PASSWORD environment variable must be set to run seed_demo_workspace.py")
+
         user = User(
             email=admin_email,
-            hashed_password=hash_password("Admin123!"),
+            hashed_password=hash_password(admin_password),
             full_name="Lead Recruiter (Demo)",
             role="admin",
             api_key="lens_demo_api_key_for_mcp_evaluation_12345",  # gitleaks:allow
         )
         session.add(user)
         await session.flush()
-        print(f"  [+] Created Demo User: {admin_email} / Admin123!")
+        print(f"  [+] Created Demo User: {admin_email} (password set from DEMO_PASSWORD)")
 
         # 2. Create Requisition 1: Staff Backend Engineer
         job1 = Job(

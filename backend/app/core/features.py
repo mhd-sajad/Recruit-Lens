@@ -385,14 +385,14 @@ def extract_candidate_features(
     # 6. Skill Recency Feature
     # Measure fraction of matched skills appearing in recent experiences
     recent_skills = set()
-    for exp in parsed_resume.experiences[:2]:  # Top 2 most recent roles
-        if exp.raw_text:
-            rec_extracted = taxonomy.extract_skills_from_text(exp.raw_text)
-            for item in rec_extracted:
-                recent_skills.add(item["skill"].lower())
-
     all_matched = {s.lower() for s in matched_must + matched_nice}
     if all_matched:
+        for exp in parsed_resume.experiences[:2]:  # Top 2 most recent roles
+            if exp.raw_text:
+                exp_text_lower = exp.raw_text.lower()
+                for s in all_matched:
+                    if s in exp_text_lower:
+                        recent_skills.add(s)
         recent_overlap = len(recent_skills & all_matched) / len(all_matched)
         skill_recency_feat = FeatureValue(
             name="skill_recency",

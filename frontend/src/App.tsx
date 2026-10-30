@@ -113,11 +113,14 @@ const MainAppContent: React.FC = () => {
         .then((detail) => {
           if (detail && detail.id && detail.breakdown) {
             const contributions = Object.entries(detail.breakdown).map(
-              ([k, v]: [string, any]) => ({
-                feature: k.charAt(0).toUpperCase() + k.slice(1) + " Assessment",
-                delta: Math.round(((v?.score ?? 0.8) * (v?.weight ?? 0.25)) * 100),
-                description: `Evidence-backed model component (${Math.round((v?.score ?? 0.8) * 100)}% fit score)`,
-              })
+              ([k, val]) => {
+                const v = val as { score?: number; weight?: number } | undefined;
+                return {
+                  feature: k.charAt(0).toUpperCase() + k.slice(1) + " Assessment",
+                  delta: Math.round(((v?.score ?? 0.8) * (v?.weight ?? 0.25)) * 100),
+                  description: `Evidence-backed model component (${Math.round((v?.score ?? 0.8) * 100)}% fit score)`,
+                };
+              }
             );
             if (contributions.length > 0) {
               setDossier((prev) => ({
@@ -134,7 +137,8 @@ const MainAppContent: React.FC = () => {
   };
 
   // Handle opening email center for candidate
-  const handleOpenEmailForCandidate = (_candId: string) => {
+  const handleOpenEmailForCandidate = (candId: string) => {
+    void candId;
     setCurrentTab("emails");
   };
 
@@ -239,7 +243,7 @@ const MainAppContent: React.FC = () => {
         {currentTab === "emails" && (
           <EmailCenterScreen
             initialCandidateCode={dossier.candidate.code}
-            onSendSuccess={(_id) => {
+            onSendSuccess={() => {
               showToast("Email logged and queued with cryptographic audit hash.", "success");
             }}
           />

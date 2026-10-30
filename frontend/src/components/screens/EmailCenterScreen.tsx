@@ -127,14 +127,14 @@ export const EmailCenterScreen: React.FC<EmailCenterScreenProps> = ({
         {/* Template Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           {[
-            { id: "interview", label: "Interview invite" },
-            { id: "hold", label: "Application hold" },
-            { id: "rejection", label: "Score-free rejection" },
+            { id: "interview" as const, label: "Interview invite" },
+            { id: "hold" as const, label: "Application hold" },
+            { id: "rejection" as const, label: "Score-free rejection" },
           ].map((tab) => (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setSelectedEmailType(tab.id as any)}
+              onClick={() => setSelectedEmailType(tab.id)}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
                 selectedEmailType === tab.id
                   ? "bg-blue-600 text-white font-semibold shadow-xs"

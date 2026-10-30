@@ -178,7 +178,7 @@ export const SettingsScreen: React.FC = () => {
               <select
                 id="export-format-select"
                 value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value as any)}
+                onChange={(e) => setExportFormat(e.target.value as "json" | "csv")}
                 className="w-full px-3 py-2 text-xs bg-[var(--canvas)] text-[var(--text-primary)] border border-[var(--border-default)] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="json">JSON (Full evidence graph & citations)</option>

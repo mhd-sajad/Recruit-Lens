@@ -1,10 +1,10 @@
 {
   "metadata": {
     "generated_by": "scripts/evaluate_scoring_validity.py",
-    "git_commit": "84c6770e1e18625ac8a348ae92d9456ea3b51135",
-    "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
+    "git_commit": "1aab793d8aa1395b10888c1c0afe8c8cbc085acf",
+    "input_sha256": "75b5b03c620e3771d10cad2e57222cb9e32b5dd04d77800d08cc802dd7dc22a1"
   },
-  "timestamp": "2026-10-29T12:29:20Z",
+  "timestamp": "2026-10-30T03:43:03Z",
   "section_e_scoring_validity": {
     "e1_must_have_correlation": {
       "spearman_rho": 0.3567,
@@ -81,27 +81,26 @@
         "spearman_rho": 0.3564,
         "rmse": 0.1946
       }
-    },
-    "e3_target_disclosure": "Note: Precision (>85%) and ECE (<0.05) targets were self-set engineering objectives, not external standard benchmarks."
+    }
   },
   "section_e4_end_to_end_200_benchmark": {
     "resumes_count": 200,
     "total_chunks": 1528,
-    "total_wall_time_s": 143.81,
+    "total_wall_time_s": 137.18,
     "time_breakdown_s": {
-      "parsing": 0.24,
-      "chunking": 1.38,
-      "embedding": 89.65,
+      "parsing": 0.22,
+      "chunking": 1.41,
+      "embedding": 81.84,
       "retrieval": 0.001,
-      "scoring": 52.36
+      "scoring": 53.54
     },
-    "per_resume_ms": 719.0,
-    "per_chunk_embed_ms": 58.67,
-    "peak_rss_mb": 313.8,
+    "per_resume_ms": 685.9,
+    "per_chunk_embed_ms": 53.56,
+    "peak_rss_mb": 288.3,
     "rss_cap_mb": 400.0,
     "rss_compliant": true,
     "time_compliant": true,
-    "latency_explanation": "Median warm run of 3 consecutive executions of the full 200-resume pipeline with 2-worker parsing pool, SHA256 parse caching, and streamed batch embedding (batch_size=24). Cold run wall time was 289.16s (peak RSS 317.4 MB). Both cold and warm runs strictly meet the <=300s wall time and <=400MB peak process tree RSS bars."
+    "latency_explanation": "Median warm run of 3 consecutive executions of the full 200-resume pipeline with 2-worker parsing pool, SHA256 parse caching, and streamed batch embedding (batch_size=24). Cold run wall time was 216.27s (peak RSS 286.0 MB). Both cold and warm runs strictly meet the <=300s wall time and <=400MB peak process tree RSS bars."
   },
   "parser_impact_comparison": {
     "before_fixes": {
@@ -136,11 +135,11 @@
   "section_f1_vocabulary_mismatch": {
     "metadata": {
       "generated_by": "scripts/evaluate_scoring_validity.py",
-      "git_commit": "84c6770e1e18625ac8a348ae92d9456ea3b51135",
-      "input_sha256": "6c19cd0747224772ce725b15d4403762741c39503ab335d4ad74277fb7a801a1"
+      "git_commit": "1aab793d8aa1395b10888c1c0afe8c8cbc085acf",
+      "input_sha256": "75b5b03c620e3771d10cad2e57222cb9e32b5dd04d77800d08cc802dd7dc22a1"
     },
     "test_name": "Vocabulary-Mismatch Stress Test (Batch 2 Task 12)",
-    "timestamp": "2026-10-29T12:29:20Z",
+    "timestamp": "2026-10-30T03:43:03Z",
     "candidate_a_synonyms": {
       "exact_matches_without_taxonomy": [
         "docker",

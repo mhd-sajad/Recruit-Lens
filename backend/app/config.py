@@ -79,9 +79,10 @@ class Settings(BaseSettings):
         default="", description="Optional Supabase Postgres connection string"
     )
 
-    # Demo & Admin Credentials (read strictly from env)
-    DEMO_RECRUITER_EMAIL: str = Field(default="recruiter@recruitlens.local")
-    DEMO_RECRUITER_PASSWORD: str = Field(default="RecruiterDemoPass123!")
+    # Demo & Admin Credentials (read strictly from env, no default password)
+    DEMO_MODE: bool = Field(default=False, description="Enable demo mode")
+    DEMO_EMAIL: str = Field(default="", description="Demo email loaded from environment")
+    DEMO_PASSWORD: str = Field(default="", description="Demo password loaded from environment")
 
     # Security & Policies
     LOGIN_MAX_FAILED_ATTEMPTS: int = 5

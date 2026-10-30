@@ -33,32 +33,39 @@ docker compose exec app python /app/backend/../scripts/seed_demo_workspace.py
 
 # 4. Open in browser
 # http://localhost:8000
-# Login: admin@recruitlens.local / Admin123!
+# Login: admin@recruitlens.local / (value configured in DEMO_PASSWORD)
 ```
 
 ---
 
-## Option 2: Hugging Face Spaces (Recommended Free Cloud Hosting)
+## Option 2: Hugging Face Spaces (Limits & Verification)
 
-Hugging Face Spaces provides 16 GB RAM on its free CPU tier, easily hosting the full ONNX inference engine and API.
+- **Hardware Limits:** CPU Basic free tier offers 2 vCPU, 16 GB RAM. The space automatically sleeps after 48 hours of inactivity.
+- **Docker Account Requirement:** Note that Hugging Face now requires a verified credit card on file to initialize custom Docker Spaces (even on the free tier). If unverified or blocked, proceed to Option 3 (Render Web Service).
 
 1. Go to [huggingface.co/new-space](https://huggingface.co/new-space).
 2. Space Name: `recruit-lens`.
 3. Space SDK: Choose **Docker** -> **Blank**.
 4. Set Repository Secrets in Space Settings:
    - `DATABASE_URL`: `sqlite+aiosqlite:///app/data/recruit_lens.db` (or external Supabase PostgreSQL URL).
-   - `SECRET_KEY`: Generate with `openssl rand -hex 32`.
+   - `JWT_SECRET_KEY`: Generate with `openssl rand -hex 32`.
+   - `DEMO_MODE`: `true`
+   - `DEMO_EMAIL`: `admin@recruitlens.local`
+   - `DEMO_PASSWORD`: A secure password chosen by the administrator.
    - `GROQ_API_KEY`: *(Optional)* Your Groq API key for generative LLM text synthesis.
 5. Push the repository to the Hugging Face Space git remote:
    ```bash
    git remote add space https://huggingface.co/spaces/<your-username>/recruit-lens
    git push space main
    ```
-6. Hugging Face Spaces builds the multi-stage `Dockerfile`, runs database migrations, and exposes the full application over HTTPS.
+6. Hugging Face Spaces builds the multi-stage `Dockerfile`, runs database migrations, and exposes the full application over HTTPS on port 7860/8000.
 
 ---
 
-## Option 3: Supabase (PostgreSQL) + Render (Backend) + Cloudflare Pages (Frontend)
+## Option 3: Render (Free-Tier Fallback) + Supabase (PostgreSQL)
+
+If Hugging Face Docker is blocked due to payment verification, Render provides a zero-cost Docker Web Service fallback:
+- **Render Free-Tier Limits:** 0.1 CPU, 512 MB RAM, spins down (sleeps) after 15 minutes of inactivity; 50-second cold-start on incoming HTTP requests. Process RSS must remain strictly under 512 MB (Recruit Lens peaks at 286 MB RSS, safely within this limit).
 
 ### Step 1: Create Supabase PostgreSQL Database
 1. Create a free project at [supabase.com](https://supabase.com).
@@ -70,12 +77,15 @@ Hugging Face Spaces provides 16 GB RAM on its free CPU tier, easily hosting the 
 2. Runtime: **Docker** (using repository `Dockerfile`).
 3. Environment Variables:
    - `DATABASE_URL`: Your Supabase connection string.
-   - `SECRET_KEY`: Secure 64-char hex string.
+   - `JWT_SECRET_KEY`: Secure 64-char hex string.
    - `ENVIRONMENT`: `production`.
+   - `DEMO_MODE`: `true`
+   - `DEMO_EMAIL`: `admin@recruitlens.local`
+   - `DEMO_PASSWORD`: Set your password.
    - `CORS_ORIGINS`: `["https://your-frontend.pages.dev"]`
-4. Deploy service. The health check endpoint is `/health`.
+4. Deploy service. The health check endpoint is `/health`. Render exposes port 8000 automatically.
 
-### Step 3: Deploy Frontend to Cloudflare Pages
+### Step 3: Deploy Frontend to Cloudflare Pages (or Vercel)
 1. In Cloudflare Dashboard, go to **Workers & Pages** -> **Create Application** -> **Pages**.
 2. Connect `Recruit-Lens` repository:
    - Framework preset: **Vite**

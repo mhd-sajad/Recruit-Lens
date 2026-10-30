@@ -9,7 +9,7 @@ export default defineConfig({
   fullyParallel: false,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:4173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:8000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -19,7 +19,7 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
+  webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
     command: "npm run preview -- --port 4173 --host",
     port: 4173,
     reuseExistingServer: true,

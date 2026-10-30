@@ -423,16 +423,8 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
     - Excellent problem solving and communication skills
     """
 
-    explanation_variance = {
-        "cold_wall_time_seconds": 289.16,
-        "warm_median_wall_time_seconds": 143.81,
-        "cold_peak_rss_mb": 317.4,
-        "warm_peak_rss_mb": 313.8,
-        "cache_parse_speedup_factor": 591.0,
-    }
-
     # Initialize shared model instances once to prevent redundant ONNX C++ session memory accumulation
-    embedder = ONNXEmbedder(model_type="minilm", quantized=True)
+    embedder = ONNXEmbedder(model_type="minilm", quantized=True, intra_op_threads=4)
     taxonomy = SkillTaxonomy.get_instance()
     scorer = MonotonicXGBoostScorer()
     model_path = repo_root / "backend" / "app" / "data" / "scoring_xgb.json"
@@ -455,10 +447,14 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
         )
         t0_wall = time.perf_counter()
 
-        # Step 1: Parse 200 PDFs (SHA256 Cache + Single-Process Memory Isolation)
+        # Step 1: Parse 200 PDFs (SHA256 Cache + Multi-Process Memory Isolation)
         t0_parse = time.perf_counter()
         tasks = [(str(p), p.stem, str(cache_dir)) for p in eval_pdfs]
-        parsed_dicts = [_parse_pdf_worker_cached(t) for t in tasks]
+        if is_cold:
+            with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
+                parsed_dicts = list(executor.map(_parse_pdf_worker_cached, tasks))
+        else:
+            parsed_dicts = [_parse_pdf_worker_cached(t) for t in tasks]
         parsed_resumes = [ResumeParseResult.model_validate(d) for d in parsed_dicts]
         del parsed_dicts
         trim_memory()
@@ -491,7 +487,7 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
             for _ in chunks_by_resume[p.resume_id]:
                 chunk_to_resume.append(p.resume_id)
 
-        batch_size = 24
+        batch_size = 32
         for start_idx in range(0, len(all_chunks), batch_size):
             batch_texts = [c.text for c in all_chunks[start_idx : start_idx + batch_size]]
             batch_embs = embedder.embed_texts(batch_texts, batch_size=batch_size)
@@ -566,6 +562,16 @@ def run_e4_end_to_end_200_benchmark(repo_root: Path) -> dict[str, Any]:
     print(
         f"Median Warm Run: Wall Time={median_run['total_wall_time_seconds']}s, Peak RSS={median_run['peak_rss_mb']} MB"
     )
+
+    cold_parse_sec = max(0.001, cold_run["stages"]["parse"]["duration_seconds"])
+    warm_parse_sec = max(0.001, median_run["stages"]["parse"]["duration_seconds"])
+    explanation_variance = {
+        "cold_wall_time_seconds": cold_run["total_wall_time_seconds"],
+        "warm_median_wall_time_seconds": median_run["total_wall_time_seconds"],
+        "cold_peak_rss_mb": cold_run["peak_rss_mb"],
+        "warm_peak_rss_mb": median_run["peak_rss_mb"],
+        "cache_parse_speedup_factor": round(cold_parse_sec / warm_parse_sec, 1),
+    }
 
     provenance = get_provenance("scripts/evaluate_scoring_validity.py")
     benchmark_200 = {
