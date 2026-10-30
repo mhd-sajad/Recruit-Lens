@@ -24,11 +24,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     (c) => (c.job_id || "job-backend") === job.id
   );
 
-  const total = jobCandidates.length || job.applicants_count || 14;
-  const fasttrack = jobCandidates.filter((c) => c.tier === "FastTrack").length || job.tier_counts.fasttrack;
-  const interview = jobCandidates.filter((c) => c.tier === "Interview").length || job.tier_counts.interview;
-  const hold = jobCandidates.filter((c) => c.tier === "Hold").length || job.tier_counts.hold;
-  const reject = jobCandidates.filter((c) => c.tier === "Reject").length || job.tier_counts.reject;
+  const total = jobCandidates.length > 0 ? jobCandidates.length : (job.applicants_count || 0);
+  const fasttrack = jobCandidates.length > 0
+    ? jobCandidates.filter((c) => c.tier === "FastTrack").length
+    : (job.tier_counts?.fasttrack || 0);
+  const interview = jobCandidates.length > 0
+    ? jobCandidates.filter((c) => c.tier === "Interview").length
+    : (job.tier_counts?.interview || 0);
+  const hold = jobCandidates.length > 0
+    ? jobCandidates.filter((c) => c.tier === "Hold").length
+    : (job.tier_counts?.hold || 0);
+  const reject = jobCandidates.length > 0
+    ? jobCandidates.filter((c) => c.tier === "Reject").length
+    : (job.tier_counts?.reject || 0);
   const abstained = 0;
 
   const topCandidate = jobCandidates[0];

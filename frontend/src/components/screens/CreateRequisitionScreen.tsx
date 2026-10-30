@@ -54,28 +54,17 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
     initialStep === 2 ? 2 : initialStep === 3 ? 3 : 1
   );
 
-  // Step 1: Role Details
-  const [title, setTitle] = useState("Staff Backend Engineer – Distributed Systems");
-  const [department, setDepartment] = useState("Core Infrastructure");
-  const [location, setLocation] = useState("Remote (US / EMEA)");
-  const [minExpYears, setMinExpYears] = useState(6);
-  const [jdText, setJdText] = useState(SAMPLE_DEMO_JD);
+  // Step 1: Role Details (starts clean - no hardcoded demo values)
+  const [title, setTitle] = useState("");
+  const [department, setDepartment] = useState("");
+  const [location, setLocation] = useState("");
+  const [minExpYears, setMinExpYears] = useState(0);
+  const [jdText, setJdText] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
 
-  // Step 2: Skills & Weights
-  const [mustHaves, setMustHaves] = useState<Array<{ name: string; weight: number }>>([
-    { name: "Distributed consensus & Raft", weight: 30 },
-    { name: "Go & Kafka streaming", weight: 25 },
-    { name: "Kubernetes & AWS EKS", weight: 20 },
-    { name: "Cassandra NoSQL Storage", weight: 15 },
-    { name: "Python API Pipelines", weight: 10 },
-  ]);
-
-  const [niceToHaves, setNiceToHaves] = useState<string[]>([
-    "OpenTelemetry & Observability",
-    "Mutual TLS & Service Mesh",
-    "gRPC Interceptors",
-  ]);
+  // Step 2: Skills & Weights (starts empty)
+  const [mustHaves, setMustHaves] = useState<Array<{ name: string; weight: number }>>([]);
+  const [niceToHaves, setNiceToHaves] = useState<string[]>([]);
 
   const [newSkillName, setNewSkillName] = useState("");
   const [newNiceToHave, setNewNiceToHave] = useState("");
@@ -90,7 +79,7 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const totalWeight = mustHaves.reduce((acc, cur) => acc + cur.weight, 0);
-  const isWeightValid = totalWeight === 100;
+  const isWeightValid = mustHaves.length > 0 && totalWeight === 100;
 
   const handleWeightChange = (index: number, val: number) => {
     const updated = [...mustHaves];
@@ -113,7 +102,9 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
 
   const handleAddSkill = () => {
     if (!newSkillName.trim()) return;
-    setMustHaves([...mustHaves, { name: newSkillName.trim(), weight: 10 }]);
+    const existingCount = mustHaves.length;
+    const defaultW = existingCount === 0 ? 100 : 10;
+    setMustHaves([...mustHaves, { name: newSkillName.trim(), weight: defaultW }]);
     setNewSkillName("");
   };
 
@@ -131,6 +122,26 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
     setNiceToHaves(niceToHaves.filter((_, i) => i !== index));
   };
 
+  const handleLoadSample = () => {
+    setTitle("Staff Backend Engineer – Distributed Systems");
+    setDepartment("Core Infrastructure");
+    setLocation("Remote (US / EMEA)");
+    setMinExpYears(6);
+    setJdText(SAMPLE_DEMO_JD);
+    setMustHaves([
+      { name: "Distributed consensus & Raft", weight: 30 },
+      { name: "Go & Kafka streaming", weight: 25 },
+      { name: "Kubernetes & AWS EKS", weight: 20 },
+      { name: "Cassandra NoSQL Storage", weight: 15 },
+      { name: "Python API Pipelines", weight: 10 },
+    ]);
+    setNiceToHaves([
+      "OpenTelemetry & Observability",
+      "Mutual TLS & Service Mesh",
+      "gRPC Interceptors",
+    ]);
+  };
+
   const handleProceedToStep2 = async () => {
     if (!title.trim() || !jdText.trim()) return;
     setIsExtracting(true);
@@ -138,10 +149,27 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
 
     try {
       const extracted = await api.extractRequirements(jdText);
-      if (extracted.must_have_skills && extracted.must_have_skills.length > 0) {
-        const count = extracted.must_have_skills.length;
+      let parsedMust = extracted.must_have_skills || [];
+      const parsedNice = extracted.nice_to_have_skills || [];
+
+      // If taxonomy didn't find technology keywords in custom text,
+      // extract bullet points or structured items from user text as fallback
+      if (parsedMust.length === 0) {
+        const lines = jdText
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => /^[-*•\d.]\s+/.test(l))
+          .map((l) => l.replace(/^[-*•\d.]\s+/, "").trim())
+          .filter((l) => l.length > 2 && l.length < 80);
+        if (lines.length > 0) {
+          parsedMust = lines.slice(0, 5);
+        }
+      }
+
+      if (parsedMust.length > 0) {
+        const count = parsedMust.length;
         let runningSum = 0;
-        const newMustHaves = extracted.must_have_skills.map((skill, idx) => {
+        const newMustHaves = parsedMust.map((skill, idx) => {
           let w = extracted.suggested_weights?.[skill];
           if (w === undefined) {
             w = Math.floor(100 / count);
@@ -153,11 +181,11 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
           return { name: skill, weight: w };
         });
         setMustHaves(newMustHaves);
+      } else {
+        setMustHaves([]);
       }
 
-      if (extracted.nice_to_have_skills && extracted.nice_to_have_skills.length > 0) {
-        setNiceToHaves(extracted.nice_to_have_skills);
-      }
+      setNiceToHaves(parsedNice);
 
       if (typeof extracted.min_years_experience === "number" && extracted.min_years_experience > 0) {
         setMinExpYears(extracted.min_years_experience);
@@ -165,7 +193,26 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
 
       setStep(2);
     } catch (err: unknown) {
-      console.warn("Requirement extraction failed or backend offline, using current skills:", err);
+      console.warn("Requirement extraction failed or backend offline, checking local lines:", err);
+      const lines = jdText
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => /^[-*•\d.]\s+/.test(l))
+        .map((l) => l.replace(/^[-*•\d.]\s+/, "").trim())
+        .filter((l) => l.length > 2 && l.length < 80);
+
+      if (lines.length > 0) {
+        const count = Math.min(lines.length, 5);
+        const per = Math.floor(100 / count);
+        setMustHaves(
+          lines.slice(0, count).map((b, i) => ({
+            name: b,
+            weight: i === count - 1 ? 100 - per * (count - 1) : per,
+          }))
+        );
+      } else {
+        setMustHaves([]);
+      }
       setStep(2);
     } finally {
       setIsExtracting(false);
@@ -247,14 +294,14 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
         id: fallbackId,
         title: title.trim(),
         department: department.trim(),
-        status: rawFiles.length > 0 ? "Active" : "Draft",
+        status: rawFiles.length > 0 ? "Ingesting" : "Draft",
         created_at: new Date().toISOString().split("T")[0]!,
-        applicants_count: files.filter((f) => f.status !== "Abstain").length,
-        top_score: rawFiles.length > 0 ? 88 : 0,
-        top_tier: rawFiles.length > 0 ? "Interview" : "Hold",
+        applicants_count: rawFiles.length,
+        top_score: 0,
+        top_tier: "Hold",
         tier_counts: {
           fasttrack: 0,
-          interview: rawFiles.length > 0 ? 1 : 0,
+          interview: 0,
           hold: 0,
           reject: 0,
         },
@@ -383,13 +430,7 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setTitle("Staff Backend Engineer – Distributed Systems");
-                    setDepartment("Core Infrastructure");
-                    setLocation("Remote (US / EMEA)");
-                    setMinExpYears(6);
-                    setJdText(SAMPLE_DEMO_JD);
-                  }}
+                  onClick={handleLoadSample}
                   className="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Sparkles size={12} />
@@ -477,38 +518,44 @@ export const CreateRequisitionScreen: React.FC<CreateRequisitionScreenProps> = (
               </span>
             </div>
 
-            {mustHaves.map((sk, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)]"
-              >
-                <span className="text-xs font-semibold text-[var(--text-primary)] flex-1">
-                  {sk.name}
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={sk.weight}
-                    onChange={(e) => handleWeightChange(idx, parseInt(e.target.value) || 0)}
-                    className="w-28 accent-indigo-600"
-                  />
-                  <span className="font-mono text-xs font-bold text-indigo-400 w-12 text-right">
-                    {sk.weight}%
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSkill(idx)}
-                  className="p-1 text-[var(--text-secondary)] hover:text-rose-400 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
+            {mustHaves.length === 0 ? (
+              <div className="p-6 text-center rounded-lg bg-[var(--bg-subtle)] border border-dashed border-[var(--border-default)] text-xs text-[var(--text-secondary)]">
+                No must-have skills extracted yet. Type a skill name below and click &quot;Add&quot; to define your role requirements.
               </div>
-            ))}
+            ) : (
+              mustHaves.map((sk, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-default)]"
+                >
+                  <span className="text-xs font-semibold text-[var(--text-primary)] flex-1">
+                    {sk.name}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={sk.weight}
+                      onChange={(e) => handleWeightChange(idx, parseInt(e.target.value) || 0)}
+                      className="w-28 accent-indigo-600"
+                    />
+                    <span className="font-mono text-xs font-bold text-indigo-400 w-12 text-right">
+                      {sk.weight}%
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSkill(idx)}
+                    className="p-1 text-[var(--text-secondary)] hover:text-rose-400 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))
+            )}
 
             {/* Add Skill */}
             <div className="flex gap-2 pt-2">

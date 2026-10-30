@@ -47,16 +47,27 @@ async def seed() -> None:
         if not admin_password:
             raise ValueError("DEMO_PASSWORD environment variable must be set to run seed_demo_workspace.py")
 
-        user = User(
-            email=admin_email,
-            hashed_password=hash_password(admin_password),
-            full_name="Lead Recruiter (Demo)",
-            role="admin",
-            api_key="lens_demo_api_key_for_mcp_evaluation_12345",  # gitleaks:allow
-        )
-        session.add(user)
-        await session.flush()
-        print(f"  [+] Created Demo User: {admin_email} (password set from DEMO_PASSWORD)")
+        user_res = await session.execute(select(User).where(User.email == admin_email))
+        user = user_res.scalar_one_or_none()
+        if user is None:
+            user = User(
+                email=admin_email,
+                hashed_password=hash_password(admin_password),
+                full_name="Lead Recruiter (Demo)",
+                role="admin",
+                api_key="lens_demo_api_key_for_mcp_evaluation_12345",  # gitleaks:allow
+            )
+            session.add(user)
+            await session.flush()
+            print(f"  [+] Created Demo User: {admin_email} (password set from DEMO_PASSWORD)")
+        else:
+            print(f"  [*] Demo User: {admin_email} already exists.")
+
+        # 2. Check if jobs are already seeded
+        existing_jobs_res = await session.execute(select(Job).where(Job.user_id == user.id))
+        if existing_jobs_res.scalars().first() is not None:
+            print("  [*] Demo workspace already seeded with jobs. Skipping redundant seeding.")
+            return
 
         # 2. Create Requisition 1: Staff Backend Engineer
         job1 = Job(

@@ -372,7 +372,9 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
           {currentRoute.name === "job-dashboard" && currentActiveJob && (
             <DashboardScreen
               job={currentActiveJob}
-              candidates={candidatesList}
+              candidates={candidatesList.filter(
+                (c) => (c.job_id || "job-backend") === currentActiveJob.id
+              )}
               onNavigate={navigate}
             />
           )}
