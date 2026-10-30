@@ -2,7 +2,7 @@ export interface JobItem {
   id: string;
   title: string;
   department: string;
-  status: "Active" | "Closed" | "Draft";
+  status: "Active" | "Closed" | "Draft" | "Ingesting";
   created_at: string;
   applicants_count: number;
   top_score: number;

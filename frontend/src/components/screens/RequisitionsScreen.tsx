@@ -21,7 +21,8 @@ export const RequisitionsScreen: React.FC<RequisitionsScreenProps> = ({
 
   const filteredJobs = jobs.filter((job) => {
     if (statusFilter === "All") return true;
-    if (statusFilter === "Active") return job.status === "Active" || job.status === "Draft";
+    if (statusFilter === "Active")
+      return job.status === "Active" || job.status === "Draft" || job.status === "Ingesting";
     return job.status === "Closed";
   });
 
@@ -141,6 +142,8 @@ export const RequisitionsScreen: React.FC<RequisitionsScreenProps> = ({
                       className={`px-2 py-0.5 text-[11px] font-medium rounded-full ${
                         job.status === "Active"
                           ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                          : job.status === "Ingesting"
+                          ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/30"
                           : job.status === "Draft"
                           ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
                           : "bg-slate-500/15 text-slate-500 border border-slate-500/30"

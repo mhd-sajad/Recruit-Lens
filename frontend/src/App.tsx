@@ -105,15 +105,21 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
       api
         .getCandidates(currentActiveJob.id)
         .then((evals) => {
-          if (!isCancelled && Array.isArray(evals) && evals.length > 0) {
-            const transformed = evals.map((e, idx) => {
-              const item = evaluationSummaryToCandidateItem(e, idx);
-              return { ...item, job_id: currentActiveJob.id };
-            });
-            setCandidatesList((prev) => {
-              const other = prev.filter((c) => (c.job_id || "job-backend") !== currentActiveJob.id);
-              return [...transformed, ...other];
-            });
+          if (!isCancelled && Array.isArray(evals)) {
+            if (evals.length > 0) {
+              const transformed = evals.map((e, idx) => {
+                const item = evaluationSummaryToCandidateItem(e, idx);
+                return { ...item, job_id: currentActiveJob.id };
+              });
+              setCandidatesList((prev) => {
+                const other = prev.filter((c) => (c.job_id || "job-backend") !== currentActiveJob.id);
+                return [...transformed, ...other];
+              });
+            } else {
+              setCandidatesList((prev) => {
+                return prev.filter((c) => (c.job_id || "job-backend") !== currentActiveJob.id);
+              });
+            }
           }
         })
         .catch(() => {});
@@ -382,6 +388,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
               onOpenEmail={(candId) => navigate(`/jobs/${currentActiveJob.id}/candidates/${candId}/email`)}
               onExportAudit={() => navigate(`/jobs/${currentActiveJob.id}/audit`)}
               onNavigateRequisitions={() => navigate("/requisitions")}
+              onNavigateAddCandidates={() => navigate(`/jobs/${currentActiveJob.id}/candidates/add`)}
             />
           )}
 

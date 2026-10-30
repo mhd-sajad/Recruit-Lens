@@ -6,7 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas import JobCreateRequest, JobResponse, JobUpdateRequest
+from app.api.v1.schemas import (
+    JobCreateRequest,
+    JobExtractRequirementsRequest,
+    JobExtractRequirementsResponse,
+    JobResponse,
+    JobUpdateRequest,
+)
 from app.auth.dependencies import get_current_user, require_role
 from app.core.jd_requirements import extract_job_requirements
 from app.core.taxonomy import SkillTaxonomy
@@ -14,6 +20,36 @@ from app.db.models import AuditLog, Job, User
 from app.db.session import get_db
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
+
+
+@router.post("/extract-requirements", response_model=JobExtractRequirementsResponse)
+async def extract_requirements_endpoint(
+    payload: JobExtractRequirementsRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> JobExtractRequirementsResponse:
+    """Extract structured skills, experience, and education requirements from raw JD text in real time."""
+    taxonomy = SkillTaxonomy.get_instance()
+    extracted_reqs = extract_job_requirements(payload.raw_text, taxonomy=taxonomy)
+    must = extracted_reqs.must_have_skills
+    nice = extracted_reqs.nice_to_have_skills
+
+    suggested: dict[str, float] = {}
+    if must:
+        total_must = len(must)
+        base_int = 100 // total_must
+        remainder = 100 % total_must
+        for idx, skill in enumerate(must):
+            suggested[skill] = float(base_int + (1 if idx < remainder else 0))
+    else:
+        suggested = {"Core Requirements": 100.0}
+
+    return JobExtractRequirementsResponse(
+        must_have_skills=must,
+        nice_to_have_skills=nice,
+        min_years_experience=extracted_reqs.min_years_experience,
+        min_education_name=extracted_reqs.min_education_name,
+        suggested_weights=suggested,
+    )
 
 
 @router.post(

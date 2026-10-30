@@ -182,6 +182,14 @@ export interface JobCreateRequest {
   weights?: Record<string, unknown> | null;
 }
 
+export interface JobExtractRequirementsResponse {
+  must_have_skills: string[];
+  nice_to_have_skills: string[];
+  min_years_experience: number | null;
+  min_education_name: string | null;
+  suggested_weights: Record<string, number>;
+}
+
 /** Job requisition response representation. */
 export interface JobResponse {
   id: string;
