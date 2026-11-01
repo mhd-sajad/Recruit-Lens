@@ -952,6 +952,22 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - Provenance audit: All 24 evaluation files in `docs/` verified.
   - `scripts/make_report.py`: 0 missing keys.
 
+### Component: Production Codebase Final Cleanup & Unused Stub Elimination (`frontend/src/`, root)
+- **What it is:** Repository sanitization and dead code removal across the full tree ahead of final deployment handoff, removing 14 obsolete frontend screens, legacy horizontal layout stubs, and redundant root coverage files.
+- **Why:** During iterative prototyping across four phases, several initial placeholder screens (e.g., `AnalyticsScreen.tsx`, `CompareScreen.tsx`, `ReportsScreen.tsx`), legacy modals superseded by unified in-dossier components (e.g., `CopilotModal.tsx`, `DecisionModal.tsx`, `EmailModal.tsx`, `ScorecardModal.tsx`, `InterviewQuestionsModal.tsx`, `JobCreateModal.tsx`, `UploadBatchModal.tsx`), superseded screen variants (`CandidateDetailScreen.tsx`, `SettingsAndExportScreen.tsx`), and a deprecated horizontal navbar (`Navbar.tsx`) were abandoned without being referenced anywhere in `frontend/src/`. Retaining unreferenced source files introduces maintenance burden, dead code bloat, and confusion for deployment engineers.
+- **How it works:**
+  - Audited external symbol references for every `.tsx` file across `frontend/src/components/screens/`, `components/common/`, and `components/layout/`.
+  - Safely eliminated 13 unused screen/modal files and 1 legacy layout file (`Navbar.tsx`).
+  - Removed duplicate root-level `coverage.json`, establishing `docs/coverage.json` as the sole canonical source cited by `scripts/make_report.py` and `scripts/generate_final_report.py`.
+  - Rebuilt the frontend: confirmed 0 TypeScript compile errors, 23/23 passing Vitest tests, and reduced CSS bundle size by ~11 kB.
+- **How it helps here:** Ensures the final deployment tree contains zero dead code, zero obsolete mocks or stubs, and delivers an auditable, minimal, production-ready codebase.
+- **Alternatives considered:** Retaining unused stubs with `@deprecated` comments (rejected: leaves dead code in the repository and violates the strict working contract to leave no TODOs or dead code).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - 23/23 Vitest frontend tests pass.
+  - Frontend production build: 0 TypeScript errors (`dist/assets/index-B7a1skXK.js`, `dist/assets/index-BBfZhua8.css`).
+  - 163/165 backend pytest tests pass (2 skipped), 0 failures; 88% overall statement coverage.
+  - `scripts/verify_eval_provenance.py` and `scripts/make_report.py` pass with 0 errors.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide
