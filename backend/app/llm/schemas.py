@@ -25,6 +25,8 @@ class EvidencePacket(BaseModel):
 
     candidate_id: str
     job_id: str | None = None
+    candidate_name: str | None = None
+    job_title: str | None = None
     retrieved_chunks: list[EvidenceChunk] = Field(
         default_factory=list, description="Top-K evidence chunks relevant to requirements"
     )

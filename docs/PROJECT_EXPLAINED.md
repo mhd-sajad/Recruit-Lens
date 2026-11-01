@@ -925,6 +925,33 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - 23/23 Vitest frontend tests passing; 0 ESLint errors; strict TypeScript production build clean.
   - `scripts/make_report.py` verified with 0 missing keys.
 
+### Component: Acceptance Defect Resolutions, Dynamic Fallbacks, Dossier Navigation & Job Lifecycle (`backend/app/`, `frontend/src/`)
+- **What it is:** Live acceptance bug fixes addressing dynamic candidate and role injection in fallback email templates, empty/rate-limited state callouts in candidate dossiers, descending score ordering and dual previous/next navigation in dossier header, dynamic applicant counts in requisitions, requisition close lifecycle management, clear rejection rationale presentation for disqualified candidates, and job-scoped audit logging.
+- **Why:** During acceptance testing:
+  1. Deterministic email templates contained hardcoded names and positions ("Dear Alex", "Staff Backend Engineer") rather than dynamic candidate names and job titles; and empty briefing or question states rendered blank bullet points.
+  2. The candidate dossier loaded candidates without ensuring the initial candidate was the highest-scoring candidate, and lacked a "Previous Candidate" button.
+  3. Requisition cards showed "0 applicants" even when candidates were ingested, because `JobResponse` did not include evaluation counts.
+  4. Recruiters could not close active requisitions from the individual Job Dashboard, and case-sensitive status filtering hid closed requisitions.
+  5. Candidates demoted to `Reject` did not display explicit rejection rationales, and the audit log screen showed global mock events instead of job-filtered immutable audit trails.
+- **How it works:**
+  - **Dynamic Fallback Templates (`backend/app/llm/templates.py`, `backend/app/worker/tasks.py`):** `generate_deterministic_emails` dynamically interpolates `packet.candidate_name` and `packet.job_title`, cleanly falling back to `"Candidate"` and `"this position"`. Mock email drafts in `INITIAL_EMAILS` are cleansed of hardcoded person names.
+  - **Dossier Rate-Limit & Empty States (`CandidateDossierScreen.tsx`):** If `briefingList` or `interview_questions` are empty, renders a clear amber alert: *"AI Evaluation Pending or Failed due to Rate Limits"* with actionable guidance instead of blank bullet points.
+  - **Dossier Sorting & Dual Navigation (`App.tsx`, `Sidebar.tsx`, `CandidateDossierScreen.tsx`):** Candidates are strictly sorted by `match_score` descending. The top candidate loaded defaults to the highest-scoring applicant. Added `"Previous candidate"` button alongside `"Next candidate"`.
+  - **Dynamic Applicant Counts (`jobs.py`, `schemas.py`, `transformers.ts`, `api.ts`):** `JobResponse` includes `applicants_count: int = 0`, computed via subquery counting evaluations/resumes grouped by `job_id` in `list_jobs` and `get_job`, syncing accurately on the Requisitions grid.
+  - **Requisition Closure Lifecycle (`DashboardScreen.tsx`, `RequisitionsScreen.tsx`, `jobs.py`):** Added a "Close Requisition" action button in the Job Command Center that calls `PUT /api/v1/jobs/{id}` with `{ status: "closed" }`, updating status badges across the UI and honoring case-insensitive `"closed"` filtering.
+  - **Transparent Rejection Rationales (`tiers.py`, `evaluations.py`, `RankedTableScreen.tsx`, `CandidateDossierScreen.tsx`):** Added mandatory skill knockout rule (`must_cov < 0.20` with >= 3 missing skills -> `Reject`), attached explicit `rejection_reason` to all rejections in `TierAssignmentResult` and `EvaluationSummaryResponse`, and rendered dedicated rejection rationale badges in the table and dossier.
+  - **Job-Scoped Audit Logs (`audit_logs.py`, `AuditLogScreen.tsx`, `api.ts`):** `GET /api/v1/audit-logs/?job_id={id}` filters audit logs by `target_id == job_id` or `Evaluation.job_id == job_id`. `AuditLogScreen` accepts `jobId` and isolates logs strictly to the active requisition.
+- **How it helps here:** Elevates user experience to enterprise grade with zero hardcoded mocks, transparent AI status alerts, seamless candidate browsing, and complete job lifecycle control.
+- **Alternatives considered:** Hiding empty AI sections entirely (rejected: creates layout shifting and confuses recruiters as to whether evaluation was attempted or rate-limited).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - 163/165 backend pytest tests pass (2 skipped), 0 failures.
+  - 23/23 Vitest frontend tests pass.
+  - Frontend production build: 0 TypeScript errors, clean bundle (`dist/assets/index-CweuQ8KA.js`).
+  - Backend formatting: 0 `ruff check` or `ruff format` issues.
+  - Mypy typecheck: 0 errors across 95 files.
+  - Provenance audit: All 24 evaluation files in `docs/` verified.
+  - `scripts/make_report.py`: 0 missing keys.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide

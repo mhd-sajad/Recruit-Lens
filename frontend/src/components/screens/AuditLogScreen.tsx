@@ -6,14 +6,17 @@ export const AuditLogScreen: React.FC<{ jobId?: string; jobTitle?: string }> = (
   jobId,
   jobTitle,
 }) => {
-  const [logs, setLogs] = useState<AuditEventItem[]>(INITIAL_AUDIT_LOGS);
+  const isDemo = !jobId || jobId === "job-backend";
+  const [logs, setLogs] = useState<AuditEventItem[]>(isDemo ? INITIAL_AUDIT_LOGS : []);
   const [actorFilter, setActorFilter] = useState<string>("All");
   const [isActorDropdownOpen, setIsActorDropdownOpen] = useState(false);
 
   useEffect(() => {
+    let isCancelled = false;
     api
-      .listAuditLogs(50)
+      .listAuditLogs(50, jobId)
       .then((apiLogs) => {
+        if (isCancelled) return;
         if (Array.isArray(apiLogs) && apiLogs.length > 0) {
           const transformed: AuditEventItem[] = apiLogs.map((l, i) => {
             const date = new Date(l.created_at);
@@ -29,6 +32,9 @@ export const AuditLogScreen: React.FC<{ jobId?: string; jobTitle?: string }> = (
             } else if (l.action.includes("approve")) {
               badge_class = "e";
               action_badge = "Draft approved";
+            } else if (l.action.includes("update")) {
+              badge_class = "h";
+              action_badge = "Job updated";
             }
             const detailStr =
               l.details && typeof l.details === "object"
@@ -40,18 +46,24 @@ export const AuditLogScreen: React.FC<{ jobId?: string; jobTitle?: string }> = (
               id: l.id || `aud-api-${i}`,
               time,
               timestamp: l.created_at,
-              actor: l.user_id ? "R. Iyer" : "System",
+              actor: l.user_id ? "HR User" : "System",
               action_badge,
               badge_class,
               target: l.target_type === "job" ? "Job Requisition" : l.target_id || "Global setting",
               detail: detailStr,
             };
           });
-          setLogs([...transformed, ...INITIAL_AUDIT_LOGS]);
+          setLogs(isDemo ? [...transformed, ...INITIAL_AUDIT_LOGS] : transformed);
+        } else if (!isDemo) {
+          setLogs([]);
         }
       })
       .catch(() => {});
-  }, []);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [jobId, isDemo]);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {

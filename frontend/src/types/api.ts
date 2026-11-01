@@ -112,6 +112,8 @@ export interface EvaluationDetailResponse {
   education_level?: string;
   matched_skills?: string[];
   missing_must_haves?: string[];
+  override_reason?: string | null;
+  rejection_reason?: string | null;
   evidence_chunks?: Array<{
     id?: string;
     chunk_index?: number;
@@ -145,6 +147,8 @@ export interface EvaluationSummaryResponse {
   must_have_coverage?: string;
   matched_skills?: string[];
   missing_must_haves?: string[];
+  override_reason?: string | null;
+  rejection_reason?: string | null;
 }
 
 export interface HTTPValidationError {
@@ -210,6 +214,7 @@ export interface JobResponse {
   requirements_json: Record<string, unknown>;
   weights_json: Record<string, unknown>;
   status: string;
+  applicants_count?: number;
   created_at: string;
   updated_at: string;
   location?: string;

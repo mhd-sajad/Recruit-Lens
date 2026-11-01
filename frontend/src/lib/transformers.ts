@@ -62,7 +62,7 @@ export function jobResponseToJobItem(
     department: job.department || "Engineering",
     status: job.status === "active" ? "Active" : job.status === "closed" ? "Closed" : "Draft",
     created_at: `Created ${relativeDate}`,
-    applicants_count: candidatesCount || candidateEvals.length || (job.id === "job-backend" ? 14 : 0),
+    applicants_count: candidatesCount || (job as unknown as { applicants_count?: number }).applicants_count || candidateEvals.length || (job.id === "job-backend" ? 14 : 0),
     top_score: maxScore,
     top_tier: topTier,
     tier_counts: {
@@ -83,11 +83,19 @@ export function evaluationSummaryToCandidateItem(
   const score = Math.round(e.total_score >= 1 ? e.total_score : e.total_score * 100);
   const t = (e.tier || "").toLowerCase();
   let tier: "FastTrack" | "Interview" | "Hold" | "Reject" = "Hold";
-  if (t.includes("fasttrack") || t.includes("strong") || score >= 85) {
+  if (t.includes("reject")) {
+    tier = "Reject";
+  } else if (t.includes("fasttrack") || t.includes("strong")) {
     tier = "FastTrack";
-  } else if (t.includes("interview") || t.includes("review") || score >= 70) {
+  } else if (t.includes("interview") || t.includes("review")) {
     tier = "Interview";
-  } else if (t.includes("hold") || score >= 55) {
+  } else if (t.includes("hold")) {
+    tier = "Hold";
+  } else if (score >= 85) {
+    tier = "FastTrack";
+  } else if (score >= 70) {
+    tier = "Interview";
+  } else if (score >= 55) {
     tier = "Hold";
   } else {
     tier = "Reject";
@@ -131,5 +139,7 @@ export function evaluationSummaryToCandidateItem(
     stage,
     skills: e.matched_skills || [],
     missing_must_haves: e.missing_must_haves || [],
+    rejection_reason: e.rejection_reason || undefined,
+    override_reason: e.override_reason || undefined,
   };
 }

@@ -37,6 +37,8 @@ export interface CandidateItem {
   missing_must_haves: string[];
   skills?: string[];
   raw_text?: string;
+  rejection_reason?: string;
+  override_reason?: string;
 }
 
 export interface CitationItem {
@@ -605,11 +607,11 @@ export const INITIAL_EMAILS: EmailDraftItem[] = [
     id: "email-01",
     type: "interview",
     title: "Interview Invitation: Staff Backend Engineer – Distributed Systems",
-    to_candidate_name: "Alex Rivera",
+    to_candidate_name: "Candidate #6299",
     to_candidate_code: "6299",
-    to_candidate_email: "alex.rivera@engineering.io",
-    ai_draft: `Dear Alex,\n\nThank you for your application for the Staff Backend Engineer – Distributed Systems position. Our engineering team was very impressed by your extensive background in distributed systems architecture, particularly your hands-on work with Apache Kafka streaming and high-throughput Go services.\n\nWe would love to invite you to an initial 45-minute technical conversation with our Engineering Director to discuss your experience and share more about the distributed scaling challenges our team is currently tackling.\n\nPlease let us know your availability over the next few business days.\n\nBest regards,\nRecruit Lens Talent Team`,
-    user_edit: `Dear Alex,\n\nThank you for your application for the Staff Backend Engineer – Distributed Systems position. Our engineering team was very impressed by your extensive background in distributed systems architecture, particularly your hands-on work with Apache Kafka streaming and high-throughput Go services.\n\nWe would love to invite you to an initial 45-minute technical conversation with our Engineering Director to discuss your experience and share more about the distributed scaling challenges our team is currently tackling.\n\nPlease let us know your availability over the next few business days.\n\nBest regards,\nRecruit Lens Talent Team`,
+    to_candidate_email: "candidate.6299@recruitlens.io",
+    ai_draft: `Dear Candidate,\n\nThank you for your application for the Engineering position. Our engineering team was very impressed by your extensive background in distributed systems architecture, particularly your hands-on work with Apache Kafka streaming and high-throughput Go services.\n\nWe would love to invite you to an initial 45-minute technical conversation with our Engineering Director to discuss your experience and share more about the distributed scaling challenges our team is currently tackling.\n\nPlease let us know your availability over the next few business days.\n\nBest regards,\nRecruit Lens Talent Team`,
+    user_edit: `Dear Candidate,\n\nThank you for your application for the Engineering position. Our engineering team was very impressed by your extensive background in distributed systems architecture, particularly your hands-on work with Apache Kafka streaming and high-throughput Go services.\n\nWe would love to invite you to an initial 45-minute technical conversation with our Engineering Director to discuss your experience and share more about the distributed scaling challenges our team is currently tackling.\n\nPlease let us know your availability over the next few business days.\n\nBest regards,\nRecruit Lens Talent Team`,
     is_approved: false,
     is_sent: false,
     is_dry_run: true,

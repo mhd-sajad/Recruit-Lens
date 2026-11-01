@@ -290,8 +290,12 @@ export const api = {
   },
 
   // Audit Logs
-  listAuditLogs: async (limit: number = 100): Promise<AuditLogResponse[]> => {
-    return request<AuditLogResponse[]>(`/api/v1/audit-logs/?limit=${limit}`);
+  listAuditLogs: async (limit: number = 100, jobId?: string): Promise<AuditLogResponse[]> => {
+    const params = new URLSearchParams();
+    if (limit) params.append("limit", limit.toString());
+    if (jobId && !jobId.includes("backend")) params.append("job_id", jobId);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return request<AuditLogResponse[]>(`/api/v1/audit-logs/${qs}`);
   },
 
   // Aliases for convenient UI consumption

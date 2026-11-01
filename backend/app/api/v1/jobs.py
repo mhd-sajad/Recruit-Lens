@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas import (
@@ -16,7 +16,7 @@ from app.api.v1.schemas import (
 from app.auth.dependencies import get_current_user, get_optional_current_user, require_role
 from app.core.jd_requirements import extract_job_requirements
 from app.core.taxonomy import SkillTaxonomy
-from app.db.models import AuditLog, Job, User
+from app.db.models import AuditLog, Evaluation, Job, Resume, User
 from app.db.session import get_db
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
@@ -96,7 +96,15 @@ async def create_job(
     await db.commit()
     await db.refresh(job)
 
-    return JobResponse.model_validate(job)
+    cnt_res = await db.execute(
+        select(func.count(Evaluation.id)).where(
+            Evaluation.job_id == job.id, Evaluation.user_id == current_user.id
+        )
+    )
+    cnt = cnt_res.scalar() or 0
+    resp = JobResponse.model_validate(job)
+    resp.applicants_count = cnt
+    return resp
 
 
 @router.get("", response_model=list[JobResponse], include_in_schema=False)
@@ -114,7 +122,32 @@ async def list_jobs(
 
     result = await db.execute(query)
     jobs = result.scalars().all()
-    return [JobResponse.model_validate(j) for j in jobs]
+
+    # Query candidate evaluation counts per job
+    eval_counts_query = (
+        select(Evaluation.job_id, func.count(Evaluation.id).label("eval_count"))
+        .where(Evaluation.user_id == current_user.id)
+        .group_by(Evaluation.job_id)
+    )
+    eval_res = await db.execute(eval_counts_query)
+    eval_map = dict(eval_res.all())
+
+    # Fallback to resume counts if evaluations in progress
+    resume_counts_query = (
+        select(Resume.job_id, func.count(Resume.id).label("res_count"))
+        .where(Resume.user_id == current_user.id)
+        .group_by(Resume.job_id)
+    )
+    res_res = await db.execute(resume_counts_query)
+    resume_map = dict(res_res.all())
+
+    responses: list[JobResponse] = []
+    for j in jobs:
+        cnt = eval_map.get(j.id) or resume_map.get(j.id, 0)
+        resp = JobResponse.model_validate(j)
+        resp.applicants_count = cnt
+        responses.append(resp)
+    return responses
 
 
 @router.get("/{job_id}", response_model=JobResponse)
@@ -131,7 +164,23 @@ async def get_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job requisition '{job_id}' not found",
         )
-    return JobResponse.model_validate(job)
+    cnt_res = await db.execute(
+        select(func.count(Evaluation.id)).where(
+            Evaluation.job_id == job.id, Evaluation.user_id == current_user.id
+        )
+    )
+    cnt = cnt_res.scalar() or 0
+    if cnt == 0:
+        res_cnt = await db.execute(
+            select(func.count(Resume.id)).where(
+                Resume.job_id == job.id, Resume.user_id == current_user.id
+            )
+        )
+        cnt = res_cnt.scalar() or 0
+
+    resp = JobResponse.model_validate(job)
+    resp.applicants_count = cnt
+    return resp
 
 
 @router.put("/{job_id}", response_model=JobResponse)
@@ -175,7 +224,15 @@ async def update_job(
     await db.commit()
     await db.refresh(job)
 
-    return JobResponse.model_validate(job)
+    cnt_res = await db.execute(
+        select(func.count(Evaluation.id)).where(
+            Evaluation.job_id == job.id, Evaluation.user_id == current_user.id
+        )
+    )
+    cnt = cnt_res.scalar() or 0
+    resp = JobResponse.model_validate(job)
+    resp.applicants_count = cnt
+    return resp
 
 
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)

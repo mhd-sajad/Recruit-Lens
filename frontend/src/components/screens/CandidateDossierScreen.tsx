@@ -74,10 +74,15 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
   const currentRank = currentIndex >= 0 ? currentIndex + 1 : 1;
   const totalCount = candidatesList.length;
 
+  const prevCandidateId =
+    currentIndex > 0
+      ? candidatesList[currentIndex - 1]?.id
+      : null;
+
   const nextCandidateId =
     currentIndex >= 0 && currentIndex < candidatesList.length - 1
       ? candidatesList[currentIndex + 1]?.id
-      : candidatesList[0]?.id;
+      : null;
 
   // Compute what-if simulation delta
   const baseScore = candidate.match_score;
@@ -164,17 +169,28 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
           <button
             type="button"
             onClick={() => onOpenEmail(candidate.id)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] bg-[var(--surface)] hover:bg-[var(--subtle)] border border-[var(--border-default)] rounded-md transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] bg-[var(--surface)] hover:bg-[var(--subtle)] border border-[var(--border-default)] rounded-md transition-colors cursor-pointer"
           >
             <Mail className="w-3.5 h-3.5" />
             <span>Draft Email</span>
           </button>
 
+          {prevCandidateId && (
+            <button
+              type="button"
+              onClick={() => onNextCandidate(prevCandidateId)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[var(--text-primary)] bg-[var(--surface)] hover:bg-[var(--subtle)] border border-[var(--border-default)] rounded-md transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Previous candidate</span>
+            </button>
+          )}
+
           {nextCandidateId && (
             <button
               type="button"
               onClick={() => onNextCandidate(nextCandidateId)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-xs cursor-pointer"
             >
               <span>Next candidate</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -247,6 +263,20 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Rejection Rationale Callout if Rejected */}
+          {candidate.tier === "Reject" && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 shadow-xs text-left">
+              <div className="flex items-center gap-1.5 font-semibold text-xs text-red-600 dark:text-red-400 mb-1.5">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                <span>Rejection Rationale</span>
+              </div>
+              <p className="text-xs text-red-700 dark:text-red-300 leading-relaxed font-medium">
+                {candidate.rejection_reason ||
+                  "Candidate did not satisfy minimum required qualifications or core competencies for this requisition."}
+              </p>
+            </div>
+          )}
 
           {/* Why This Score Card (Signed Contributions) */}
           <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface)] p-5 shadow-xs">
@@ -373,21 +403,33 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
               </span>
             </div>
 
-            <ul className="space-y-3 text-xs leading-relaxed text-[var(--text-primary)]">
-              {briefingList.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2">
-                  <span className="text-blue-500 font-bold mt-0.5">•</span>
-                  <div className="flex-1">
-                    <span>{item.sentence}</span>{" "}
-                    <CitationPill
-                      id={item.citation_id}
-                      isActive={activeCitationId === item.citation_id}
-                      onClick={handleCitationClick}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {briefingList.length > 0 ? (
+              <ul className="space-y-3 text-xs leading-relaxed text-[var(--text-primary)]">
+                {briefingList.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-blue-500 font-bold mt-0.5">•</span>
+                    <div className="flex-1">
+                      <span>{item.sentence}</span>{" "}
+                      <CitationPill
+                        id={item.citation_id}
+                        isActive={activeCitationId === item.citation_id}
+                        onClick={handleCitationClick}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="p-4 rounded-lg bg-[var(--subtle)] border border-[var(--border-default)] text-center text-xs text-[var(--text-secondary)]">
+                <AlertCircle className="w-5 h-5 text-amber-500 mx-auto mb-1.5" />
+                <p className="font-semibold text-[var(--text-primary)]">
+                  AI Evaluation Pending or Failed due to Rate Limits
+                </p>
+                <p className="text-[11px] mt-1">
+                  Grounded candidate summary statements will appear here once background processing completes.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Resume Evidence Viewer Card */}
@@ -533,71 +575,90 @@ export const CandidateDossierScreen: React.FC<CandidateDossierScreenProps> = ({
               Interview Questions
             </h2>
 
-            {/* Skill Verification Questions */}
-            <div>
-              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 block mb-2">
-                Skill Verification ({interview_questions.skill_verification.length})
-              </span>
-              <div className="space-y-3">
-                {interview_questions.skill_verification.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-lg bg-[var(--subtle)]/70 border border-[var(--border-default)] space-y-1.5 text-xs"
-                  >
-                    <p className="font-medium text-[var(--text-primary)] leading-snug">
-                      "{q.question}"
-                    </p>
-                    <div className="text-[10px] text-[var(--text-secondary)] font-mono">
-                      Target: <span className="text-blue-500 font-semibold">{q.target_skill}</span>
-                    </div>
-                    <p className="text-[11px] text-[var(--text-secondary)] italic">
-                      Criteria: {q.evaluation_criteria}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => navigator.clipboard.writeText(q.question)}
-                      className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:underline pt-1"
-                    >
-                      <Copy className="w-3 h-3" />
-                      <span>Copy question</span>
-                    </button>
-                  </div>
-                ))}
+            {interview_questions.skill_verification.length === 0 &&
+            interview_questions.gap_probing.length === 0 ? (
+              <div className="p-4 rounded-lg bg-[var(--subtle)] border border-[var(--border-default)] text-center text-xs text-[var(--text-secondary)]">
+                <AlertCircle className="w-5 h-5 text-amber-500 mx-auto mb-1.5" />
+                <p className="font-semibold text-[var(--text-primary)]">
+                  AI Evaluation Pending or Failed due to Rate Limits
+                </p>
+                <p className="text-[11px] mt-1">
+                  Seniority-calibrated interview questions will be generated when background processing completes.
+                </p>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Skill Verification Questions */}
+                {interview_questions.skill_verification.length > 0 && (
+                  <div>
+                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 block mb-2">
+                      Skill Verification ({interview_questions.skill_verification.length})
+                    </span>
+                    <div className="space-y-3">
+                      {interview_questions.skill_verification.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg bg-[var(--subtle)]/70 border border-[var(--border-default)] space-y-1.5 text-xs"
+                        >
+                          <p className="font-medium text-[var(--text-primary)] leading-snug">
+                            "{q.question}"
+                          </p>
+                          <div className="text-[10px] text-[var(--text-secondary)] font-mono">
+                            Target: <span className="text-blue-500 font-semibold">{q.target_skill}</span>
+                          </div>
+                          <p className="text-[11px] text-[var(--text-secondary)] italic">
+                            Criteria: {q.evaluation_criteria}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(q.question)}
+                            className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:underline pt-1 cursor-pointer"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>Copy question</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Gap Probing Questions */}
-            <div className="pt-2 border-t border-[var(--border-default)]">
-              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 block mb-2">
-                Gap Probing ({interview_questions.gap_probing.length})
-              </span>
-              <div className="space-y-3">
-                {interview_questions.gap_probing.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-lg bg-[var(--subtle)]/70 border border-[var(--border-default)] space-y-1.5 text-xs"
-                  >
-                    <p className="font-medium text-[var(--text-primary)] leading-snug">
-                      "{q.question}"
-                    </p>
-                    <div className="text-[10px] text-[var(--text-secondary)] font-mono">
-                      Target Gap: <span className="text-amber-500 font-semibold">{q.target_gap}</span>
+                {/* Gap Probing Questions */}
+                {interview_questions.gap_probing.length > 0 && (
+                  <div className="pt-2 border-t border-[var(--border-default)]">
+                    <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 block mb-2">
+                      Gap Probing ({interview_questions.gap_probing.length})
+                    </span>
+                    <div className="space-y-3">
+                      {interview_questions.gap_probing.map((q, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg bg-[var(--subtle)]/70 border border-[var(--border-default)] space-y-1.5 text-xs"
+                        >
+                          <p className="font-medium text-[var(--text-primary)] leading-snug">
+                            "{q.question}"
+                          </p>
+                          <div className="text-[10px] text-[var(--text-secondary)] font-mono">
+                            Target Gap: <span className="text-amber-500 font-semibold">{q.target_gap}</span>
+                          </div>
+                          <p className="text-[11px] text-[var(--text-secondary)] italic">
+                            Criteria: {q.evaluation_criteria}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(q.question)}
+                            className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:underline pt-1 cursor-pointer"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>Copy question</span>
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-[11px] text-[var(--text-secondary)] italic">
-                      Criteria: {q.evaluation_criteria}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => navigator.clipboard.writeText(q.question)}
-                      className="inline-flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 hover:underline pt-1"
-                    >
-                      <Copy className="w-3 h-3" />
-                      <span>Copy question</span>
-                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

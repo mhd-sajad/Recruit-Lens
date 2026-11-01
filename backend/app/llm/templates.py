@@ -151,13 +151,15 @@ def generate_deterministic_emails(packet: EvidencePacket) -> EmailsResult:
     top_skill = (
         packet.matched_must_skills[0] if packet.matched_must_skills else "your technical background"
     )
+    cand_name = packet.candidate_name or "Candidate"
+    job_title = packet.job_title or "the position"
 
     invite = EmailDraft(
         action="interview_invite",
-        subject="Interview Invitation - Recruit Lens Team",
+        subject=f"Interview Invitation: {job_title} - Recruit Lens Team",
         body=(
-            f"Dear Candidate,\n\n"
-            f"Thank you for your application. We were impressed by your background, particularly your demonstrated "
+            f"Dear {cand_name},\n\n"
+            f"Thank you for your application for the {job_title} role. We were impressed by your background, particularly your demonstrated "
             f"experience with {top_skill}.\n\n"
             f"We would like to invite you for an initial technical conversation with our engineering team to discuss "
             f"your experience and explore how your skills align with our upcoming initiatives.\n\n"
@@ -169,13 +171,13 @@ def generate_deterministic_emails(packet: EvidencePacket) -> EmailsResult:
 
     hold = EmailDraft(
         action="hold",
-        subject="Update on your application - Recruit Lens",
+        subject=f"Application Update: {job_title} - Recruit Lens",
         body=(
-            "Dear Candidate,\n\n"
-            "Thank you for your patience while our hiring team reviews candidate qualifications. "
-            "Your application remains under active consideration, and we are currently finalizing candidate schedules.\n\n"
-            "We appreciate your interest and will provide an update as soon as the next phase begins.\n\n"
-            "Best regards,\nRecruiting Team"
+            f"Dear {cand_name},\n\n"
+            f"Thank you for your patience while our hiring team reviews candidate qualifications for {job_title}. "
+            f"Your application remains under active consideration, and we are currently finalizing candidate schedules.\n\n"
+            f"We appreciate your interest and will provide an update as soon as the next phase begins.\n\n"
+            f"Best regards,\nRecruiting Team"
         ),
         citations_used=[],
     )
@@ -183,15 +185,15 @@ def generate_deterministic_emails(packet: EvidencePacket) -> EmailsResult:
     # Rejection email: Strictly professional, zero internal scores, zero negative critique reasons
     rejection = EmailDraft(
         action="rejection",
-        subject="Your application with Recruit Lens",
+        subject=f"Your application for {job_title} with Recruit Lens",
         body=(
-            "Dear Candidate,\n\n"
-            "Thank you for taking the time to apply and for your interest in our team. "
-            "After careful consideration of our current hiring requirements and team priorities, "
-            "we have decided to proceed with other candidates whose backgrounds more closely match "
-            "our immediate needs for this specific opening.\n\n"
-            "We sincerely appreciate your interest and wish you the very best in your professional journey.\n\n"
-            "Best regards,\nRecruiting Team"
+            f"Dear {cand_name},\n\n"
+            f"Thank you for taking the time to apply for {job_title} and for your interest in our team. "
+            f"After careful consideration of our current hiring requirements and team priorities, "
+            f"we have decided to proceed with other candidates whose backgrounds more closely match "
+            f"our immediate needs for this specific opening.\n\n"
+            f"We sincerely appreciate your interest and wish you the very best in your professional journey.\n\n"
+            f"Best regards,\nRecruiting Team"
         ),
         citations_used=[],
     )

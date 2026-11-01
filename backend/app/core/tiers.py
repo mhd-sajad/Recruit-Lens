@@ -33,6 +33,7 @@ class TierAssignmentResult(BaseModel):
     tier_rank: int  # 3=Strong Fit, 2=Interview, 1=Hold, 0=Reject, -1=Abstain
     must_have_override_applied: bool = False
     override_reason: str | None = None
+    rejection_reason: str | None = None
     is_abstain: bool = False
     abstain_reason: str | None = None
     recommended_action: str = ""
@@ -151,6 +152,23 @@ def assign_candidate_tier(
             f"Downgraded to Hold."
         )
 
+    # Rule: Severe must-have knockout deficit (< 20% coverage with >= 3 missing requirements) disallows Hold
+    if final_rank >= 1 and must_cov < 0.20 and len(missing_must) >= 3:
+        final_tier = "Reject"
+        final_rank = 0
+        override_applied = True
+        override_reason = (
+            f"Mandatory skill deficit: Satisfied only {must_cov:.0%} of required core competencies "
+            f"({len(missing_must)} mandatory skills missing). Disqualified to Reject."
+        )
+
+    # Determine explicit rejection rationale for transparency
+    rejection_reason: str | None = None
+    if final_tier == "Reject":
+        rejection_reason = override_reason or (
+            f"Calibrated match score ({score:.0%}) falls below the minimum consideration threshold ({HOLD_THRESHOLD:.0%})."
+        )
+
     # Recommended action descriptions
     actions = {
         "Strong Fit": "Prioritize immediate recruiter screen and technical interview scheduling.",
@@ -168,6 +186,7 @@ def assign_candidate_tier(
         tier_rank=final_rank,
         must_have_override_applied=override_applied,
         override_reason=override_reason,
+        rejection_reason=rejection_reason,
         is_abstain=False,
         recommended_action=actions.get(final_tier, ""),
     )

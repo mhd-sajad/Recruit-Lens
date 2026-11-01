@@ -65,7 +65,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
   // Sync backend jobs into jobsList
   useEffect(() => {
     if (jobs && jobs.length > 0) {
-      const converted = jobs.map((j) => jobResponseToJobItem(j));
+      const converted = jobs.map((j) => jobResponseToJobItem(j, j.applicants_count || 0));
       const convertedIds = new Set(converted.map((c) => c.id));
       const remainingInitial = INITIAL_JOBS.filter((j) => !convertedIds.has(j.id));
       setJobsList([...converted, ...remainingInitial]);
@@ -110,7 +110,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
               const transformed = evals.map((e, idx) => {
                 const item = evaluationSummaryToCandidateItem(e, idx, isBlindMode);
                 return { ...item, job_id: currentActiveJob.id };
-              });
+              }).sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
               setCandidatesList((prev) => {
                 const other = prev.filter((c) => (c.job_id || "job-backend") !== currentActiveJob.id);
                 return [...transformed, ...other];
@@ -150,12 +150,40 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
     }
   }, [isLoading, isAuthenticated, currentRoute, navigate]);
 
+  // Requisition closure handler
+  const handleCloseJob = async (jobId: string) => {
+    try {
+      if (jobId !== "job-backend") {
+        await api.updateJob(jobId, { status: "closed" });
+      }
+      setJobsList((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, status: "Closed" } : j))
+      );
+      showToast("Requisition status updated to Closed.", "success");
+    } catch {
+      showToast("Failed to close requisition. Please try again.", "error");
+    }
+  };
+
   // Dossier opener helper
   const handleOpenDossier = (candId: string, jobId: string) => {
-    const cand = candidatesList.find(
-      (c) => (c.id === candId || c.code === candId) && (c.job_id || "job-backend") === jobId
+    const jobCands = candidatesList
+      .filter((c) => (c.job_id || "job-backend") === jobId)
+      .sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
+
+    let cand = jobCands.find(
+      (c) => c.id === candId || c.code === candId
     );
+    if (!cand && candId === "top" && jobCands.length > 0) {
+      cand = jobCands[0];
+    }
     if (cand) {
+      if (
+        currentRoute.name !== "job-candidate-dossier" ||
+        currentRoute.candidateId !== cand.id
+      ) {
+        navigate(`/jobs/${jobId}/candidates/${cand.id}`);
+      }
       const isDemoJob = jobId === "job-backend" && (!cand.job_id || cand.job_id === "job-backend");
       const baseDossier: CandidateDossier = isDemoJob
         ? { ...SAMPLE_DOSSIER_6299, candidate: cand }
@@ -277,8 +305,25 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
         })
         .catch(() => {});
     }
-    navigate(`/jobs/${jobId}/candidates/${candId}`);
   };
+
+  const routeCandidateId = currentRoute.name === "job-candidate-dossier" ? currentRoute.candidateId : null;
+  const routeJobId = currentRoute.name === "job-candidate-dossier" ? currentRoute.jobId : null;
+
+  // Sync candidate dossier on candidate route or candidate list load
+  useEffect(() => {
+    if (routeCandidateId && routeJobId && currentActiveJob) {
+      const cand = candidatesList.find(
+        (c) =>
+          (c.id === routeCandidateId || c.code === routeCandidateId) &&
+          (c.job_id || "job-backend") === routeJobId
+      );
+      if (cand) {
+        handleOpenDossier(routeCandidateId, currentActiveJob.id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeCandidateId, routeJobId, currentActiveJob?.id, candidatesList.length]);
 
   // Pipeline stage update helper
   const handleUpdateCandidateStage = (candId: string, newStage: CandidateItem["stage"]) => {
@@ -469,6 +514,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
                 (c) => (c.job_id || "job-backend") === currentActiveJob.id
               )}
               onNavigate={navigate}
+              onCloseJob={handleCloseJob}
             />
           )}
 
@@ -476,9 +522,9 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
           {currentRoute.name === "job-candidates" && currentActiveJob && (
             <RankedTableScreen
               job={currentActiveJob}
-              candidates={candidatesList.filter(
-                (c) => (c.job_id || "job-backend") === currentActiveJob.id
-              )}
+              candidates={candidatesList
+                .filter((c) => (c.job_id || "job-backend") === currentActiveJob.id)
+                .sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0))}
               onSelectCandidate={(candId) => handleOpenDossier(candId, currentActiveJob.id)}
               onOpenEmail={(candId) => navigate(`/jobs/${currentActiveJob.id}/candidates/${candId}/email`)}
               onExportAudit={() => navigate(`/jobs/${currentActiveJob.id}/audit`)}
@@ -502,9 +548,9 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
           {currentRoute.name === "job-candidate-dossier" && currentActiveJob && (
             <CandidateDossierScreen
               dossier={dossier}
-              candidatesList={candidatesList.filter(
-                (c) => (c.job_id || "job-backend") === currentActiveJob.id
-              )}
+              candidatesList={candidatesList
+                .filter((c) => (c.job_id || "job-backend") === currentActiveJob.id)
+                .sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0))}
               onBack={() => navigate(`/jobs/${currentActiveJob.id}/candidates`)}
               onNextCandidate={(nextId) => handleOpenDossier(nextId, currentActiveJob.id)}
               onOpenEmail={(candId) =>

@@ -56,6 +56,7 @@ class JobResponse(BaseModel):
     requirements_json: dict[str, Any]
     weights_json: dict[str, Any]
     status: str
+    applicants_count: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -97,6 +98,8 @@ class EvaluationSummaryResponse(BaseModel):
     must_have_coverage: str | None = None
     matched_skills: list[str] = Field(default_factory=list)
     missing_must_haves: list[str] = Field(default_factory=list)
+    override_reason: str | None = None
+    rejection_reason: str | None = None
 
 
 class EvaluationDetailResponse(BaseModel):
@@ -122,6 +125,8 @@ class EvaluationDetailResponse(BaseModel):
     llm_generated: bool
     created_at: datetime
     updated_at: datetime
+    override_reason: str | None = None
+    rejection_reason: str | None = None
     raw_text: str = ""
     citations: list[dict[str, Any]] = Field(default_factory=list)
 

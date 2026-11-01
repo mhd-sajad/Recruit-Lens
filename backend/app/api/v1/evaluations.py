@@ -149,6 +149,14 @@ async def list_evaluations_for_job(
                 clean = re.sub(r"[\(_\-\d\)]+", " ", clean).strip()
                 raw_name = clean.title() if clean else "Applicant"
 
+        # Extract rejection/override reasons
+        override_reason = breakdown.get("override_reason")
+        rejection_reason = breakdown.get("rejection_reason")
+        if not rejection_reason and (ev.tier or "").lower() == "reject":
+            rejection_reason = override_reason or (
+                f"Calibrated match score ({ev.total_score:.0%}) falls below the minimum consideration threshold (30%)."
+            )
+
         summary_list.append(
             EvaluationSummaryResponse(
                 id=ev.id,
@@ -168,6 +176,8 @@ async def list_evaluations_for_job(
                 must_have_coverage=coverage_str,
                 matched_skills=matched,
                 missing_must_haves=missing,
+                override_reason=override_reason,
+                rejection_reason=rejection_reason,
             )
         )
 
@@ -309,6 +319,14 @@ async def get_evaluation_detail(
     )
     display_raw_text = redact_pii_blind_mode(raw_text) if is_blind else raw_text
 
+    bdown = ev.breakdown_json or {}
+    override_reason = bdown.get("override_reason")
+    rejection_reason = bdown.get("rejection_reason")
+    if not rejection_reason and (ev.tier or "").lower() == "reject":
+        rejection_reason = override_reason or (
+            f"Calibrated match score ({ev.total_score:.0%}) falls below the minimum consideration threshold (30%)."
+        )
+
     return EvaluationDetailResponse(
         id=ev.id,
         user_id=ev.user_id,
@@ -328,6 +346,8 @@ async def get_evaluation_detail(
         llm_generated=ev.llm_generated,
         created_at=ev.created_at,
         updated_at=ev.updated_at,
+        override_reason=override_reason,
+        rejection_reason=rejection_reason,
         raw_text=display_raw_text,
         citations=citations,
     )

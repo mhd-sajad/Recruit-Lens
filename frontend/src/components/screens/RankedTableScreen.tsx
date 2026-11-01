@@ -395,6 +395,14 @@ export const RankedTableScreen: React.FC<RankedTableScreenProps> = ({
                     {/* Tier badge with SVG icon */}
                     <td className="py-3 px-4">
                       <TierBadge tier={cand.tier} size="sm" />
+                      {cand.tier === "Reject" && cand.rejection_reason && (
+                        <span
+                          className="block text-[10px] text-red-500 font-mono mt-1 max-w-[160px] truncate"
+                          title={cand.rejection_reason}
+                        >
+                          {cand.rejection_reason}
+                        </span>
+                      )}
                     </td>
 
                     {/* Must-have coverage */}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Users,
   ArrowRight,
@@ -6,6 +6,7 @@ import {
   Award,
   Layers,
   UserPlus,
+  XCircle,
 } from "lucide-react";
 import type { JobItem, CandidateItem } from "../../lib/mockData";
 
@@ -13,13 +14,30 @@ interface DashboardScreenProps {
   job: JobItem;
   candidates: CandidateItem[];
   onNavigate: (path: string) => void;
+  onCloseJob?: (jobId: string) => Promise<void> | void;
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({
   job,
   candidates,
   onNavigate,
+  onCloseJob,
 }) => {
+  const [isClosing, setIsClosing] = useState(false);
+  const isClosed = job.status?.toLowerCase() === "closed";
+
+  const handleCloseRequisition = async () => {
+    if (isClosed || isClosing) return;
+    setIsClosing(true);
+    try {
+      if (onCloseJob) {
+        await onCloseJob(job.id);
+      }
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
   const jobCandidates = candidates.filter(
     (c) => (c.job_id || "job-backend") === job.id
   );
@@ -63,6 +81,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
+          {!isClosed ? (
+            <button
+              onClick={handleCloseRequisition}
+              disabled={isClosing}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-500 dark:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
+              title="Close this requisition"
+            >
+              <XCircle size={14} />
+              <span>{isClosing ? "Closing..." : "Close Requisition"}</span>
+            </button>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-lg bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-default)]">
+              Requisition Closed
+            </span>
+          )}
           <button
             onClick={() => onNavigate(`/jobs/${job.id}/candidates/add`)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-[var(--border-default)] bg-[var(--bg-subtle)] hover:bg-[var(--border-default)]/60 text-[var(--text-primary)] transition-colors cursor-pointer"

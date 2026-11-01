@@ -215,6 +215,12 @@ async def process_batch_ingestion(task_id: str) -> None:
             ev_packet = EvidencePacket(
                 candidate_id=resume.id,
                 job_id=job.id,
+                candidate_name=(
+                    pdf_result.pii.name
+                    if pdf_result.pii and pdf_result.pii.name
+                    else f"Candidate #{resume.id[:4]}"
+                ),
+                job_title=job.title,
                 retrieved_chunks=evidence_chunks,
                 matched_must_skills=features.matched_must_skills,
                 missing_must_skills=features.missing_must_skills,
@@ -271,6 +277,8 @@ async def process_batch_ingestion(task_id: str) -> None:
                             else "Not Specified",
                         },
                         "semantic": {"score": features.dense_similarity.value},
+                        "override_reason": tier_res.override_reason,
+                        "rejection_reason": tier_res.rejection_reason,
                     },
                     explanation_json=det_explanation.model_dump(),
                     explanation_type="template",
@@ -393,15 +401,24 @@ async def generate_on_demand_llm_text(evaluation_id: str, user_id: str | None = 
             for c in chunks[:10]
         ]
 
-        # Load Job
+        # Load Job and Resume
         job_res = await db.execute(select(Job).where(Job.id == evaluation.job_id))
         job = job_res.scalar_one_or_none()
+        resume_res = await db.execute(select(Resume).where(Resume.id == evaluation.resume_id))
+        resume = resume_res.scalar_one_or_none()
+        cand_name = None
+        if resume and resume.parse_result_json:
+            cand_name = resume.parse_result_json.get("name")
+        if not cand_name:
+            cand_name = f"Candidate #{evaluation.resume_id[:4]}"
 
         # Reconstruct packet
         breakdown = evaluation.breakdown_json
         ev_packet = EvidencePacket(
             candidate_id=evaluation.resume_id,
             job_id=evaluation.job_id,
+            candidate_name=cand_name,
+            job_title=job.title if job else "the position",
             retrieved_chunks=retrieved_chunks,
             matched_must_skills=breakdown.get("skills", {}).get("matched_must", []),
             missing_must_skills=breakdown.get("skills", {}).get("missing_must", []),

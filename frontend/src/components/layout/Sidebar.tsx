@@ -49,10 +49,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const currentJobId = isInsideJob && "jobId" in currentRoute ? currentRoute.jobId : selectedJob?.id || "job-backend";
   const activeJob = jobsList.find((j) => j.id === currentJobId) || selectedJob || jobsList[0];
 
-  // Candidates scoped to activeJob
-  const jobCandidates = candidatesList.filter(
+  // Candidates scoped to activeJob sorted descending by match score
+  const jobCandidates = [...candidatesList.filter(
     (c) => (c.job_id || "job-backend") === (activeJob?.id || "job-backend")
-  );
+  )].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
   const topCandidate = jobCandidates[0];
 
   const emailCandidateId =
