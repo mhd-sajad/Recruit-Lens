@@ -77,7 +77,8 @@ export function jobResponseToJobItem(
 
 export function evaluationSummaryToCandidateItem(
   e: EvaluationSummaryResponse,
-  index: number = 0
+  index: number = 0,
+  isBlindMode: boolean = false
 ): CandidateItem {
   const score = Math.round(e.total_score >= 1 ? e.total_score : e.total_score * 100);
   const t = (e.tier || "").toLowerCase();
@@ -101,19 +102,19 @@ export function evaluationSummaryToCandidateItem(
   // Deterministic 4-digit code
   const code = e.id ? e.id.replace(/-/g, "").slice(-4).toUpperCase() : `${6200 + index}`;
 
-  // Role title (only use demo title on demo workspace job)
-  const roleTitle = e.candidate_title || (e.job_id === "job-backend" ? "Staff Backend Architect" : "Applicant");
+  // Role title (cleanly extracted or generic role)
+  const roleTitle = e.candidate_title || "Applicant";
 
-  // Candidate Name (only use demo name on demo workspace job)
-  const candidateName = e.candidate_name || (e.job_id === "job-backend" ? "Alex Rivera" : `Candidate #${code}`);
+  // Candidate Name (blind mode strictly enforces Candidate #CODE)
+  const candidateName = isBlindMode ? `Candidate #${code}` : (e.candidate_name || `Candidate #${code}`);
 
-  // Must-have coverage (use real evaluated coverage, fallback to demo on demo job)
-  const coverage = e.must_have_coverage || (e.job_id === "job-backend" ? (tier === "FastTrack" ? "7 / 7" : "4 / 7") : "Pending");
+  // Must-have coverage (actual verified evaluation metric)
+  const coverage = e.must_have_coverage || "Pending";
 
-  // Verified Experience
+  // Verified Experience (exact parsed years or explicit indicator)
   const expStr = e.years_experience !== null && e.years_experience !== undefined && e.years_experience > 0
     ? `${e.years_experience.toFixed(1)} yrs`
-    : (e.job_id === "job-backend" ? "8.5 yrs" : "Dates missing");
+    : "Dates missing";
 
   return {
     id: e.id,
@@ -129,6 +130,6 @@ export function evaluationSummaryToCandidateItem(
     verified_experience: expStr,
     stage,
     skills: e.matched_skills || [],
-    missing_must_haves: e.missing_must_haves || (e.job_id === "job-backend" && tier === "Reject" ? ["Cassandra", "Raft"] : []),
+    missing_must_haves: e.missing_must_haves || [],
   };
 }

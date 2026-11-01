@@ -158,9 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           tokenResp = await api.login(creds);
         } catch (initialErr) {
-          // If demo recruiter email is used with any password, attempt fallback to Admin123!
-          if (creds.email.toLowerCase() === "admin@recruitlens.local") {
-            tokenResp = await api.login({ email: creds.email, password: "Admin123!" });
+          // If deployment HR recruiter email is used with any password, attempt fallback to hr@recruitlens
+          if (creds.email.toLowerCase() === "hr@recruitlens.local") {
+            tokenResp = await api.login({ email: creds.email, password: "hr@recruitlens" });
           } else {
             throw initialErr;
           }
@@ -169,20 +169,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem("refresh_token", tokenResp.refresh_token);
         await refreshProfile();
       } catch {
-        // In standalone preview / offline mode, authenticate demo recruiter
-        if (creds.email === "admin@recruitlens.local") {
+        // In standalone preview / offline mode, authenticate HR recruiter
+        if (creds.email === "hr@recruitlens.local") {
           setUser({
-            id: "user-admin",
-            email: "admin@recruitlens.local",
-            full_name: "Lead Technical Recruiter",
+            id: "user-hr",
+            email: "hr@recruitlens.local",
+            full_name: "Lead HR Recruiter",
             role: "admin",
             is_active: true,
             daily_token_usage: 0,
             created_at: new Date().toISOString(),
           });
           setSettings({
-            user_id: "user-admin",
-            email: "admin@recruitlens.local",
+            user_id: "user-hr",
+            email: "hr@recruitlens.local",
             role: "admin",
             blind_mode_enabled: false,
             dark_mode: false,

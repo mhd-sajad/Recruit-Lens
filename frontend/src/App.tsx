@@ -45,7 +45,7 @@ interface MainAppContentProps {
 
 const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
   const { currentRoute, navigate } = useRouter();
-  const { isAuthenticated, isLoading, jobs, activeJob, setActiveJob } = useAuth();
+  const { isAuthenticated, isLoading, jobs, activeJob, setActiveJob, isBlindMode } = useAuth();
   const { showToast } = useToast();
 
   // If initialPath prop was provided, navigate there once
@@ -108,7 +108,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
           if (!isCancelled && Array.isArray(evals)) {
             if (evals.length > 0) {
               const transformed = evals.map((e, idx) => {
-                const item = evaluationSummaryToCandidateItem(e, idx);
+                const item = evaluationSummaryToCandidateItem(e, idx, isBlindMode);
                 return { ...item, job_id: currentActiveJob.id };
               });
               setCandidatesList((prev) => {
@@ -132,7 +132,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
       isCancelled = true;
       clearInterval(pollTimer);
     };
-  }, [currentActiveJob]);
+  }, [currentActiveJob, isBlindMode]);
 
   // Handle protected route access while not authenticated
   useEffect(() => {
@@ -214,7 +214,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
         .getCandidateDetail(candId)
         .then((detail) => {
           if (detail && detail.id) {
-            const breakdown = (detail.breakdown || {}) as Record<string, any>;
+            const breakdown = (detail.breakdown || {}) as Record<string, { score?: number; weight?: number; matched_must?: string[]; matched_nice?: string[]; missing_must?: string[] }>;
             const contributions = Object.entries(breakdown).map(([k, val]) => {
               const v = val as { score?: number; weight?: number } | undefined;
               return {
@@ -231,15 +231,16 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
             const inferredSkills = Array.isArray(breakdownSkills.matched_nice) ? breakdownSkills.matched_nice : [];
             const missingSkills = Array.isArray(breakdownSkills.missing_must) ? breakdownSkills.missing_must : [];
 
-            const expl = (detail.explanation || {}) as Record<string, any>;
-            const sentences: Array<{ text: string; citation_ids: string[] }> = Array.isArray(expl.sentences) && expl.sentences.length > 0
-              ? expl.sentences.map((s: any) => ({
+            const expl = (detail.explanation || {}) as Record<string, unknown>;
+            const rawSentences = Array.isArray(expl.sentences) ? (expl.sentences as Array<{ text?: string; citation_ids?: string[] }>) : [];
+            const sentences: Array<{ text: string; citation_ids: string[] }> = rawSentences.length > 0
+              ? rawSentences.map((s) => ({
                   text: s.text || "",
                   citation_ids: Array.isArray(s.citation_ids) && s.citation_ids.length > 0 ? s.citation_ids : ["c_01"],
                 }))
               : [
                   {
-                    text: expl.summary || `Candidate evaluated with ${Math.round(detail.total_score >= 1 ? detail.total_score : detail.total_score * 100)}% fit score.`,
+                    text: (typeof expl.summary === "string" && expl.summary) || `Candidate evaluated with ${Math.round(detail.total_score >= 1 ? detail.total_score : detail.total_score * 100)}% fit score.`,
                     citation_ids: ["c_01"],
                   },
                 ];
@@ -249,7 +250,7 @@ const MainAppContent: React.FC<MainAppContentProps> = ({ initialPath }) => {
               ? detail.citations
               : baseDossier.citations;
 
-            const questions = (detail.interview_questions || {}) as Record<string, any>;
+            const questions = (detail.interview_questions || {}) as Record<string, unknown>;
 
             setDossier((prev) => ({
               ...prev,

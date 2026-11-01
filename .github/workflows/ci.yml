@@ -85,8 +85,8 @@ jobs:
       - name: Start Services with Docker Compose
         env:
           DEMO_MODE: "true"
-          DEMO_EMAIL: "admin@recruitlens.local"
-          DEMO_PASSWORD: "Admin123!"
+          DEMO_EMAIL: "hr@recruitlens.local"
+          DEMO_PASSWORD: "hr@recruitlens"
         run: |
           docker compose up -d --build
           for i in {1..30}; do
@@ -117,8 +117,8 @@ jobs:
         working-directory: frontend
         env:
           PLAYWRIGHT_BASE_URL: "http://localhost:8000"
-          DEMO_EMAIL: "admin@recruitlens.local"
-          DEMO_PASSWORD: "Admin123!"
+          DEMO_EMAIL: "hr@recruitlens.local"
+          DEMO_PASSWORD: "hr@recruitlens"
         run: npx playwright test
 
       - name: Upload Playwright Failure Artifacts

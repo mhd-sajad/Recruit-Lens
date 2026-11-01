@@ -193,12 +193,27 @@ def _extract_page_layout_aware(page: pdfplumber.page.Page) -> tuple[str, str]:
     midpoint = width / 2.0
 
     # Count words strictly in left half vs right half
-    left_words = [w for w in words if w["x1"] <= midpoint + 20]
-    right_words = [w for w in words if w["x0"] >= midpoint - 20]
+    left_words = [w for w in words if float(w["x1"]) <= midpoint + 20]
+    right_words = [w for w in words if float(w["x0"]) >= midpoint - 20]
 
-    # If substantial words exist in both halves and overlap vertically, treat as 2-column
+    # Detect lines that span across the midpoint (indicator of single-column text)
+    from collections import defaultdict
+
+    line_groups: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for w in words:
+        line_groups[int(round(float(w["top"]) / 3.0))].append(w)
+
+    spanning_lines = 0
+    for lg in line_groups.values():
+        min_x = min(float(w["x0"]) for w in lg)
+        max_x = max(float(w["x1"]) for w in lg)
+        if min_x < midpoint - 20 and max_x > midpoint + 20:
+            spanning_lines += 1
+
+    # If substantial words exist in both halves, do not span across midpoint, and overlap vertically, treat as 2-column
     is_multi_column = (
-        len(left_words) > 25
+        spanning_lines < 3
+        and len(left_words) > 25
         and len(right_words) > 25
         and abs(len(left_words) - len(right_words)) < len(words) * 0.7
     )

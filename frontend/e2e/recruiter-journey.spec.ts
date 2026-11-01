@@ -36,8 +36,8 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     });
 
     // Fill credentials and authenticate
-    await page.getByLabel(/Email Address/i).fill(process.env.DEMO_EMAIL || "admin@recruitlens.local");
-    await page.getByLabel(/Password/i).fill(process.env.DEMO_PASSWORD || "Admin123!");
+    await page.getByLabel(/Email Address/i).fill(process.env.DEMO_EMAIL || "hr@recruitlens.local");
+    await page.getByLabel(/Password/i).fill(process.env.DEMO_PASSWORD || "hr@recruitlens");
     await page.getByRole("button", { name: /Sign in to Recruiter Portal/i }).click();
 
     // 2. Requisitions Command Center Screen

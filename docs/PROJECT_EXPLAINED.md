@@ -907,6 +907,24 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - **Scorer Feature Weight Defense:** `WeightedBaselineScorer` safely validates input weights against baseline feature names and four-pillar architecture, falling back to calibrated default weights rather than zeroing out features when passed individual skill-weight maps.
   - **Quality Gates:** 23/23 Vitest tests pass; 2/2 API jobs and evaluations backend tests pass; zero TypeScript compiler errors.
 
+### Component: Production Deployment Account Hardening, Custom Weights Integration, Blind Redaction, and CI Ingestion Smoke Test (`backend/app/`, `frontend/src/`, `scripts/`)
+- **What it is:** Enterprise deployment hardening standardizing the default production role on `hr@recruitlens.local`, eliminating obsolete accounts, activating custom requirement skill weights in the candidate feature extractor, preventing Strong Fit starvation from single missing must-haves, enforcing blind redaction of filename-derived identities, and integrating an end-to-end CI smoke test with synthetic multi-profile PDF ingestion.
+- **Why:** Hardcoded demo and admin credentials violated single-account deployment specifications; custom skill weights configured in the requisition wizard were previously unweighted placeholders; strict 100% must-have thresholds unfairly locked out Strong Fit ratings when only one nice/minor requirement was unverified; and unredacted candidate names derived from uploaded filenames leaked into blind review mode.
+- **How it works:**
+  - **Sole Deployment Account (`scripts/seed_demo_workspace.py`):** Standardizes credentials to `hr@recruitlens.local` (`hr@recruitlens`), deletes all legacy/demo accounts (`workflow_lead@recruitlens.local`, `admin@recruitlens.local`), reassigns existing database entities, and removes deprecated seeding scripts (`scripts/seed_demo_data.py`).
+  - **Active Skill Weight Maps (`features.py`, `tasks.py`, `jd_requirements.py`):** Candidate feature extractor computes weighted must-have and nice-to-have skill coverage using custom weight distributions stored in `job.weights_json`, seamlessly honoring recruiter wizard inputs.
+  - **Calibrated Tier Guardrails (`tiers.py`):** Adjusts tier threshold override so candidates with high overall score (>=85%) and strong must-have coverage (>=75%, or at most 1 missing must-have) can achieve `Strong Fit`, preventing tier starvation while preserving quality bars.
+  - **Blind Mode Filename Redaction (`evaluations.py`, `transformers.ts`):** `GET /api/v1/evaluations/job/{id}?blind_mode=true` redacts candidate names to `Candidate #CODE` and filenames to `candidate_code.pdf`, preventing identity leakage from resume file naming.
+  - **Full-Spectrum Ingestion Smoke Test (`test_ci_smoke_ingestion.py`):** Synthesizes three PDF documents (Strong developer, Partial developer, Office equipment invoice), validates batch ingestion via API, asserts ranking order (Strong > Partial > Invoice), confirms non-zero experience extraction, confirms invoice gate rejection, asserts zero mock string leakage, and verifies blind-mode anonymization.
+- **How it helps here:** Ensures robust production deployment compliance, fair non-starved tiering, zero identity leakage, and automated regression testing across the entire ingestion pipeline.
+- **Alternatives considered:** Relying purely on frontend UI masking for blind mode (rejected: API responses would still leak real filenames in network traffic).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - Automated smoke test passes end-to-end: Strong match score (65) > Partial (30) > Unrelated Invoice (0, gate rejected).
+  - 165/165 backend tests passing with 163 passed, 2 skipped, 0 failures.
+  - Backend overall statement coverage: 88% (4,384 / 4,998 statements).
+  - 23/23 Vitest frontend tests passing; 0 ESLint errors; strict TypeScript production build clean.
+  - `scripts/make_report.py` verified with 0 missing keys.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide

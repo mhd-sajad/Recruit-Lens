@@ -4,7 +4,7 @@ import { App } from "./App";
 import * as AuthContextModule from "./context/AuthContext";
 
 // Helper to mock auth state
-const mockAuth = (isAuthenticated: boolean, email = "admin@recruitlens.local") => {
+const mockAuth = (isAuthenticated: boolean, email = "hr@recruitlens.local") => {
   vi.spyOn(AuthContextModule, "useAuth").mockReturnValue({
     user: isAuthenticated
       ? {
@@ -181,7 +181,7 @@ describe("Routing, Sidebar, and Access Verification Suite", () => {
     expect(sidebarScope.getByRole("button", { name: /Settings/i })).toBeInTheDocument();
     expect(sidebarScope.getByRole("button", { name: /How it Works/i })).toBeInTheDocument();
     expect(sidebarScope.getByText("Recruiter")).toBeInTheDocument();
-    expect(sidebarScope.getByText("admin@recruitlens.local")).toBeInTheDocument();
+    expect(sidebarScope.getByText("hr@recruitlens.local")).toBeInTheDocument();
 
     // Theme toggle
     expect(sidebarScope.getByRole("button", { name: /Switch to Light Theme/i })).toBeInTheDocument();

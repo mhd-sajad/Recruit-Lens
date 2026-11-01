@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.v1.auth import _USER_SETTINGS
 from app.api.v1.schemas import (
     EmailDraftResponse,
     EmailSendResponse,
@@ -43,6 +44,7 @@ from app.db.models import (
     User,
 )
 from app.db.session import get_db
+from app.llm.guardrails import redact_pii_blind_mode
 from app.worker.tasks import generate_on_demand_llm_text
 
 router = APIRouter(prefix="/evaluations", tags=["Evaluations"])
@@ -76,6 +78,7 @@ async def list_evaluations_for_job(
     db: Annotated[AsyncSession, Depends(get_db)],
     tier: str | None = Query(None, description="Filter by fit tier"),
     stage: str | None = Query(None, description="Filter by workflow stage"),
+    blind_mode: bool = Query(False, description="Redact PII for blind mode review"),
 ) -> list[EvaluationSummaryResponse]:
     """Retrieve ranked candidate evaluation list for a specific job requisition. Cross-user returns 404."""
     # Verify Job ownership
@@ -85,6 +88,9 @@ async def list_evaluations_for_job(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job requisition '{job_id}' not found",
         )
+
+    stored_settings = _USER_SETTINGS.get(current_user.id, {})
+    is_blind = blind_mode or stored_settings.get("blind_mode_enabled", False)
 
     query = (
         select(Evaluation)
@@ -118,24 +124,30 @@ async def list_evaluations_for_job(
         # Experience duration
         cand_years = exp_data.get("years")
 
-        # Extract name and title
-        filename = ev.resume.filename if ev.resume else ""
-        raw_name = None
-        raw_title = None
-        if ev.resume and ev.resume.parse_result_json:
-            raw_name = ev.resume.parse_result_json.get("name")
-            raw_title = ev.resume.parse_result_json.get("title")
+        # Extract name and title (redacted if blind mode is active)
+        cand_code = ev.id.replace("-", "")[-4:].upper()
+        if is_blind:
+            raw_name = f"Candidate #{cand_code}"
+            filename = f"candidate_{cand_code.lower()}.pdf"
+            raw_title = "Applicant"
+        else:
+            filename = ev.resume.filename if ev.resume else ""
+            raw_name = None
+            raw_title = None
+            if ev.resume and ev.resume.parse_result_json:
+                raw_name = ev.resume.parse_result_json.get("name")
+                raw_title = ev.resume.parse_result_json.get("title")
 
-        if not raw_name and filename:
-            clean = filename.rsplit(".", 1)[0]
-            clean = re.sub(
-                r"\b(cv|resume|ai_engineer|backend|dev|senior|staff)\b",
-                "",
-                clean,
-                flags=re.IGNORECASE,
-            )
-            clean = re.sub(r"[\(_\-\d\)]+", " ", clean).strip()
-            raw_name = clean.title() if clean else "Applicant"
+            if not raw_name and filename:
+                clean = filename.rsplit(".", 1)[0]
+                clean = re.sub(
+                    r"\b(cv|resume|ai_engineer|backend|dev|senior|staff)\b",
+                    "",
+                    clean,
+                    flags=re.IGNORECASE,
+                )
+                clean = re.sub(r"[\(_\-\d\)]+", " ", clean).strip()
+                raw_name = clean.title() if clean else "Applicant"
 
         summary_list.append(
             EvaluationSummaryResponse(
@@ -239,6 +251,7 @@ async def get_evaluation_detail(
     evaluation_id: str,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db)],
+    blind_mode: bool = Query(False, description="Redact PII for blind mode review"),
 ) -> EvaluationDetailResponse:
     """Retrieve comprehensive candidate dossier. Cross-user returns 404."""
     query = (
@@ -254,17 +267,22 @@ async def get_evaluation_detail(
             detail=f"Candidate evaluation '{evaluation_id}' not found",
         )
 
+    stored_settings = _USER_SETTINGS.get(current_user.id, {})
+    is_blind = blind_mode or stored_settings.get("blind_mode_enabled", False)
+    cand_code = ev.id.replace("-", "")[-4:].upper()
+
     raw_text = ""
     citations: list[dict[str, Any]] = []
     if ev.resume:
         raw_text = ev.resume.raw_text or ""
         if ev.resume.chunks:
             for c in sorted(ev.resume.chunks, key=lambda ch: ch.chunk_index):
+                snippet = redact_pii_blind_mode(c.text) if is_blind else c.text
                 citations.append(
                     {
                         "id": f"c_{c.chunk_index:02d}",
                         "section": c.section or "EXPERIENCE",
-                        "text_snippet": c.text,
+                        "text_snippet": snippet,
                         "char_start": c.char_start,
                         "char_end": c.char_end,
                     }
@@ -273,22 +291,30 @@ async def get_evaluation_detail(
     if not citations and raw_text:
         paras = [p.strip() for p in raw_text.split("\n\n") if len(p.strip()) > 30]
         for idx, p in enumerate(paras[:5]):
+            snippet = redact_pii_blind_mode(p[:250]) if is_blind else p[:250]
             citations.append(
                 {
                     "id": f"c_{idx + 1:02d}",
                     "section": "RESUME EVIDENCE",
-                    "text_snippet": p[:250],
+                    "text_snippet": snippet,
                     "char_start": 0,
-                    "char_end": len(p[:250]),
+                    "char_end": len(snippet),
                 }
             )
+
+    display_filename = (
+        f"candidate_{cand_code.lower()}.pdf"
+        if is_blind
+        else (ev.resume.filename if ev.resume else "Unknown")
+    )
+    display_raw_text = redact_pii_blind_mode(raw_text) if is_blind else raw_text
 
     return EvaluationDetailResponse(
         id=ev.id,
         user_id=ev.user_id,
         job_id=ev.job_id,
         resume_id=ev.resume_id,
-        candidate_filename=ev.resume.filename if ev.resume else "Unknown",
+        candidate_filename=display_filename,
         total_score=ev.total_score,
         tier=ev.tier,
         confidence=ev.confidence,
@@ -302,7 +328,7 @@ async def get_evaluation_detail(
         llm_generated=ev.llm_generated,
         created_at=ev.created_at,
         updated_at=ev.updated_at,
-        raw_text=raw_text,
+        raw_text=display_raw_text,
         citations=citations,
     )
 

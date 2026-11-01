@@ -33,7 +33,7 @@ docker compose exec app python /app/backend/../scripts/seed_demo_workspace.py
 
 # 4. Open in browser
 # http://localhost:8000
-# Login: admin@recruitlens.local / (value configured in DEMO_PASSWORD)
+# Login: hr@recruitlens.local / hr@recruitlens
 ```
 
 ---
@@ -50,8 +50,8 @@ docker compose exec app python /app/backend/../scripts/seed_demo_workspace.py
    - `DATABASE_URL`: `sqlite+aiosqlite:///app/data/recruit_lens.db` (or external Supabase PostgreSQL URL).
    - `JWT_SECRET_KEY`: Generate with `openssl rand -hex 32`.
    - `DEMO_MODE`: `true`
-   - `DEMO_EMAIL`: `admin@recruitlens.local`
-   - `DEMO_PASSWORD`: A secure password chosen by the administrator.
+   - `DEMO_EMAIL`: `hr@recruitlens.local`
+   - `DEMO_PASSWORD`: `hr@recruitlens`
    - `GROQ_API_KEY`: *(Optional)* Your Groq API key for generative LLM text synthesis.
 5. Push the repository to the Hugging Face Space git remote:
    ```bash
@@ -80,8 +80,8 @@ If Hugging Face Docker is blocked due to payment verification, Render provides a
    - `JWT_SECRET_KEY`: Secure 64-char hex string.
    - `ENVIRONMENT`: `production`.
    - `DEMO_MODE`: `true`
-   - `DEMO_EMAIL`: `admin@recruitlens.local`
-   - `DEMO_PASSWORD`: Set your password.
+   - `DEMO_EMAIL`: `hr@recruitlens.local`
+   - `DEMO_PASSWORD`: `hr@recruitlens`
    - `CORS_ORIGINS`: `["https://your-frontend.pages.dev"]`
 4. Deploy service. The health check endpoint is `/health`. Render exposes port 8000 automatically.
 

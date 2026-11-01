@@ -334,8 +334,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="text-[10px] font-mono text-indigo-400 font-semibold uppercase tracking-wider">
               Recruiter
             </span>
-            <span className="text-xs font-medium text-[var(--text-primary)] truncate" title={user?.email || "admin@recruitlens.local"}>
-              {user?.email || "admin@recruitlens.local"}
+            <span className="text-xs font-medium text-[var(--text-primary)] truncate" title={user?.email || "hr@recruitlens.local"}>
+              {user?.email || "hr@recruitlens.local"}
             </span>
           </div>
           <button

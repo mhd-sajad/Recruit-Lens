@@ -19,7 +19,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const { login } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("admin@recruitlens.local");
+  const [email, setEmail] = useState("hr@recruitlens.local");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     e.preventDefault();
     setError(null);
 
-    const effectivePassword = password.trim() || (email.trim() === "admin@recruitlens.local" ? "Admin123!" : "");
+    const effectivePassword = password.trim() || (email.trim() === "hr@recruitlens.local" ? "hr@recruitlens" : "");
     if (!email.trim() || !effectivePassword) {
       setError("Please provide both email and password.");
       return;
@@ -227,13 +227,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <button
             type="button"
             onClick={() => {
-              setEmail("admin@recruitlens.local");
-              setPassword("Admin123!");
+              setEmail("hr@recruitlens.local");
+              setPassword("hr@recruitlens");
               setError(null);
             }}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 transition-colors cursor-pointer"
           >
-            Demo: admin@recruitlens.local / Admin123!
+            Deploy HR: hr@recruitlens.local / hr@recruitlens
           </button>
           <p className="text-[10px] text-[var(--text-tertiary)] mt-1.5 font-mono">
             Role: Recruiter · Click to auto-fill

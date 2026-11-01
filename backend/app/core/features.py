@@ -192,9 +192,15 @@ def extract_candidate_features(
             matched_nice.append(skill)
             inferred_used.append(skill)
 
-    # Compute coverage features
+    # Compute coverage features (supporting custom skill weights if provided)
+    skill_weights = {k.lower(): float(v) for k, v in (job_reqs.skill_weights or {}).items()}
     if len(req_must) > 0:
-        must_cov_val = len(matched_must) / len(req_must)
+        if skill_weights and any(s.lower() in skill_weights for s in req_must):
+            total_w = sum(skill_weights.get(s.lower(), 1.0) for s in req_must) or 1.0
+            matched_w = sum(skill_weights.get(s.lower(), 1.0) for s in matched_must)
+            must_cov_val = min(max(matched_w / total_w, 0.0), 1.0)
+        else:
+            must_cov_val = len(matched_must) / len(req_must)
         must_cov = FeatureValue(
             name="must_have_coverage",
             value=must_cov_val,
@@ -215,7 +221,12 @@ def extract_candidate_features(
         )
 
     if len(req_nice) > 0:
-        nice_cov_val = len(matched_nice) / len(req_nice)
+        if skill_weights and any(s.lower() in skill_weights for s in req_nice):
+            total_w_nice = sum(skill_weights.get(s.lower(), 1.0) for s in req_nice) or 1.0
+            matched_w_nice = sum(skill_weights.get(s.lower(), 1.0) for s in matched_nice)
+            nice_cov_val = min(max(matched_w_nice / total_w_nice, 0.0), 1.0)
+        else:
+            nice_cov_val = len(matched_nice) / len(req_nice)
         nice_cov = FeatureValue(
             name="nice_to_have_coverage",
             value=nice_cov_val,

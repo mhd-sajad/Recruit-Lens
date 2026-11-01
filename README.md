@@ -71,7 +71,7 @@ flowchart TD
 ## Demo Workspace Access
 
 The application ships with a pre-configured synthetic demo workspace initialized via environment variables:
-- **Email:** Set via `DEMO_EMAIL` (e.g. `admin@recruitlens.local` in `.env.example`)
+- **Email:** Set via `DEMO_EMAIL` (e.g. `hr@recruitlens.local` / `hr@recruitlens`)
 - **Password:** Set via `DEMO_PASSWORD` in your `.env` (no hardcoded credentials)
 - **Demo Mode:** Set `DEMO_MODE=true` to enable demo switcher and banner on the login screen
 - **Demo Requisitions:** Staff Backend Engineer, Senior ML Engineer, Product Designer.

@@ -88,10 +88,20 @@ def test_assign_tier_abstain_on_unverified_document() -> None:
     assert "non-resume" in (tier_res.abstain_reason or "")
 
 
-def test_must_have_override_strictly_disallows_strong_fit() -> None:
-    """SPEC Rule B: A candidate missing ANY must-have skill cannot be Strong Fit under any circumstance."""
+def test_single_missing_must_have_allows_strong_fit() -> None:
+    """Verify that a single missing must-have does not block Strong Fit if coverage >= 75%."""
     score_res, fv = create_mock_score_and_vector(
         score=0.95, must_cov=0.90, missing_must=["General Ledger"]
+    )
+    tier_res = assign_candidate_tier(score_res, fv)
+    assert tier_res.tier == "Strong Fit"
+    assert not tier_res.must_have_override_applied
+
+
+def test_must_have_override_disallows_strong_fit_on_multiple_missing() -> None:
+    """A candidate missing multiple must-have skills or with < 75% coverage cannot be Strong Fit."""
+    score_res, fv = create_mock_score_and_vector(
+        score=0.95, must_cov=0.70, missing_must=["General Ledger", "Tax Compliance"]
     )
     tier_res = assign_candidate_tier(score_res, fv)
     assert tier_res.tier != "Strong Fit"

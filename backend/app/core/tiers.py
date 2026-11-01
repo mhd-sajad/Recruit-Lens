@@ -116,16 +116,17 @@ def assign_candidate_tier(
     final_tier = preliminary_tier
     final_rank = preliminary_rank
 
-    # Rule: Missing any required skill strictly disallows Strong Fit without exception
-    if preliminary_tier == "Strong Fit" and (len(missing_must) > 0 or must_cov < 1.0):
+    # Rule: Missing multiple required skills (or < 75% coverage) disallows Strong Fit.
+    # A single missing must-have does not automatically block Strong Fit if coverage remains >= 75%.
+    if preliminary_tier == "Strong Fit" and (len(missing_must) > 1 or must_cov < 0.75):
         final_tier = "Interview"
         final_rank = 2
         override_applied = True
         missing_str = ", ".join(missing_must[:3]) if missing_must else "unmet requirements"
         override_reason = (
             f"Must-have override: High score ({score:.2f}) qualifies for Strong Fit, "
-            f"but candidate is missing mandatory requirements ({missing_str}). "
-            f"Downgraded to Interview."
+            f"but candidate is missing multiple mandatory requirements ({missing_str}) "
+            f"or coverage ({must_cov:.0%}) is under 75%. Downgraded to Interview."
         )
 
     # Rule: Severe experience deficit (e.g. 1 year vs 5 required, gap < -1.0) disallows Strong Fit

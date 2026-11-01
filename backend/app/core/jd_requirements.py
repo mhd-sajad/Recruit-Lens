@@ -103,6 +103,7 @@ class JobRequirements(BaseModel):
     raw_sections: dict[str, str] = Field(default_factory=dict)
     confidence: float = 1.0
     llm_refined: bool = False
+    skill_weights: dict[str, float] = Field(default_factory=dict)
 
 
 def segment_jd_sections(jd_text: str) -> dict[str, str]:

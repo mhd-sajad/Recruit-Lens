@@ -43,32 +43,56 @@ async def seed() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
-        # 1. Create or retrieve demo admin user from env vars
-        admin_email = os.environ.get("DEMO_EMAIL", "admin@recruitlens.local")
-        admin_password = os.environ.get("DEMO_PASSWORD")
-        if not admin_password:
-            raise ValueError("DEMO_PASSWORD environment variable must be set to run seed_demo_workspace.py")
+        # 1. Create or retrieve deployment HR account
+        admin_email = os.environ.get("DEMO_EMAIL", "hr@recruitlens.local").strip().lower()
+        admin_password = os.environ.get("DEMO_PASSWORD", "hr@recruitlens").strip()
 
-        user_res = await session.execute(select(User).where(User.email == admin_email))
-        user = user_res.scalar_one_or_none()
-        if user is None:
-            user = User(
+        # Clean up any legacy or demo accounts (e.g. admin@recruitlens.local, workflow_lead@recruitlens.local)
+        all_users_res = await session.execute(select(User))
+        all_users = all_users_res.scalars().all()
+
+        target_user = None
+        for u in all_users:
+            if u.email.lower() == admin_email:
+                target_user = u
+                target_user.hashed_password = hash_password(admin_password)
+                target_user.role = "admin"
+                target_user.is_active = True
+
+        if target_user is None:
+            target_user = User(
                 email=admin_email,
                 hashed_password=hash_password(admin_password),
-                full_name="Lead Recruiter (Demo)",
+                full_name="Lead HR Recruiter",
                 role="admin",
-                api_key="lens_demo_api_key_for_mcp_evaluation_12345",  # gitleaks:allow
+                api_key="lens_hr_api_key_for_mcp_evaluation_12345",  # gitleaks:allow
             )
-            session.add(user)
+            session.add(target_user)
             await session.flush()
-            print(f"  [+] Created Demo User: {admin_email} (password set from DEMO_PASSWORD)")
+            print(f"  [+] Created Deployment User: {admin_email}")
         else:
-            print(f"  [*] Demo User: {admin_email} already exists.")
+            print(f"  [*] Deployment User: {admin_email} updated and active.")
+
+        # Reassign data and remove any other accounts so only hr@recruitlens.local exists
+        for u in all_users:
+            if u.id != target_user.id:
+                print(f"  [-] Removing old account: {u.email}")
+                # Reassign jobs and evaluations to target_user
+                jobs_res = await session.execute(select(Job).where(Job.user_id == u.id))
+                for j in jobs_res.scalars().all():
+                    j.user_id = target_user.id
+                evals_res = await session.execute(select(Evaluation).where(Evaluation.user_id == u.id))
+                for ev in evals_res.scalars().all():
+                    ev.user_id = target_user.id
+                await session.delete(u)
+
+        await session.commit()
+        user = target_user
 
         # 2. Check if jobs are already seeded
         existing_jobs_res = await session.execute(select(Job).where(Job.user_id == user.id))
         if existing_jobs_res.scalars().first() is not None:
-            print("  [*] Demo workspace already seeded with jobs. Skipping redundant seeding.")
+            print("  [*] Workspace already seeded with jobs. Skipping redundant seeding.")
             return
 
         # 2. Create Requisition 1: Staff Backend Engineer

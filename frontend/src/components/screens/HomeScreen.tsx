@@ -45,7 +45,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex flex-col text-right">
                   <span className="text-xs font-semibold text-[var(--text-primary)]">
-                    {user?.email || "admin@recruitlens.local"}
+                    {user?.email || "hr@recruitlens.local"}
                   </span>
                   <span className="text-[10px] text-indigo-400 font-mono font-medium">
                     Recruiter
@@ -121,7 +121,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
 
                 <p className="text-xs text-[var(--text-secondary)]">
                   {isAuthenticated
-                    ? `Signed in as ${user?.email || "admin@recruitlens.local"}. This takes you straight to Requisitions.`
+                    ? `Signed in as ${user?.email || "hr@recruitlens.local"}. This takes you straight to Requisitions.`
                     : "New here? You will sign up or log in first, then land on Requisitions."}
                 </p>
               </div>

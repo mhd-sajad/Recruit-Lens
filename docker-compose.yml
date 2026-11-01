@@ -14,8 +14,8 @@ services:
       - LOG_LEVEL=INFO
       - CORS_ORIGINS=["http://localhost:8000","http://localhost:5173"]
       - DEMO_MODE=${DEMO_MODE:-true}
-      - DEMO_EMAIL=${DEMO_EMAIL:-admin@recruitlens.local}
-      - DEMO_PASSWORD=${DEMO_PASSWORD:-Admin123!}
+      - DEMO_EMAIL=${DEMO_EMAIL:-hr@recruitlens.local}
+      - DEMO_PASSWORD=${DEMO_PASSWORD:-hr@recruitlens}
     depends_on:
       db:
         condition: service_healthy

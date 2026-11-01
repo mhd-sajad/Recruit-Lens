@@ -92,7 +92,9 @@ async def process_batch_ingestion(task_id: str) -> None:
             return
 
         try:
-            reqs_data = job.requirements_json
+            reqs_data = dict(job.requirements_json) if job.requirements_json else {}
+            if job.weights_json and "skill_weights" not in reqs_data:
+                reqs_data["skill_weights"] = job.weights_json
             job_reqs = (
                 JobRequirements(**reqs_data)
                 if reqs_data
@@ -101,6 +103,7 @@ async def process_batch_ingestion(task_id: str) -> None:
                     title=job.title,
                     must_have_skills=[],
                     nice_to_have_skills=[],
+                    skill_weights=job.weights_json or {},
                 )
             )
         except Exception as e:
@@ -110,6 +113,7 @@ async def process_batch_ingestion(task_id: str) -> None:
                 title=job.title,
                 must_have_skills=[],
                 nice_to_have_skills=[],
+                skill_weights=job.weights_json or {},
             )
 
         # Load all resumes for this job
