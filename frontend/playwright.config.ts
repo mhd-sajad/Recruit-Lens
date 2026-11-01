@@ -10,13 +10,17 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:8000",
+    colorScheme: "dark",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        colorScheme: "dark",
+      },
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {

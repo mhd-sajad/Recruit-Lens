@@ -38,7 +38,7 @@ flowchart TD
 
 ---
 
-## Product Screenshots
+## Product Screenshots (Dark Theme)
 
 | 1. Secure Recruiter Login | 2. Requisitions Command Center |
 | :---: | :---: |

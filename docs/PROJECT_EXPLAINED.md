@@ -988,6 +988,21 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - All 6 screenshots successfully refreshed in `docs/screenshots/`.
   - Provenance audit verified via `scripts/verify_eval_provenance.py` and `scripts/make_report.py`.
 
+### Component: Dark Mode Visual Theme Screenshots Capture & Configuration (`frontend/`, `docs/screenshots/`, `README.md`)
+- **What it is:** Capture of high-fidelity dark-mode product screenshots across all 6 core workflow screens via Playwright with browser-level `colorScheme: "dark"` emulation and runtime theme state synchronization.
+- **Why:** The default recruiter interface defaults to enterprise dark mode ("Dark Mode First" palette: `#0b0f17` canvas, `#111827` surface, `#1f2937` subtle container, and `#374151` borders). Capturing screenshots in dark mode presents the primary visual design system as experienced by engineering and recruiting operators.
+- **How it works:**
+  - Configured `frontend/playwright.config.ts` with `colorScheme: "dark"`.
+  - Added initialization script in `frontend/e2e/recruiter-journey.spec.ts` setting `localStorage.setItem("theme", "dark")` and adding `dark` class to `document.documentElement`.
+  - Ensured authenticated session explicitly activates dark mode via `Switch to Dark Theme` control after user settings load, preserving dark mode through table navigation, dossier inspection, kanban board, and settings toggling.
+  - Verified pixel RGB color values across all 6 screenshots with PIL to confirm true dark theme backgrounds (canvas `#0b0f17` / surface `#111827`).
+- **How it helps here:** Accurately represents the sleek, modern dark-mode aesthetic in GitHub repository landing documentation.
+- **Alternatives considered:** Retaining light theme screenshots (rejected: user specifically requested dark mode view).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - 6/6 screenshots verified in dark mode with RGB luminance audits.
+  - Playwright E2E suite executed cleanly (1/1 passed in 1.6s).
+  - Provenance audit verified with 0 errors.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide

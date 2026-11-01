@@ -13,6 +13,18 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
     page.on("console", (msg) => console.log("BROWSER CONSOLE:", msg.type(), msg.text()));
     page.on("pageerror", (err) => console.log("BROWSER ERROR:", err.message));
 
+    // Force Dark Mode for all captured screenshots
+    await page.addInitScript(() => {
+      try {
+        localStorage.setItem("theme", "dark");
+        if (typeof document !== "undefined" && document.documentElement) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch {
+        // ignored
+      }
+    });
+
     // 1. Visit App & Login Screen
     await page.goto("/");
 
@@ -42,6 +54,18 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
 
     // 2. Requisitions Command Center Screen
     await expect(page.getByRole("heading", { name: "Requisitions", level: 1 })).toBeVisible({ timeout: 15000 });
+
+    // Wait for requisitions cards to load
+    const seededCard = page.locator("div.rounded-xl").filter({ hasText: /Staff Backend Engineer/i }).first();
+    await expect(seededCard).toBeVisible({ timeout: 15000 });
+
+    // Ensure Dark Mode is toggled on in the authenticated workspace
+    const darkBtn = page.getByRole("button", { name: "Switch to Dark Theme" });
+    if (await darkBtn.isVisible()) {
+      await darkBtn.click();
+    }
+    await expect(page.locator("html")).toHaveClass(/dark/);
+
     await page.screenshot({
       path: path.join(SCREENSHOT_DIR, "02_requisitions_screen.png"),
       fullPage: true,
@@ -49,7 +73,6 @@ test.describe("Recruiter Journey End-to-End Suite", () => {
 
     // 3. Candidates Ranked Table Screen
     // Target the seeded requisition containing evaluated candidates (Staff Backend Engineer)
-    const seededCard = page.locator("div.rounded-xl").filter({ hasText: /Staff Backend Engineer/i }).first();
     const candidatesBtn = seededCard.getByRole("button", { name: /View ranked candidates/i });
     await expect(candidatesBtn).toBeVisible({ timeout: 15000 });
     await candidatesBtn.click();
