@@ -1019,6 +1019,19 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - All 6 screenshot paths verified against `docs/screenshots/`.
   - Provenance audit and `scripts/make_report.py` verified with 0 errors.
 
+### Component: README Simplification & Metrics Table Removal (`README.md`)
+- **What it is:** Streamlining `README.md` by removing the dense internal benchmark citation table and redundant dividers, focusing the landing documentation on product gallery visuals, core capabilities, architecture, and quickstart workflows.
+- **Why:** The raw verified metrics table (listing technical file paths such as `docs/pytest_results.xml:tests`, `docs/eval_benchmark_200.json:peak_rss_mb`) was intended for audit reports (`docs/FINAL_REPORT.md` and `docs/PROJECT_EXPLAINED.md`) rather than public marketing/overview documentation.
+- **How it works:**
+  - Removed the `Key Highlights & Verified Metrics` section and raw evaluation file citation table from `README.md`.
+  - Updated top navigation anchor links to remove `#key-highlights--verified-metrics`.
+  - Streamlined `Quickstart Guide` sections by removing unnecessary divider rules.
+- **How it helps here:** Results in a cleaner, executive-focused repository README with faster readability while preserving complete empirical audit data in `docs/FINAL_REPORT.md`.
+- **Alternatives considered:** Keeping the full metrics table (rejected: user explicitly requested removing this table from `README.md`).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - `README.md` formatting verified.
+  - `scripts/verify_eval_provenance.py` and `scripts/make_report.py` continue to pass with 0 errors.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide

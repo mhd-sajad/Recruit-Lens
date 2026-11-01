@@ -19,7 +19,7 @@
   Recruit Lens splits recruitment AI into mathematical monotonic scoring and evidence-grounded agent synthesis with an audit-backed human-in-the-loop workflow.
 </p>
 
-[Quickstart](#quickstart-guide) • [Architecture](#system-architecture) • [Product Gallery](#product-screenshots-dark-theme) • [Verified Benchmarks](#key-highlights--verified-metrics) • [MCP Server](#official-model-context-protocol-mcp-server) • [Security](#security--governance)
+[Product Gallery](#product-screenshots-dark-theme) • [Core Capabilities](#core-capabilities) • [Architecture](#system-architecture) • [Quickstart](#quickstart-guide) • [MCP Server](#official-model-context-protocol-mcp-server) • [Security](#security--governance)
 
 ---
 
@@ -116,26 +116,6 @@ flowchart TD
 
 ---
 
-## Key Highlights & Verified Metrics
-
-All reported figures are authenticated by automated verification scripts against physical disk artifacts:
-
-| Standard / Bar | Target | Measured Result | Verification Citation |
-| :--- | :--- | :--- | :--- |
-| **Backend Test Suite** | 100% Pass | **163/165 passed** (2 skipped, 0 failures) | `docs/pytest_results.xml:tests` |
-| **Statement Coverage** | $\ge 80.0\%$ | **87.72%** (4,384 / 4,998 statements) | `docs/coverage.json:totals.percent_covered` |
-| **200-Resume Batch Execution** | $\le 300$ s | **125.04 s** (2.1 min total pipeline) | `docs/eval_benchmark_200.json:total_pipeline_time_seconds` |
-| **Peak Memory Footprint** | $\le 400$ MB RSS | **349.3 MB RSS** | `docs/eval_benchmark_200.json:peak_rss_mb` |
-| **Parser Holdout Fragments** | $< 5.0\%$ | **0.0%** (0 / 130 extracted entries) | `docs/eval_parser_dev30_fresh_measurement.json:metrics.fragments_pct` |
-| **Parser Recoverable Rate** | $\ge 90.0\%$ | **96.3%** (130 / 135 real entries) | `docs/eval_parser_dev30_fresh_measurement.json:metrics.recoverable_rate_pct` |
-| **Adversarial Prompt Defense** | 100% Neutralized | **100.0%** (10 / 10 live attack variants) | `docs/eval_injection_live.json:neutralization_rate_pct` |
-| **Isolated Embedder Memory** | $< 200$ MB RSS | **123.8 MB** (3.3 ms / chunk latency) | `docs/eval_embedder_footprint_report.json:isolated_subprocess_rss_mb` |
-| **Scoring Marginal Gain** | $> 0.0$ vs heuristic | **Spearman +0.0897 / NDCG@10 +0.0725** | `docs/eval_scoring_validity_report.json:section_e_scoring_validity.e1_must_have_correlation` |
-| **Dependency Security Audit**| 0 vulnerabilities | **0 vulnerabilities** (`pip-audit 2.10.1`) | `docs/SECURITY.md` |
-| **Secret Scanning (Gitleaks)** | 0 leaks in repo | **0 leaks detected** across git history | `gitleaks protect --staged` |
-
----
-
 ## Quickstart Guide
 
 ### Option A: Docker Compose (Recommended for Production)
@@ -160,8 +140,6 @@ open http://localhost:8000
 **Default Production Credentials:**
 - **Email:** `hr@recruitlens.local`
 - **Password:** `hr@recruitlens`
-
----
 
 ### Option B: Local Development Setup
 
