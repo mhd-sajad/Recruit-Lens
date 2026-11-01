@@ -40,13 +40,13 @@ flowchart TD
 
 ## Product Screenshots
 
-| 1. Secure Recruiter Login | 2. Dashboard Command Center |
+| 1. Secure Recruiter Login | 2. Requisitions Command Center |
 | :---: | :---: |
-| ![Login Screen](docs/screenshots/01_login_screen.png) | ![Dashboard](docs/screenshots/02_dashboard_command_center.png) |
-| **3. Ranked Candidates (Blind Mode)** | **4. Evidence-Grounded Candidate Dossier** |
-| ![Ranked Table](docs/screenshots/03_ranked_table_blind_mode.png) | ![Candidate Detail](docs/screenshots/04_candidate_detail_evidence.png) |
-| **5. Tailored Interview Rubric** | **6. Recruitment Analytics & Funnel** |
-| ![Interview Rubric](docs/screenshots/05_interview_rubric.png) | ![Reports & Analytics](docs/screenshots/06_reports_and_analytics.png) |
+| ![Login Screen](docs/screenshots/01_login_screen.png) | ![Requisitions Screen](docs/screenshots/02_requisitions_screen.png) |
+| **3. Ranked Candidates Table** | **4. Evidence-Grounded Candidate Dossier** |
+| ![Ranked Table](docs/screenshots/03_candidates_table.png) | ![Candidate Dossier](docs/screenshots/04_candidate_dossier.png) |
+| **5. Hiring Pipeline Kanban Board** | **6. Recruiter Settings & Blind Review Mode** |
+| ![Pipeline Board](docs/screenshots/05_pipeline_board.png) | ![Settings Screen](docs/screenshots/06_settings_screen.png) |
 
 ---
 
@@ -54,14 +54,14 @@ flowchart TD
 
 | Standard / Bar | Target | Measured Result | Citation |
 | :--- | :--- | :--- | :--- |
-| **Backend Test Suite** | 100% Pass | **140/140 passed** (0 failures) | `docs/pytest_results.xml:tests` |
-| **Statement Coverage** | $\ge 80.0\%$ | **89.21%** (3,853 / 4,319 statements) | `docs/coverage.json:totals.percent_covered` |
-| **200-Resume Batch Execution** | $\le 300$ s | **289.16 s cold / 143.81 s warm** | `docs/eval_benchmark_200.json:run_1_cold.total_wall_time_seconds` |
-| **Peak Memory Footprint** | $\le 400$ MB RSS | **317.4 MB cold / 313.8 MB warm** | `docs/eval_benchmark_200.json:run_1_cold.peak_tree_rss_mb` |
+| **Backend Test Suite** | 100% Pass | **163/165 passed** (2 skipped, 0 failures) | `docs/pytest_results.xml:tests` |
+| **Statement Coverage** | $\ge 80.0\%$ | **87.72%** (4,384 / 4,998 statements) | `docs/coverage.json:totals.percent_covered` |
+| **200-Resume Batch Execution** | $\le 300$ s | **125.04 s** | `docs/eval_benchmark_200.json:total_pipeline_time_seconds` |
+| **Peak Memory Footprint** | $\le 400$ MB RSS | **349.3 MB RSS** | `docs/eval_benchmark_200.json:peak_rss_mb` |
 | **Parser Holdout Fragments** | $< 5.0\%$ | **0.0%** (0 / 130 extracted entries) | `docs/eval_parser_dev30_fresh_measurement.json:metrics.fragments_pct` |
 | **Parser Recoverable Rate** | $\ge 90.0\%$ | **96.3%** (130 / 135 real entries) | `docs/eval_parser_dev30_fresh_measurement.json:metrics.recoverable_rate_pct` |
 | **Adversarial Prompt Defense** | 100% Neutralized | **100.0%** (10 / 10 live attack variants) | `docs/eval_injection_live.json:neutralization_rate_pct` |
-| **Isolated Embedder Memory** | $< 200$ MB RSS | **122.78 MB** (3.3 ms / chunk latency) | `docs/eval_embedder_footprint_report.json:models.minilm.rss_after_load_mb` |
+| **Isolated Embedder Memory** | $< 200$ MB RSS | **123.8 MB** (3.3 ms / chunk latency) | `docs/eval_embedder_footprint_report.json:isolated_subprocess_rss_mb` |
 | **Scoring Marginal Gain** | $> 0.0$ vs heuristic | **Spearman +0.0897 / NDCG@10 +0.0725** | `docs/eval_scoring_validity_report.json:section_e_scoring_validity.e1_must_have_correlation` |
 | **Dependency Security Audit**| 0 vulnerabilities | **0 vulnerabilities** (`pip-audit 2.10.1`) | `docs/SECURITY.md` |
 | **Secret Scanning (Gitleaks)** | 0 leaks in repo | **0 leaks detected** across full history | `gitleaks git --verbose` |

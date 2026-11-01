@@ -968,6 +968,26 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - 163/165 backend pytest tests pass (2 skipped), 0 failures; 88% overall statement coverage.
   - `scripts/verify_eval_provenance.py` and `scripts/make_report.py` pass with 0 errors.
 
+### Component: Production UI Screenshots Regeneration & README Alignment (`docs/screenshots/`, `README.md`)
+- **What it is:** Full regeneration of high-resolution product screenshots across 6 representative recruiter workflow screens via headless Chromium Playwright test, updating embedded visual assets and synchronized audit metrics in `README.md`.
+- **Why:** After closing integration defects, updating candidate dossier navigation, adding requisition status controls, and eliminating obsolete screen components, existing screenshots and markdown references were out of date.
+- **How it works:**
+  - Executed `frontend/e2e/recruiter-journey.spec.ts` against the live production container on port 8000.
+  - Successfully refreshed all 6 visual assets in `docs/screenshots/`:
+    1. `01_login_screen.png`: Secure recruiter authentication portal with demo workspace switcher.
+    2. `02_requisitions_screen.png`: Requisitions command center with applicant counts and active status indicators.
+    3. `03_candidates_table.png`: Ranked candidates table with match scores, tier badges, and knockout reasons.
+    4. `04_candidate_dossier.png`: Candidate dossier featuring score gauge, timeline, evidence drawer, and dual navigation.
+    5. `05_pipeline_board.png`: Kanban hiring stage pipeline board.
+    6. `06_settings_screen.png`: Recruiter settings with blind review mode toggle.
+  - Cleaned up obsolete duplicate screenshots and synchronized markdown image links in `README.md`.
+- **How it helps here:** Provides a visually accurate, professional landing documentation for recruiters and evaluators.
+- **Alternatives considered:** Manual browser screenshot taking (rejected: automated Playwright captures are repeatable, headless, and deterministic).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - Playwright E2E test passed cleanly: 1/1 passed in 2.0s execution time.
+  - All 6 screenshots successfully refreshed in `docs/screenshots/`.
+  - Provenance audit verified via `scripts/verify_eval_provenance.py` and `scripts/make_report.py`.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide
