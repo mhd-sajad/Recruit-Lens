@@ -1003,6 +1003,22 @@ Recruit Lens is an explainable, evidence-grounded candidate evaluation and recru
   - Playwright E2E suite executed cleanly (1/1 passed in 1.6s).
   - Provenance audit verified with 0 errors.
 
+### Component: Executive Professional README Overhaul & Badges Alignment (`README.md`)
+- **What it is:** Enterprise-grade README overhaul structuring the project landing page with modern GitHub badges, problem/solution paradigm contrasts, core capabilities breakdown, dark-mode product screenshots gallery, updated system architecture flowcharts, authenticated benchmarks, security & governance policies, and dual quickstart pathways (Docker & local).
+- **Why:** The previous README was a brief draft that did not fully communicate the platform's architectural philosophy (deterministic mathematical scoring vs evidence-grounded agent synthesis), lacked badges, and omitted key security and compliance highlights.
+- **How it works:**
+  - Enhanced layout with technology badges (CI, Python 3.11, FastAPI, React 19, TypeScript, PostgreSQL 16, Coverage 88%, Gitleaks Zero Leaks).
+  - Explicitly contrasts LLM hallucination and prestige bias with Recruit Lens's dual-boundary architecture.
+  - Retained the verified dark theme product gallery table linking to all 6 refreshed screenshots.
+  - Documented enterprise capabilities: blind mode anonymization, what-if sensitivity analysis, indirect prompt injection defense, and official MCP server human confirmation gates.
+  - Retained exact benchmark metrics verified against physical disk artifacts.
+- **How it helps here:** Elevates the repository landing page to enterprise standards for open-source evaluation, engineering review, and compliance auditing.
+- **Alternatives considered:** Keeping a minimal developer-only README (rejected: user requested a comprehensive, professional README).
+- **Key Empirical Verifications & Gate Resolutions:**
+  - Markdown syntax and internal anchor links verified.
+  - All 6 screenshot paths verified against `docs/screenshots/`.
+  - Provenance audit and `scripts/make_report.py` verified with 0 errors.
+
 ---
 
 ## 5. Five-Minute Interactive Demo Script & Technical Presentation Guide
